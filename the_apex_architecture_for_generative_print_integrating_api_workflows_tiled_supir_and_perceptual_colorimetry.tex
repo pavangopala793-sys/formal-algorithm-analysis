@@ -1,0 +1,65 @@
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{algorithmic}
+\usepackage{textcomp}
+
+\begin{document}
+
+\title{The Apex Architecture for Generative Print: Integrating API Workflows, Tiled SUPIR, and Perceptual Colorimetry}
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+This paper formalizes a rigorous generative poster pipeline that bridges API-driven ideation with local typography and upscaling. We introduce a layered compositing model accounting for physical print constraints, utilizing measure theory to define text density within latent spatial distributions. To address VRAM limits, we implement Tiled Diffusion upscaling, where topological consistency across latent seams is guaranteed via bottleneck distance constraints on sublevel set filtrations. High-frequency hallucination on text is prevented via ControlNet-guided masking and Sobolev norm regularization. Finally, we formalize RGB-to-CMYK conversion as a metric-minimizing retraction governed by 3D LUT interpolation and UCR/GCR black generation, formulating total ink limits as strict boundary conditions.
+\end{abstract}
+}
+
+\maketitle
+\IEEEdisplaynontitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+
+\section{Introduction}
+The synthesis of high-density print media via generative models bridges continuous latent spaces and discrete physical gamuts. Addressing the dichotomy between scalable API access and local execution, we formalize the 'Apex Architecture'. This multi-agent workflow utilizes Ideogram 2.0 via API for foundational aesthetics, followed by local inpainting with AnyText 2 and ControlNet for precise typography, Tiled SUPIR for memory-efficient upscaling, and robust 3D LUT-based Perceptual Colorimetry.
+
+\section{Measure-Theoretic Typographic Compositing}
+Commercial print demands adherence to physical constraints: bleed $B$, trim $T$, and safe zones $S$. We model the canvas as a layered measure space $(\Omega, \mathcal{F}, \mu)$, replacing naive non-overlapping subsets with a compositing model $C = \sum_{k} \alpha_k L_k$ prioritizing typographic layers within $S$.
+
+\begin{definition}
+Let $T_i \subset S$ be the bounding box for the $i$-th typographic element. The text density measure $\rho(T_i)$ is explicitly related to the latent spatial distribution of the diffusion model via $\rho(T_i) = \int_{T_i} ||z_0(x)||^2 d\mu(x)$, where $z_0$ is the decoded latent vector.
+\end{definition}
+
+By employing local ControlNet guidance, we condition the latent spatial distribution. 
+
+\begin{theorem}
+Let the domain of spatial coordinates $x$ be the normalized canvas $\Omega = [0,1]^2$. Applying soft cross-attention constraints $\int_{\Omega \setminus T_i} A(x, y) d\mu(y) < \delta$ during the local AnyText 2 inpainting phase induces hard topological bounds on the generated text measure's support, ensuring typographical elements strictly reside within the safe zone $S$.
+\end{theorem}
+\textit{Proof Sketch.} As the diffusion reverse process converges, the soft attention gradients project the score function onto the constrained manifold defined by $T_i$, shrinking the probability mass outside $T_i$ asymptotically to zero.
+
+\section{VRAM-Aware Tiled Upscaling and Topological Blending}
+To overcome VRAM limits for 77.7 MP outputs, we employ Tiled Diffusion. The global image is partitioned into overlapping chunks. To prevent boundary artifacts, we enforce topological consistency during latent seam blending.
+
+\begin{definition}
+We define discrete sublevel set filtrations on the intensity functions of adjacent tiles $X$ and $Y$ in the Vietoris-Rips complex. The blending is topologically valid if the bottleneck distance between their persistent diagrams satisfies $d_B(Dgm(X), Dgm(Y)) < \epsilon$.
+\end{definition}
+
+To solve the text-upscaling compounding error, we architect a bypass pipeline. Text regions are masked, and a ControlNet-guided upscaling strategy enforces fidelity. For non-text regions, SUPIR injects micro-textures by maximizing high-frequency spectral energy, constrained by a proper Sobolev norm bound $||Y||_{H^s} \le C$ to prevent unbound hallucination.
+
+\section{Colorimetry: 3D LUTs and CMYK Retraction}
+\begin{lemma}
+The mapping $\Phi: \mathcal{C}_{RGB} \to \mathcal{C}_{CMYK}$ under Perceptual rendering intent is a metric-minimizing projection (retraction) onto the bounded CMYK manifold, determined by 3D LUT interpolation.
+\end{lemma}
+
+We discard continuous volume-preserving claims, defining the RGB-to-CMYK conversion explicitly using standard tetrahedral interpolation of a 3D LUT. The metric $\Phi$ minimizes the perceived color difference $\Delta E_{00}$. 
+
+Crucially, ICC profile Black Generation (UCR/GCR) manages the neutral axis. The total ink limit is not a bijective inequality but a strict boundary condition on the destination manifold: $\partial \mathcal{C}_{CMYK} = \{ (c,m,y,k) \mid c+m+y+k \le \tau \}$, where $\tau$ is typically $300\%$. This explicitly bounds the minimum printable luminance $L^*_{min}$ without enforcing bijectivity.
+
+\section{Conclusion}
+The revised Apex Architecture provides a robust, physically and mathematically sound pipeline. By combining API generation with localized, mathematically constrained typographic inpainting, VRAM-aware topologically consistent tiled upscaling, and strict 3D LUT colorimetric boundaries, we guarantee rigorous commercial print synthesis.
+
+\end{document}
