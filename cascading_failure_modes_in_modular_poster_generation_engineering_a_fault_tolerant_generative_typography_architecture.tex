@@ -1,0 +1,77 @@
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{algorithmic}
+\usepackage{textcomp}
+
+\begin{document}
+
+\title{Cascading Failure Modes in Modular Poster Generation: Engineering a Fault-Tolerant Generative Typography Architecture}
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+While theoretical modular pipelines for AI poster generation decouple artistic synthesis from typography, they frequently ignore the reality of compounding sequential errors. This paper critiques the naive assumption of frictionless pipeline integration, highlighting severe technical gaps in Multimodal Large Language Model (MLLM) layout prediction, the obsolescence of legacy typographic models, and the fragility of arbitrary upscaling parameters. We introduce a Fault-Tolerant Generative Architecture that replaces deterministic automation with mandatory inter-stage quality gates, substitutes outdated inpainting engines with state-of-the-art models (AnyText, TextDiffuser-2), and formalizes precise computational color-space management (CMYK ICC profiling). By prioritizing engineering recovery over theoretical purity, we establish a robust blueprint for high-density commercial poster synthesis.
+\end{abstract}
+}
+
+\maketitle
+\IEEEdisplaynontitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+
+\section{Introduction}
+Recent theoretical models propose modular pipelines for AI poster generation: (1) Background Synthesis, (2) MLLM Layout, (3) Typographic Inpainting, and (4) Print-Density Upscaling. While conceptually sound, executing this sequence $1 \to 2 \to 3 \to 4$ in a fully automated, deterministic manner is an engineering fallacy.
+
+Generative AI pipelines are non-linear error multipliers. If the background synthesis contains minor compositional flaws, the MLLM bounding box predictions shift. The inpainting model subsequently attempts to render typography over inappropriate textures, and the final upscaling stage permanently bakes these compounded errors into the print file. This paper dismantles the idealized modular pipeline and proposes a battle-hardened, fault-tolerant architecture requiring mandatory human-in-the-loop quality gates.
+
+\section{Technical Gaps in Autonomous Layout Prediction}
+\subsection{The MLLM Spatial Accuracy Deficit}
+Current literature often claims that MLLMs can "analyze negative space" to output optimal bounding boxes. Empirically, MLLMs possess semantic understanding but lack sub-pixel spatial precision. When tasked with predicting coordinates $(x_{min}, y_{min}, x_{max}, y_{max})$, the outputs frequently clip focal subjects or misalign typographic hierarchy.
+
+\textbf{Engineering Solution:} Full automation of Stage 2 must be abandoned. The architecture must implement a Manual Override Web UI. The MLLM serves solely as an initialization heuristic, requiring a human operator to physically drag, resize, and confirm the typographic bounding boxes before passing the data to the inpainting tensor.
+
+\section{Obsolescence in Typographic Rendering}
+Early modular frameworks relied heavily on models such as GlyphControl for text inpainting. However, the rapid evolution of generative models renders these legacy systems inadequate for commercial-grade typography.
+
+\subsection{Lighting Integration and Texture Clashing}
+The theoretical claim that mask-guided inpainting naturally "inherits global lighting" is demonstrably false on complex backgrounds. While successful on flat, minimalist gradients, applying legacy inpainting to highly textured (e.g., photorealistic foliage) or dark-mode backgrounds results in text that appears composited and visibly disjointed from the irradiance map.
+
+\textbf{Engineering Solution:} The pipeline must upgrade the typographic rendering engine to contemporary state-of-the-art architectures, specifically \textit{AnyText} or \textit{TextDiffuser-2}. Furthermore, the inpainting mask must utilize a configurable gaussian feathering radius, and the denoising strength must be dynamically exposed to the quality gate operator to ensure structural blending.
+
+\section{Empirical Validation of Upscaling Heuristics}
+Standard upscaling protocols often cite arbitrary denoising thresholds (e.g., $\lambda_{denoise} < 0.35$) to prevent hallucination during tiled diffusion upscaling. 
+
+This lacks rigorous ablation. A value of $0.35$ may preserve vector-style posters but completely obliterate the micro-texture of a photorealistic cinematic poster. The pipeline must reject hardcoded parameters.
+
+\textbf{Engineering Solution:} The upscaling module must support a comparative preview matrix. Before committing to a $7200 \times 10800$ computation, the system must generate isolated $1024 \times 1024$ crops of the most complex typographic regions at $\lambda \in \{0.20, 0.30, 0.40\}$. The quality gate operator determines the optimal threshold based on localized artifacting.
+
+\section{Computational Color-Space Management}
+Academic papers frequently summarize the RGB-to-CMYK conversion in a single passing paragraph, severely underestimating the complexity of gamut translation for physical print.
+
+Latent diffusion models operate strictly in the sRGB latent space. Naive algorithmic conversion to CMYK often results in "muddy" contrast and hue shifting, destroying the visual impact of the generated poster.
+
+\textbf{Engineering Solution:} The pipeline must sever color management from the diffusion pipeline. A dedicated post-processing script utilizing \texttt{Pillow} (Python Imaging Library) and explicitly declared International Color Consortium (ICC) profiles (e.g., U.S. Web Coated (SWOP) v2) is mandatory. Additionally, precise mechanical bleed margins (e.g., 0.125 inches) must be computationally injected prior to PDF/TIFF serialization.
+
+\section{The Inter-Stage Quality Gate Framework}
+To prevent catastrophic error compounding, the pipeline architecture is redefined as follows:
+\[ S_1 \to QG_1 \to S_2 \to QG_2 \to S_3 \to QG_3 \to S_4 \to QG_4 \to S_{CMYK} \]
+where $S_n$ denotes an operational stage and $QG_n$ denotes a mandatory human-in-the-loop Quality Gate. Without isolation and manual verification between stages, the pipeline guarantees failure on complex visual prompts.
+
+\section{Conclusion}
+The theoretical elegance of modular poster generation collapses under the weight of generative unpredictability. By acknowledging the spatial limitations of MLLMs, upgrading outdated typographic nodes, forcing empirical upscaling tests, and treating color management as a dedicated computational science, we establish a robust, fault-tolerant architecture. Professional AI generation is not achieved through end-to-end automation, but through the strategic placement of control surfaces within non-deterministic pipelines.
+
+\section*{References}
+\begin{enumerate}
+    \item Tuo, Y., et al. "AnyText: Multilingual Visual Text Generation and Editing", ICLR 2024.
+    \item Chen, J., et al. "TextDiffuser-2: Unleashing the Power of Language Models for Text Rendering", ECCV 2024.
+    \item International Color Consortium. "Image technology colour management — Architecture, profile format and data structure", ISO 15076-1:2005.
+\end{enumerate}
+
+
+\end{document}
