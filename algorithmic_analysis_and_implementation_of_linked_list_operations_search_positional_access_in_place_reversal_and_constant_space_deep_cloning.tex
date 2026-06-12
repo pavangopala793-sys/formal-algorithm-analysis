@@ -1,0 +1,256 @@
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{algorithmic}
+\usepackage{textcomp}
+
+\begin{document}
+
+\title{Algorithmic Analysis and Implementation of Linked List Operations: Search, Positional Access, In-Place Reversal, and Constant-Space Deep Cloning}
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+This paper presents a formal analysis and reference implementation of key singly-linked list operations. We investigate sequential search, positional index access, and dynamic insertion, detailing their computational complexity. Furthermore, we formalize the linear-time, in-place reversal of singly-linked lists using a three-pointer technique. We then address the complex problem of deep copying a linked list containing arbitrary random pointer links. We contrast the hash-map-based $O(N)$ space approach with a highly efficient node-interleaving algorithm that achieves $O(N)$ time complexity and $O(1)$ auxiliary space complexity. All algorithms are fully implemented in the C programming language. Finally, we dissect the underlying memory architectures of the stack and heap during pointer manipulation and parameter passing, explaining the necessity of double-pointer references for persistent pointer modification.
+\end{abstract}
+}
+
+\maketitle
+\IEEEdisplaynontitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+\section{Introduction}
+Linked lists are a fundamental family of linear data structures characterized by collections of elements called nodes, whose order is not given by their physical placement in memory. Instead, each node contains a data payload and a pointer reference pointing to the next node. While linked lists suffer from lack of constant-time random access compared to arrays, they provide highly efficient insertion and deletion operations. 
+
+This paper presents a rigorous study of core operations on singly-linked lists, implementing them in standard C, and evaluates their performance under standard asymptotic analysis. We also discuss memory layouts, illustrating the mechanics of heap vs stack allocation and why pass-by-pointer-to-pointer (double pointer) is necessary in C.
+
+\section{Basic Singly-Linked List Operations}
+We define a singly-linked list node in the C programming language as follows:
+
+\begin{verbatim}
+typedef struct Node {
+    int data;
+    struct Node* next;
+} Node;
+\end{verbatim}
+
+\subsection{Sequential Search}
+Searching for a target element $x$ in a singly-linked list requires traversing nodes sequentially starting from the head. We traverse until the value is found or the end of the list is reached.
+
+\begin{verbatim}
+// Returns 1 if x is found in the list, 0 otherwise
+int search(Node* head, int x) {
+    Node* temp = head;
+    while (temp != NULL) {
+        if (temp->data == x) {
+            return 1; // Found
+        }
+        temp = temp->next;
+    }
+    return 0; // Not found
+}
+\end{verbatim}
+
+The worst-case time complexity of this operation is $O(N)$, where $N$ is the number of nodes in the list, as we may have to traverse the entire list. The space complexity is $O(1)$ since only a temporary traversal pointer is allocated on the stack.
+
+\subsection{Accessing the $K$-th Index}
+To access the node at index $K$ (assuming 0-based indexing), we traverse the list starting from the head and advance the pointer exactly $K$ times.
+
+\begin{verbatim}
+// Returns the node at index K, or NULL if out of bounds
+Node* getKthIndex(Node* head, int K) {
+    if (K < 0) return NULL;
+    Node* temp = head;
+    for (int i = 0; temp != NULL && i < K; i++) {
+        temp = temp->next;
+    }
+    return temp; // If K >= length of list, temp will be NULL
+}
+\end{verbatim}
+
+The worst-case time complexity is $O(K)$, which is bounded by $O(N)$ when $K$ is close to the list length. The space complexity is $O(1)$ auxiliary space.
+
+\subsection{Insertion at an Arbitrary Index}
+Inserting a node at index $i$ requires finding the node at index $i-1$ (the predecessor) and adjusting pointers. If $i = 0$, this corresponds to a head insertion, which requires updating the head pointer itself.
+
+\begin{verbatim}
+// Inserts a node with given data at index i
+// Returns the new head of the list
+Node* insertAtIndex(Node* head, int data, int i) {
+    if (i < 0) return head;
+    
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    if (newNode == NULL) {
+        return head; // Memory allocation failed
+    }
+    newNode->data = data;
+    
+    // Case 1: Insert at the beginning (index 0)
+    if (i == 0) {
+        newNode->next = head;
+        return newNode; // New node is now the head
+    }
+    
+    // Case 2: Insert at index i > 0
+    Node* temp = head;
+    // Find the node at index i-1
+    for (int j = 0; temp != NULL && j < i - 1; j++) {
+        temp = temp->next;
+    }
+    
+    // If the index is out of bounds
+    if (temp == NULL) {
+        free(newNode);
+        return head;
+    }
+    
+    // Link new node
+    newNode->next = temp->next;
+    temp->next = newNode;
+    return head;
+}
+\end{verbatim}
+
+The worst-case time complexity is $O(i)$, which is bounded by $O(N)$ when inserting near the end of the list. The space complexity is $O(1)$ auxiliary space.
+
+\section{In-Place Singly-Linked List Reversal}
+Reversing a singly-linked list in-place is a classic algorithmic task. It requires reversing the direction of all \texttt{next} pointers without creating new nodes. We can achieve this in a single pass using three pointers: \texttt{prev} (to keep track of the reversed sublist), \texttt{curr} (the current node being processed), and \texttt{future} (to store the remainder of the original list before redirecting the current node's pointer).
+
+\begin{verbatim}
+// Reverses the list in-place and returns the new head
+Node* reverseList(Node* head) {
+    Node* prev = NULL;
+    Node* curr = head;
+    Node* future = NULL;
+    
+    while (curr != NULL) {
+        future = curr->next; // Store next node
+        curr->next = prev;   // Reverse link
+        prev = curr;         // Move prev one step forward
+        curr = future;       // Move curr one step forward
+    }
+    return prev; // prev points to the new head
+}
+\end{verbatim}
+
+The time complexity is $O(N)$ as we visit each node exactly once. The space complexity is $O(1)$ auxiliary space since pointer updates are performed in-place.
+
+\section{Deep Copy of a Linked List with Random Pointers}
+A more complex problem is cloning a linked list where each node has two pointers: \texttt{next} and \texttt{random} (which can point to any node in the list or \texttt{NULL}). A standard singly-linked list copy is simple, but random pointers can point to future or past nodes, creating cyclical and arbitrary dependency graphs. We define the node structure for a list with a random pointer as:
+
+\begin{verbatim}
+typedef struct RandomNode {
+    int data;
+    struct RandomNode* next;
+    struct RandomNode* random;
+} RandomNode;
+\end{verbatim}
+
+\subsection{Method 1: Hash-Map-Based Approach}
+One straightforward solution is to use a hash table to map each original node address to its corresponding newly created clone node.
+1) Traverse the original list and create a new node for each node, saving the mapping: \texttt{map[original\_node] = clone\_node}.
+2) Traverse the list again. For each original node $T$, set \texttt{clone\_node->next = map[T->next]} and \texttt{clone\_node->random = map[T->random]}.
+While this method is simple, it requires $O(N)$ auxiliary space to store the mapping keys and values.
+
+\subsection{Method 2: Node Interleaving (Constant Space)}
+To avoid the $O(N)$ auxiliary space, we can interleave the cloned nodes within the original list. This lets us use the original list's structure itself as a temporary mapping, achieving $O(N)$ time complexity and $O(1)$ auxiliary space complexity. The algorithm proceeds in three phases:
+
+\textbf{Phase 1: Interleave Cloned Nodes.} We clone each node and insert it immediately after the original node:
+$A \to B \to C \implies A \to A' \to B \to B' \to C \to C'$.
+
+\textbf{Phase 2: Establish Random Pointers.} For each original node $T$, the cloned node is at \texttt{T->next}. Its random pointer should point to \texttt{T->random->next} (since \texttt{T->random->next} is the clone of \texttt{T->random}).
+
+\textbf{Phase 3: Disentangle the Interleaved Lists.} Separate the original and cloned lists to restore the original list and extract the cloned list.
+
+\begin{verbatim}
+// Clones a list with next and random pointers using O(1) auxiliary space
+RandomNode* cloneList(RandomNode* head) {
+    if (head == NULL) return NULL;
+    
+    RandomNode* curr = head;
+    
+    // Step 1: Clone nodes and insert them in-between original nodes
+    while (curr != NULL) {
+        RandomNode* clone = (RandomNode*)malloc(sizeof(RandomNode));
+        clone->data = curr->data;
+        clone->next = curr->next;
+        clone->random = NULL;
+        
+        curr->next = clone;
+        curr = clone->next;
+    }
+    
+    // Step 2: Assign random pointers for the cloned nodes
+    curr = head;
+    while (curr != NULL) {
+        RandomNode* clone = curr->next;
+        if (curr->random != NULL) {
+            clone->random = curr->random->next;
+        } else {
+            clone->random = NULL;
+        }
+        curr = clone->next;
+    }
+    
+    // Step 3: Disentangle original and cloned lists
+    RandomNode* original = head;
+    RandomNode* copyHead = head->next;
+    RandomNode* copy = copyHead;
+    
+    while (original != NULL) {
+        original->next = original->next->next;
+        if (copy->next != NULL) {
+            copy->next = copy->next->next;
+        } else {
+            copy->next = NULL;
+        }
+        original = original->next;
+        copy = copy->next;
+    }
+    
+    return copyHead;
+}
+\end{verbatim}
+
+The algorithm runs in $O(N)$ time as it performs three linear passes over the list. The space complexity is $O(1)$ auxiliary space, as no dynamic mapping data structures (like hash tables) are created.
+
+\section{Memory Management: Stack vs. Heap Dynamics}
+An essential aspect of systems programming in C is understanding the distinction between Stack and Heap memory allocations, particularly during pointer manipulation.
+
+\subsection{Stack and Heap Allocations}
+\begin{itemize}
+    \item \textbf{Stack Memory:} Automatically managed, fast, but limited in size. Local variables and function parameters are allocated here. When a function returns, its stack frame is popped and all local allocations are deallocated.
+    \item \textbf{Heap Memory:} Manually managed using \texttt{malloc} and \texttt{free} in C. Objects allocated here persist until explicitly freed, making it ideal for dynamic structures like linked list nodes.
+\end{itemize}
+
+\subsection{The Swap Pointer Fallacy and Pointer-to-Pointer (Double Pointers)}
+A common mistake when swapping nodes or list heads inside a helper function is passing the pointer by value. In C, all arguments are passed by value. When a pointer is passed, its address value is copied onto the stack frame of the callee. Changing the pointer inside the callee only affects the local copy of the pointer.
+
+Consider the incorrect implementation:
+\begin{verbatim}
+// INCORRECT: Does not modify the caller's pointers
+void swapNodes_Wrong(Node* a, Node* b) {
+    Node* temp = a;
+    a = b;
+    b = temp;
+}
+\end{verbatim}
+
+To swap the actual pointer values in the caller's stack frame, we must pass the address of the pointers (i.e., pointer-to-pointer or double pointer \texttt{Node**}).
+
+\begin{verbatim}
+// CORRECT: Swaps the pointers in the caller's stack frame
+void swapNodes_Correct(Node** head_ref1, Node** head_ref2) {
+    Node* temp = *head_ref1;
+    *head_ref1 = *head_ref2;
+    *head_ref2 = temp;
+}
+\end{verbatim}
+
+This ensures that the dereferenced pointers \texttt{*head\_ref1} and \texttt{*head\_ref2} modify the actual variables in the caller's stack frame.
+
+\section{Conclusion}
+This paper has presented and analyzed core singly-linked list algorithms and memory management models in the C programming language. We highlighted the trade-offs between space and time, demonstrating a constant auxiliary space method for deep copying lists with arbitrary random pointer configurations. We also demonstrated the structural necessity of pointer-to-pointer references for proper heap address manipulation under C's pass-by-value model.
+
+\end{document}
