@@ -40,27 +40,36 @@ Stacks are a fundamental data structure...
 In a linked list implementation, the stack's top is represented by the head of the list. Pushing an element corresponds to inserting a new node at the head, and popping corresponds to removing the head node.
 
 \begin{verbatim}
-void push(int x) {
-    Node* nn = new Node(x);
-    nn->next = head;
-    head = nn;
+class Node {
+    int data;
+    Node next;
+    Node(int data) { this.data = data; }
 }
 
-int pop() {
-    if (head == NULL) return -1;
-    int save = head->data;
-    head = head->next;
-    return save;
-}
+class Stack {
+    Node head;
 
-int peek() {
-    if (head == NULL) return -1;
-    return head->data;
-}
+    public void push(int x) {
+        Node nn = new Node(x);
+        nn.next = head;
+        head = nn;
+    }
 
-boolean isEmpty() {
-    if (head == NULL) return true;
-    else return false;
+    public int pop() {
+        if (head == null) return -1;
+        int save = head.data;
+        head = head.next;
+        return save;
+    }
+
+    public int peek() {
+        if (head == null) return -1;
+        return head.data;
+    }
+
+    public boolean isEmpty() {
+        return head == null;
+    }
 }
 \end{verbatim}
 The time complexity for all the above stack operations is $O(1)$.
@@ -93,13 +102,17 @@ The number of such subarrays is $(i - NGL) \times (NGR - i)$.
 Similarly, to count subarrays where $A[i]$ is the minimum, we use Next Smaller to Left (NSL) and Next Smaller to Right (NSR).
 The algorithm operates in $O(N)$ time:
 \begin{verbatim}
-long total = 0;
-for (int i = 0; i < N; i++) {
-    long max_count = (i - ngl[i]) * (ngr[i] - i);
-    long min_count = (i - nsl[i]) * (nsr[i] - i);
-    total += (max_count - min_count) * A[i];
+public long subArrayRanges(int[] A) {
+    int N = A.length;
+    long total = 0;
+    // Assume ngl, ngr, nsl, nsr are precalculated arrays
+    for (int i = 0; i < N; i++) {
+        long max_count = (long)(i - ngl[i]) * (ngr[i] - i);
+        long min_count = (long)(i - nsl[i]) * (nsr[i] - i);
+        total += (max_count - min_count) * A[i];
+    }
+    return total;
 }
-return total;
 \end{verbatim}
 
 \section{Conclusion}
