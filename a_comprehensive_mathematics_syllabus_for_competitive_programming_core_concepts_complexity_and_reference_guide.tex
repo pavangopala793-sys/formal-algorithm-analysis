@@ -1,0 +1,240 @@
+\documentclass[10pt,journal,compsoc,onecolumn]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{textcomp}
+\usepackage{tikz}
+\usetikzlibrary{arrows,positioning,shapes.geometric}
+\usepackage{booktabs}
+\usepackage{url}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\begin{document}
+
+\title{A Comprehensive Mathematics Syllabus for Competitive Programming: Core Concepts, Complexity, and Reference Guide}
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+This document presents a comprehensive mathematics syllabus for competitive programming, serving as a checklist and reference guide. We cover essential topics across seven modules: (1) Number Theory (sieves, divisibility, modular arithmetic, and multiplicative inverses); (2) Combinatorics (binomial coefficients, factorials, Pigeonhole Principle, Catalan numbers, and Inclusion-Exclusion); (3) Algebra (linear recurrences, matrix exponentiation, and Fast Fourier Transform); (4) Probability and Game Theory (expected values, Nim-sums, and Sprague-Grundy theorem); (5) Bit Manipulation (submask iteration and built-in functions); (6) Computational Geometry (vectors, orientation, and convex hulls); and (7) Numerical Methods (ternary search and binary search on real numbers). For each module, we outline the core concepts, time complexities, and typical applications in competitive coding platforms.
+\end{abstract}
+
+\begin{IEEEkeywords}
+binary trees, algorithms, data structures, computational complexity, tree traversal, recursive algorithms, formal analysis
+\end{IEEEkeywords}
+}
+
+\maketitle
+\IEEEdisplaynontitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+\section{Introduction}
+\label{sec:intro}
+
+Mathematics is a key pillar of competitive programming (CP). A significant portion of problems on platforms such as Codeforces, CodeChef, AtCoder, and LeetCode require mathematical insights to reduce search spaces, optimize time complexities, or prove the correctness of greedy and dynamic programming solutions. 
+
+This syllabus provides a structured roadmap of the mathematical concepts required to excel in competitive programming, ranging from division and modulo operations to advanced algebraic and game-theoretic topics. It is designed to serve as a checklist and study guide for programmers seeking to elevate their performance from intermediate to advanced levels (e.g., reaching Candidate Master on Codeforces and beyond).
+
+\section{Module 1: Number Theory (The CP Core)}
+\label{sec:number_theory}
+
+Number Theory is the most frequently tested mathematical area in competitive programming. Mastery of modular arithmetic, prime numbers, and divisibility is essential for solving division-based constraints.
+
+\subsection{Primality and Sieves}
+\begin{itemize}
+    \item \textbf{Primality Testing:} Naive $O(\sqrt{N})$ trial division and the probabilistic \textbf{Miller-Rabin Primality Test} ($O(K \log^3 N)$) for handling 64-bit integers ($N \leq 10^{18}$).
+    \item \textbf{Sieve of Eratosthenes:} Standard $O(N \log \log N)$ algorithm to find all primes up to $N$.
+    \item \textbf{Sieve Optimizations:} Odd-only sieving (reducing space by 50\%), \textbf{Linear Sieve} (Euler's Sieve) which runs in $O(N)$ and computes the smallest prime factor (SPF) for every number (useful for $O(\log N)$ prime factorization queries).
+    \item \textbf{Segmented Sieve:} Running sieves in blocks of size $O(\sqrt{N})$ to achieve $O(\sqrt{N})$ space complexity, bypassing memory limits for $N \leq 10^9$.
+\end{itemize}
+
+\subsection{Divisibility and Greatest Common Divisor (GCD)}
+\begin{itemize}
+    \item \textbf{Euclidean Algorithm:} Computes $\gcd(a, b)$ in $O(\log(\min(a, b)))$ time.
+    \item \textbf{Extended Euclidean Algorithm:} Solves the linear equation $ax + by = \gcd(a, b)$, yielding the coefficients $x$ and $y$ (useful for computing modular inverses).
+    \item \textbf{Linear Diophantine Equations:} Solving $ax + by = c$. A integer solution exists if and only if $\gcd(a, b) \mid c$.
+\end{itemize}
+
+\subsection{Modular Arithmetic}
+\begin{itemize}
+    \item \textbf{Basic Operations:} Addition, subtraction, and multiplication under a modulo $M$ (typically $10^9+7$ or $998244353$).
+    \item \textbf{Binary Exponentiation:} Computing $a^b \pmod M$ in $O(\log b)$ time by recursively squaring the base.
+    \item \textbf{Modular Multiplicative Inverse:} Finding $x$ such that $ax \equiv 1 \pmod M$.
+    \begin{itemize}
+        \item Via \textbf{Fermat's Little Theorem:} $a^{-1} \equiv a^{M-2} \pmod M$ (valid only when $M$ is prime).
+        \item Via \textbf{Extended Euclidean Algorithm:} Finding $x$ in $ax + My = 1$ (valid when $\gcd(a, M) = 1$, even if $M$ is composite).
+    \end{itemize}
+\end{itemize}
+
+\subsection{Advanced Number Theory}
+\begin{itemize}
+    \item \textbf{Euler's Totient Function ($\phi(N)$):} Counts the number of integers in $[1, N]$ that are coprime to $N$. Computed in $O(\sqrt{N})$ for a single query or $O(N)$ using a sieve.
+    \item \textbf{Euler's Theorem:} $a^{\phi(M)} \equiv 1 \pmod M$ for $\gcd(a, M) = 1$. Offers a general method for exponent reduction under composite moduli.
+    \item \textbf{Chinese Remainder Theorem (CRT):} Resolves a system of simultaneous congruences $x \equiv a_i \pmod{m_i}$ for pairwise coprime moduli in $O(k \log(\min(m_i)))$ time.
+    \item \textbf{Möbius Inversion \& Dirichlet Convolution:} Advanced tools for counting coprimes and optimizing nested loops on divisors.
+\end{itemize}
+
+\section{Module 2: Combinatorics \& Counting}
+\label{sec:combinatorics}
+
+Combinatorics is the study of counting discrete configurations. CP problems often ask for the count of valid states modulo $M$.
+
+\subsection{Factorials \& Binomial Coefficients}
+\begin{itemize}
+    \item \textbf{Permutations ($^nP_r$) and Combinations ($^nC_r$):} Standard selection and arrangement formulas.
+    \item \textbf{Pre-computed Factorials:} Computing factorials and their modular inverses up to $N \approx 10^6$ in $O(N)$ time. This enables $O(1)$ query response for $^nC_r \pmod M$.
+    \item \textbf{Pascal's Triangle:} Generating binomial coefficients in $O(N^2)$ using additive DP (useful when modulo is not prime and division is impossible).
+    \item \textbf{Lucas Theorem:} Computes $\binom{n}{r} \pmod P$ for a small prime $P$ ($P \leq 10^5$) but large $n, r \leq 10^{18}$ by expressing $n$ and $r$ in base $P$.
+\end{itemize}
+
+\subsection{Counting Principles \& Identities}
+\begin{itemize}
+    \item \textbf{Pigeonhole Principle (PHP):} If $n$ items are put into $m$ containers where $n > m$, at least one container must contain more than one item. Used for proving invariants and cycles.
+    \item \textbf{Inclusion-Exclusion Principle (PIE):} Computes the size of the union of overlapping sets. General formula:
+    \[
+    \left| \bigcup_{i=1}^n S_i \right| = \sum_{\emptyset \neq J \subseteq \{1,\dots,n\}} (-1)^{|J|-1} \left| \bigcap_{j \in J} S_j \right|
+    \]
+    \item \textbf{Catalan Numbers ($C_n$):} Sequences satisfying $C_n = \frac{1}{n+1}\binom{2n}{n}$. Appears in counting:
+    \begin{itemize}
+        \item Balanced parentheses sequences of length $2n$.
+        \item Valid Dyck paths on a grid.
+        \item Triangulations of a convex polygon with $n+2$ sides.
+        \item Unlabeled binary trees with $n$ nodes.
+    \end{itemize}
+    \item \textbf{Stirling Numbers:} Stirling numbers of the second kind, $S(n, k)$, representing the number of ways to partition a set of $n$ elements into $k$ non-empty subsets.
+\end{itemize}
+
+\section{Module 3: Algebra \& Recurrences}
+\label{sec:algebra}
+
+Algebra in CP focused heavily on solving recurrence relations and polynomial operations.
+
+\subsection{Linear Recurrence \& Matrix Exponentiation}
+\begin{itemize}
+    \item \textbf{Fibonacci and Tribonacci recurrences:} Solving state-transitions where $F_n = a F_{n-1} + b F_{n-2}$.
+    \item \textbf{Matrix Exponentiation:} Represents a linear recurrence as a matrix multiplication $\mathbf{v}_n = \mathbf{M} \mathbf{v}_{n-1}$. Raising $\mathbf{M}$ to the power $N$ in $O(D^3 \log N)$ (where $D$ is the matrix dimension) allows computing the $N$-th term of a recurrence for $N \leq 10^{18}$.
+\end{itemize}
+
+\subsection{Polynomials \& Fast Fourier Transform (FFT)}
+\begin{itemize}
+    \item \textbf{Polynomial Multiplication:} Multiplying two polynomials of degree $N$ naively takes $O(N^2)$ time.
+    \item \textbf{Fast Fourier Transform (FFT):} Uses complex roots of unity to multiply polynomials in $O(N \log N)$ time.
+    \item \textbf{Number Theoretic Transform (NTT):} A variant of FFT that operates over finite fields using primitive roots modulo $M$ (commonly $M=998244353$), avoiding floating-point precision errors.
+\end{itemize}
+
+\section{Module 4: Probability \& Game Theory}
+\label{sec:probability_game_theory}
+
+Many advanced CP problems involve expected values or finding optimal strategies in two-player games.
+
+\subsection{Probability \& Expectation}
+\begin{itemize}
+    \item \textbf{Conditional Probability \& Bayes' Theorem:} Computing probabilities of dependent events.
+    \item \textbf{Linearity of Expectation:} For any random variables $X$ and $Y$ (even if dependent), $E[X+Y] = E[X] + E[Y]$. This property is used to break down complex expected value problems into simpler indicator variables.
+    \item \textbf{Probability Dynamic Programming:} Defining states as probability distributions and transitioning between them.
+\end{itemize}
+
+\subsection{Combinatorial Game Theory}
+\begin{itemize}
+    \item \textbf{Impartial Games:} Two-player games where valid moves depend only on the position, not on the player. Played under normal play convention (last player to move wins).
+    \item \textbf{Nim Game:} The foundation of impartial games. A state is a winning position if and only if the XOR sum of the pile sizes (Nim-sum) is non-zero:
+    \[
+    X = p_1 \oplus p_2 \oplus \dots \oplus p_k \neq 0
+    \]
+    \item \textbf{Sprague-Grundy Theorem:} Every impartial game is equivalent to a single Nim pile. The state is represented by a Grundy value (or SG number) computed recursively as the Minimum Excluded value (\text{mex}) of the Grundy values of all reachable states:
+    \[
+    g(v) = \text{mex}(\{g(u) \mid v \to u\})
+    \]
+\end{itemize}
+
+\section{Module 5: Bit Manipulation \& Masking}
+\label{sec:bitmask}
+
+Bitwise operations provide high performance and compact state representations.
+
+\subsection{Basic Bitwise Operations}
+\begin{itemize}
+    \item \textbf{Operators:} AND (\texttt{\&}), OR (\texttt{|}), XOR (\texttt{\^}), NOT (\texttt{\~}), Left Shift (\texttt{<<}), and Right Shift (\texttt{>>}).
+    \item \textbf{Subsets as Bitmasks:} Representing a subset of a set of size $N$ as an integer in $[0, 2^N-1]$. Checking membership via bitwise AND: \texttt{(mask \& (1 << i))}.
+\end{itemize}
+
+\subsection{Advanced Masking Techniques}
+\begin{itemize}
+    \item \textbf{Submask Iteration:} Iterating through all submasks of a given mask in $O(3^N)$ total time:
+    \begin{verbatim}
+    for (int mask = 0; mask < (1 << N); mask++) {
+        for (int sub = mask; sub > 0; sub = (sub - 1) & mask) {
+            // Process submask
+        }
+    }
+    \end{verbatim}
+    \item \textbf{Built-in Functions (GCC):}
+    \begin{itemize}
+        \item \texttt{\_\_builtin\_popcount(x)}: Counts set bits.
+        \item \texttt{\_\_builtin\_clz(x)}: Counts leading zeros.
+        \item \texttt{\_\_builtin\_ctz(x)}: Counts trailing zeros.
+    \end{itemize}
+\end{itemize}
+
+\section{Module 6: Computational Geometry}
+\label{sec:geometry}
+
+Geometry problems are less frequent but present a high barrier due to precision issues and edge cases.
+
+\subsection{Vector Arithmetic \& Orientation}
+\begin{itemize}
+    \item \textbf{Dot Product:} $\vec{a} \cdot \vec{b} = a_x b_x + a_y b_y$. Used to check perpendicularity ($\vec{a} \cdot \vec{b} = 0$) and project vectors.
+    \item \textbf{Cross Product:} $\vec{a} \times \vec{b} = a_x b_y - a_y b_x$. Represents the signed area of the parallelogram formed by the vectors.
+    \item \textbf{Orientation Test (CCW):} For three points $A$, $B$, and $C$, computing the cross product of $\vec{AB}$ and $\vec{BC}$:
+    \begin{itemize}
+        \item Positive: Counter-Clockwise turn.
+        \item Negative: Clockwise turn.
+        \item Zero: Collinear points.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Geometric Structures \& Algorithms}
+\begin{itemize}
+    \item \textbf{Line Segment Intersection:} Checking whether two segments intersect using orientation tests.
+    \item \textbf{Shoelace Formula:} Computes the area of a polygon with vertices $(x_i, y_i)$ in $O(N)$ time:
+    \[
+    \text{Area} = \frac{1}{2} \left| \sum_{i=1}^n (x_i y_{i+1} - x_{i+1} y_i) \right|
+    \]
+    \item \textbf{Convex Hull:} Graham Scan or Monotone Chain algorithm to construct the convex boundary of $N$ points in $O(N \log N)$ time.
+\end{itemize}
+
+\section{Module 7: Numerical Methods \& Optimization}
+\label{sec:numerical}
+
+\subsection{Ternary Search}
+\begin{itemize}
+    \item Used to find the minimum or maximum of a \textbf{unimodal function} (functions that strictly increase then decrease, or vice-versa).
+    \item Splits the search interval $[L, R]$ into three equal parts using two midpoints: $m_1 = L + \frac{R-L}{3}$ and $m_2 = R - \frac{R-L}{3}$.
+    \item Runs in $O(\log N)$ and can be applied to both integer and floating-point ranges.
+\end{itemize}
+
+\subsection{Binary Search on Answers (Real Numbers)}
+\begin{itemize}
+    \item Optimizing real-valued parameters by checking feasibility. Instead of a fixed iteration limit, run for a constant number of loops (typically 100 iterations) to guarantee high precision:
+    \begin{verbatim}
+    double L = 0.0, R = 1e9;
+    for (int iter = 0; iter < 100; iter++) {
+        double mid = L + (R - L) / 2.0;
+        if (check(mid)) L = mid;
+        else R = mid;
+    }
+    \end{verbatim}
+\end{itemize}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+Achieving proficiency in competitive programming mathematics requires a balanced approach. Programmers should begin by mastering modular arithmetic and the Sieve of Eratosthenes in Number Theory, and basic permutations and selections in Combinatorics. Once these foundational concepts are solidified, they can progress to more advanced topics such as matrix exponentiation, game theory (Sprague-Grundy), and Fast Fourier Transform (FFT). Applying these mathematical models to actual problem sets is the key to developing the necessary intuition for competitive coding assessments.
+
+
+\end{document}
