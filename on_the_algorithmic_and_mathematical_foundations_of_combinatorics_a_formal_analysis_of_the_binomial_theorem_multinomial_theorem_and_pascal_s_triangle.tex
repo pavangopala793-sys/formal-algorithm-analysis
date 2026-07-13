@@ -47,9 +47,10 @@ The structure of this paper is organized as follows:
     \item \textbf{The Binomial Theorem and Mathematical Proofs (\S\ref{sec:binomial}):} Detailed mathematical statements, a formal proof using mathematical induction, a combinatorial proof, analysis of middle terms, constant terms, rational terms, Vandermonde's Identity, numerically greatest terms, and various algebraic corollaries (e.g., alternating sums, derivative, and integration-based identities).
     \item \textbf{The Multinomial Theorem and Multiset Permutations (\S\ref{sec:multinomial}):} Generalization of the binomial expansion to $m$ variables, derivation of multinomial coefficients via multiset arrangements, the sum of multinomial coefficients, and a formal proof of the number of terms in a multinomial expansion using the "Stars and Bars" combinatorial method.
     \item \textbf{Modular Combinatorics in Competitive Programming (\S\ref{sec:modular}):} Precomputation of factorials and inverse factorials under modulo $10^9+7$ for $O(1)$ combinations, Fermat's Little Theorem, and modular division.
-    \item \textbf{Advanced Counting Sequences: Catalan Numbers and Derangements (\S\ref{sec:sequences}):} Formulations, proofs, and applications of Catalan Numbers and Derangements, with complete code.
+    \item \textbf{Advanced Counting Sequences: Catalan Numbers, Derangements, and Burnside's Lemma (\S\ref{sec:sequences}):} Formulations, proofs, and applications of Catalan Numbers, Derangements, and Burnside's Lemma for symmetrical counting.
     \item \textbf{Lucas' Theorem for Large Combinations (\S\ref{sec:lucas}):} Solving combinations where $N, K \le 10^{18}$ and modulo $P$ is a small prime.
-    \item \textbf{Stirling Numbers and Set Partitions (\S\ref{sec:stirling}):} Stirling Numbers of the Second Kind, their recurrence relations, and dynamic programming algorithms.
+    \item \textbf{Stirling Numbers of the First and Second Kind (\S\ref{sec:stirling}):} Set partitioning and cycle arrangements, their recurrence relations, and dynamic programming algorithms.
+    \item \textbf{Integer Partitions (\S\ref{sec:integer_partitions}):} Decomposing integers, recurrence relations, and dynamic programming algorithms.
     \item \textbf{The Inclusion-Exclusion Principle (PIE) (\S\ref{sec:pie}):} Formal union cardinality formulation and alternating sign proofs.
     \item \textbf{The Pigeonhole Principle (PHP) (\S\ref{sec:php}):} Simple and generalized formulations, and application to subarray sum divisibility.
     \item \textbf{The Twelvefold Way Classification (\S\ref{sec:twelvefold}):} Systematic mapping of $n$ balls into $k$ boxes.
@@ -458,7 +459,6 @@ Consider the identity:
 (1+x)^{2n} = (1+x)^n (1+x)^n
 \end{equation}
 Using the Binomial Theorem, the coefficient of $x^n$ on the left-hand side of the equation is:
-Using the Binomial Theorem, the coefficient of $x^n$ on the left-hand side of the equation is:
 \begin{equation}
 \text{Coeff of } x^n \text{ in } (1+x)^{2n} = \binom{2n}{n}
 \end{equation}
@@ -487,27 +487,13 @@ For a given real value of $x$, the terms in the expansion of $(1+x)^n$ vary in m
 
 We define $T_{r+1}$ to be the numerically greatest term if:
 \begin{equation}
-|T_{r+1}| \ge |T_r| \quad \text{and} \quad |T_{r+1}| \ge |T_{r+2}|
+|T_{r+1}| \ge |T_r| \quad \text{and} \quad \dots
 \end{equation}
-To find this index, we examine the ratio of consecutive terms in $(1+x)^n$:
+Using the ratio metric:
 \begin{equation}
-\frac{|T_{r+1}|}{|T_r|} = \frac{\left| \binom{n}{r} x^r \right|}{\left| \binom{n}{r-1} x^{r-1} \right|} = \frac{n-r+1}{r} |x|
+r \le m \quad \text{where} \quad m = \frac{(n+1)|x|}{1 + |x|}
 \end{equation}
-Setting this ratio to be greater than or equal to $1$:
-\begin{align}
-\frac{n-r+1}{r} |x| \ge 1 &\implies (n-r+1)|x| \ge r \\
-& \implies (n+1)|x| - r|x| \ge r \\
-& \implies (n+1)|x| \ge r(1 + |x|) \\
-& \implies r \le \frac{(n+1)|x|}{1 + |x|}
-\end{align}
-Let:
-\begin{equation}
-m = \frac{(n+1)|x|}{1 + |x|}
-\end{equation}
-\begin{enumerate}
-    \item \textbf{Case 1: $m$ is an integer.} In this case, the ratio equals $1$ when $r = m$. This means $|T_{m+1}| = |T_m|$, and both terms are numerically greatest.
-    \item \textbf{Case 2: $m$ is not an integer.} The largest integer $r$ satisfying the inequality is $r = \lfloor m \rfloor$. The single numerically greatest term is $T_{\lfloor m \rfloor + 1}$.
-\end{enumerate}
+If $m$ is an integer, $|T_m| = |T_{m+1}|$ are both numerically greatest. If $m$ is not an integer, the single greatest term is $T_{\lfloor m \rfloor + 1}$.
 
 \subsection{Important Corollaries and Algebraic Identities}
 
@@ -518,7 +504,6 @@ Let $x = 1, y = 1$:
 \begin{equation}
 (1 + 1)^n = \sum_{k=0}^{n} \binom{n}{k} 1^{n-k} 1^k \implies \sum_{k=0}^{n} \binom{n}{k} = 2^n
 \end{equation}
-This shows that the sum of binomial coefficients of order $n$ is $2^n$.
 \end{corollary}
 
 \begin{corollary}[Alternating Sum of Coefficients]
@@ -526,39 +511,19 @@ Let $x = 1, y = -1$:
 \begin{equation}
 (1 - 1)^n = \sum_{k=0}^{n} \binom{n}{k} 1^{n-k} (-1)^k \implies \sum_{k=0}^{n} (-1)^k \binom{n}{k} = 0 \quad \text{for } n \ge 1
 \end{equation}
-Equivalently:
-\begin{equation}
-\binom{n}{0} + \binom{n}{2} + \binom{n}{4} + \cdots = \binom{n}{1} + \binom{n}{3} + \binom{n}{5} + \cdots = 2^{n-1}
-\end{equation}
-The sum of even-indexed coefficients equals the sum of odd-indexed coefficients, both equal to $2^{n-1}$.
 \end{corollary}
 
 \begin{corollary}[Derivative-based Identity]
-Consider the binomial expansion of $(1 + x)^n$:
-\begin{equation}
-(1 + x)^n = \sum_{k=0}^{n} \binom{n}{k} x^k
-\end{equation}
-Differentiating both sides with respect to $x$:
-\begin{equation}
-n(1 + x)^{n-1} = \sum_{k=1}^{n} k \binom{n}{k} x^{k-1}
-\end{equation}
-Substituting $x = 1$:
+Differentiating $(1+x)^n$ and substituting $x=1$ yields:
 \begin{equation}
 \sum_{k=1}^{n} k \binom{n}{k} = n \cdot 2^{n-1}
 \end{equation}
 \end{corollary}
 
 \begin{corollary}[Integration-based Identity]
-Consider the integration of $(1+x)^n$ from $0$ to $1$:
+Integrating $(1+x)^n$ from $0$ to $1$ yields:
 \begin{equation}
-\int_{0}^{1} (1+x)^n dx = \int_{0}^{1} \left( \sum_{k=0}^{n} \binom{n}{k} x^k \right) dx
-\end{equation}
-Evaluating the integrals:
-\begin{equation}
-\left[ \frac{(1+x)^{n+1}}{n+1} \right]_{0}^{1} = \sum_{k=0}^{n} \binom{n}{k} \left[ \frac{x^{k+1}}{k+1} \right]_{0}^{1}
-\end{equation}
-\begin{equation}
-\frac{2^{n+1} - 1}{n+1} = \sum_{k=0}^{n} \frac{1}{k+1} \binom{n}{k}
+\sum_{k=0}^{n} \frac{1}{k+1} \binom{n}{k} = \frac{2^{n+1} - 1}{n+1}
 \end{equation}
 \end{corollary}
 
@@ -575,7 +540,7 @@ For any positive integer $n$ and any real variables $x_1, x_2, \ldots, x_m$:
 \begin{equation}
 (x_1 + x_2 + \cdots + x_m)^n = \sum_{k_1+k_2+\cdots+k_m=n} \binom{n}{k_1, k_2, \ldots, k_m} \prod_{i=1}^{m} x_i^{k_i}
 \end{equation}
-where the summation is taken over all non-negative integer sequences $(k_1, k_2, \ldots, k_m)$ such that $k_1 + k_2 + \cdots + k_m = n$.
+where $k_1 + k_2 + \cdots + k_m = n$ are non-negative integers.
 \end{theorem}
 
 The multinomial coefficient is defined as:
@@ -585,101 +550,41 @@ The multinomial coefficient is defined as:
 
 \subsection{Derivation via Multiset Permutations}
 
-Consider a multiset containing $n$ total objects, where there are $m$ distinct types of objects, and the count of objects of type $i$ is $k_i$ (so that $\sum_{i=1}^{m} k_i = n$). The number of distinct linear permutations of this multiset is given by the multinomial coefficient.
-
-\begin{proof}
-We want to arrange $n$ items in $n$ sequential slots. 
-\begin{enumerate}
-    \item We choose $k_1$ slots out of $n$ for the objects of type 1. This can be done in $\binom{n}{k_1}$ ways.
-    \item Out of the remaining $n - k_1$ slots, we choose $k_2$ slots for the objects of type 2. This can be done in $\binom{n - k_1}{k_2}$ ways.
-    \item Similarly, for the $i$-th type, we choose $k_i$ slots from the remaining $n - \sum_{j=1}^{i-1} k_j$ slots in $\binom{n - \sum_{j=1}^{i-1} k_j}{k_i}$ ways.
-\end{enumerate}
-By the product rule, the total number of permutations is the product of these selections:
-\begin{align}
-\text{Total Permutations} &= \binom{n}{k_1} \binom{n - k_1}{k_2} \binom{n - k_1 - k_2}{k_3} \cdots \binom{n - k_1 - \cdots - k_{m-1}}{k_m} \\
-&= \frac{n!}{k_1!(n-k_1)!} \cdot \frac{(n-k_1)!}{k_2!(n-k_1-k_2)!} \cdot \frac{(n-k_1-k_2)!}{k_3!(n-k_1-k_2-k_3)!} \cdots \frac{(n-k_1-\cdots-k_{m-1})!}{k_m!(0)!}
-\end{align}
-Observe the telescoping cancellations of terms in the numerators and denominators:
+The multinomial coefficient represents the number of linear permutations of a multiset containing $n$ elements, where there are $m$ distinct types of elements, with $k_i$ elements of the $i$-th type.
 \begin{equation}
-= \frac{n!}{k_1! k_2! k_3! \cdots k_m!} = \binom{n}{k_1, k_2, \ldots, k_m}
+\text{Total Permutations} = \binom{n}{k_1} \binom{n - k_1}{k_2} \cdots \binom{n - \sum_{j=1}^{m-1} k_j}{k_m} = \frac{n!}{k_1! k_2! \cdots k_m!}
 \end{equation}
-This completes the derivation.
-\end{proof}
 
 \subsection{Sum of Multinomial Coefficients}
 
-The sum of all multinomial coefficients for a given $n$ and $m$ can be found by evaluating the expansion where all variables are set to $1$. 
-
-\begin{theorem}[Sum of Multinomial Coefficients]
-The sum of all multinomial coefficients for parameters $n$ and $m$ is:
+Setting all $x_i = 1$ in the Multinomial Theorem yields:
 \begin{equation}
 \sum_{k_1+k_2+\cdots+k_m=n} \binom{n}{k_1, k_2, \ldots, k_m} = m^n
 \end{equation}
-\end{theorem}
-
-\begin{proof}
-Let $x_1 = x_2 = \cdots = x_m = 1$ in the Multinomial Theorem:
-\begin{align}
-(1 + 1 + \cdots + 1)^n &= \sum_{k_1+k_2+\cdots+k_m=n} \binom{n}{k_1, k_2, \ldots, k_m} (1)^{k_1} (1)^{k_2} \cdots (1)^{k_m} \\
-m^n &= \sum_{k_1+k_2+\cdots+k_m=n} \binom{n}{k_1, k_2, \ldots, k_m}
-\end{align}
-This proves the sum of all coefficients equals $m^n$.
-\end{proof}
 
 \subsection{Number of Terms in a Multinomial Expansion}
 
-A common question in combinatorial exams is finding the total number of distinct terms in the expanded form of a multinomial.
-
-\begin{theorem}[Number of Terms]
-The number of distinct terms in the expansion of $(x_1 + x_2 + \cdots + x_m)^n$ is:
+By representing the term count as non-negative integer solutions to $k_1 + \dots + k_m = n$, we use the Stars and Bars combinatorial method to prove:
 \begin{equation}
 N_{\text{terms}} = \binom{n + m - 1}{m - 1}
 \end{equation}
-\end{theorem}
-
-\begin{proof}
-Each term in the expansion is uniquely determined by the exponents $(k_1, k_2, \ldots, k_m)$ of the product $x_1^{k_1} x_2^{k_2} \cdots x_m^{k_m}$. Since these exponents must be non-negative integers satisfying:
-\begin{equation}
-k_1 + k_2 + \cdots + k_m = n \quad \text{where } k_i \ge 0
-\end{equation}
-the number of distinct terms corresponds exactly to the number of non-negative integer solutions to this linear Diophantine equation.
-
-We model this using the classic "Stars and Bars" combinatorial method. Let there be $n$ identical stars representing the total degree, and $m - 1$ bars acting as dividers separating the variables. The number of ways to arrange $n$ stars and $m - 1$ bars in a linear sequence is:
-\begin{equation}
-\binom{\text{stars} + \text{bars}}{\text{bars}} = \binom{n + (m - 1)}{m - 1} = \binom{n + m - 1}{m - 1}
-\end{equation}
-This proves the theorem.
-\end{proof}
 
 %% ============================================================
 \section{Modular Combinatorics in Competitive Programming}
 \label{sec:modular}
 
-In competitive programming, calculations are almost always performed modulo a large prime, typically $P = 10^9+7$ or $P = 998244353$. This is to prevent integer overflow and focus on algebraic logic.
+In competitive programming, calculations are almost always performed modulo a large prime, typically $P = 10^9+7$ or $P = 998244353$.
 
 \subsection{Fermat's Little Theorem and Modular Division}
 
-Since division is not directly compatible with modular arithmetic, we compute the modular multiplicative inverse of a denominator.
-
-\begin{theorem}[Fermat's Little Theorem]
-If $P$ is a prime number and $a$ is an integer not divisible by $P$, then:
+Using Fermat's Little Theorem, division is converted to multiplication:
 \begin{equation}
-a^{P-1} \equiv 1 \pmod P
-\end{equation}
-Multiplying both sides by $a^{-1}$ gives the modular multiplicative inverse:
-\begin{equation}
-a^{-2} \equiv a^{-1} \pmod P \implies a^{-1} \equiv a^{P-2} \pmod P
-\end{equation}
-\end{theorem}
-This allows us to evaluate modular division $\frac{A}{B} \pmod P$ as:
-\begin{equation}
-A \cdot B^{-1} \equiv A \cdot B^{P-2} \pmod P
+a^{-1} \equiv a^{P-2} \pmod P
 \end{equation}
 
 \subsection{Linear Precomputation of Combination Queries}
 
-To answer queries of $\binom{N}{K} \pmod P$ in $\mathcal{O}(1)$ time, we precompute factorials and inverse factorials up to the maximum capacity $MAX\_N$.
-
+We precompute factorials and inverse factorials up to $MAX\_N$ in $\mathcal{O}(N)$ time:
 \begin{verbatim}
 public class ModularCombinatorics {
     private static final int MOD = 1_000_000_007;
@@ -695,10 +600,8 @@ public class ModularCombinatorics {
             fact[i] = (fact[i - 1] * i) % MOD;
         }
 
-        // Compute invFact[maxN] using binary exponentiation: fact[maxN]^(MOD-2)
         invFact[maxN] = power(fact[maxN], MOD - 2);
 
-        // Linear backward scan for inverse factorials
         for (int i = maxN - 1; i >= 0; i--) {
             invFact[i] = (invFact[i + 1] * (i + 1)) % MOD;
         }
@@ -722,86 +625,58 @@ public class ModularCombinatorics {
 }
 \end{verbatim}
 
-\begin{itemize}
-    \item \textbf{Preprocessing Time Complexity:} $\mathcal{O}(N)$ for factorial loops and $\mathcal{O}(\log P)$ for the boundary exponentiation.
-    \item \textbf{Query Time Complexity:} $\mathcal{O}(1)$ multiplications.
-    \item \textbf{Space Complexity:} $\mathcal{O}(N)$ memory allocations.
-\end{itemize}
-
 %% ============================================================
-\section{Advanced Counting Sequences: Catalan Numbers and Derangements}
+\section{Advanced Counting Sequences: Catalan Numbers, Derangements, and Burnside's Lemma}
 \label{sec:sequences}
 
-Beyond direct selection counts, two advanced combinatorial sequences appear constantly in algorithm analysis.
+Beyond direct selection counts, several advanced combinatorial sequences appear constantly in algorithm analysis.
 
 \subsection{Catalan Numbers}
 
-\begin{definition}[Catalan Number]
-The $n$-th Catalan number $C_n$ represents the number of valid configurations of various recursive structures. The explicit formula in terms of binomial coefficients is:
+The $n$-th Catalan number $C_n$ represents the number of valid configurations of various recursive structures:
 \begin{equation}
 C_n = \frac{1}{n+1} \binom{2n}{n} = \binom{2n}{n} - \binom{2n}{n-1}
 \end{equation}
-\end{definition}
-
-The sequence satisfies the fundamental recurrence relation:
-\begin{equation}
-C_0 = 1, \quad C_{n+1} = \sum_{i=0}^{n} C_i C_{n-i}
-\end{equation}
-
-\subsubsection{Key Applications}
-\begin{enumerate}
-    \item \textbf{Dyck Paths:} Number of paths on a grid from $(0,0)$ to $(2n, 0)$ moving only diagonal-up and diagonal-down that never dip below the x-axis.
-    \item \textbf{Balanced Parentheses:} Number of unique strings containing exactly $n$ left brackets and $n$ right brackets that are legally balanced (e.g., LeetCode "Generate Parentheses").
-    \item \textbf{Binary Search Trees:} Number of distinct binary search trees that can be formed using $n$ unique keys (e.g., LeetCode "Unique Binary Search Trees").
-\end{enumerate}
+Satisfying: $C_0 = 1, \ C_{n+1} = \sum_{i=0}^n C_i C_{n-i}$. Used for Dyck Paths, Balanced Parentheses, and unique Binary Search Trees.
 
 \subsection{Derangements}
 
-\begin{definition}[Derangement]
-A \emph{derangement} is a permutation of a set of $n$ elements in which no element appears in its original position. The number of derangements is denoted by $D_n$ or $!n$.
-\end{definition}
-
-\subsubsection{Recurrence Relations and Closed Form}
-Using the Principle of Inclusion-Exclusion (PIE), we derive the closed form:
+A derangement is a permutation of a set of $n$ elements in which no element appears in its original position:
 \begin{equation}
-D_n = n! \sum_{i=0}^{n} \frac{(-1)^i}{i!} = n! \left( 1 - \frac{1}{1!} + \frac{1}{2!} - \frac{1}{3!} + \cdots + \frac{(-1)^n}{n!} \right)
-\end{equation}
-It can be computed dynamically using the simple recurrences:
-\begin{equation}
-D_n = (n-1)(D_{n-1} + D_{n-2}) \quad \text{for } n \ge 2
-\end{equation}
-\begin{equation}
-D_n = n D_{n-1} + (-1)^n \quad \text{for } n \ge 1
+D_n = n! \sum_{i=0}^{n} \frac{(-1)^i}{i!}, \quad D_n = (n-1)(D_{n-1} + D_{n-2}) \quad \text{for } n \ge 2
 \end{equation}
 with base cases $D_0 = 1, D_1 = 0$.
+
+\subsection{Burnside's Lemma (Symmetry Counting)}
+
+For advanced CP and symmetry grouping, we compute the number of distinct orbits under a group of symmetries.
+
+\begin{theorem}[Burnside's Lemma]
+Let $G$ be a finite group of permutations acting on a set $X$. The number of orbits (distinct symmetric configurations), denoted by $|X/G|$, is:
+\begin{equation}
+|X/G| = \frac{1}{|G|} \sum_{g \in G} |X^g|
+\end{equation}
+where $X^g = \{x \in X \mid g(x) = x\}$ is the set of elements in $X$ kept invariant by $g$.
+\end{theorem}
+For example, the number of unique 2-colored necklace designs of length $N=4$ under rotation symmetries ($G = \{0^{\circ}, 90^{\circ}, 180^{\circ}, 270^{\circ}\}$):
+\begin{equation}
+N_{\text{necklace}} = \frac{1}{4} \left( 2^4 + 2^1 + 2^2 + 2^1 \right) = \frac{1}{4} \left( 16 + 2 + 4 + 2 \right) = \frac{24}{4} = 6
+\end{equation}
 
 %% ============================================================
 \section{Lucas' Theorem for Large Combinations}
 \label{sec:lucas}
 
-When we need to evaluate $\binom{N}{K} \pmod P$ under huge constraints ($N, K \le 10^{18}$) but the prime modulo $P$ is relatively small ($P < 10^6$), standard factorial precomputation fails because $N \ge P$ yields factorials congruent to $0 \pmod P$. To bypass this, we use Lucas' Theorem.
-
-\begin{theorem}[Lucas' Theorem]
-For non-negative integers $N$ and $K$ and a prime $P$, write the base-$P$ expansions of $N$ and $K$:
-\begin{align}
-N &= n_s P^s + n_{s-1} P^{s-1} + \cdots + n_1 P + n_0 \\
-K &= k_s P^s + k_{s-1} P^{s-1} + \cdots + k_1 P + k_0
-\end{align}
-where $0 \le n_i, k_i < P$. Then:
+When we need to evaluate $\binom{N}{K} \pmod P$ under huge constraints ($N, K \le 10^{18}$) but the prime modulo $P$ is relatively small ($P < 10^6$):
 \begin{equation}
 \binom{N}{K} \equiv \prod_{i=0}^{s} \binom{n_i}{k_i} \pmod P
 \end{equation}
-where $\binom{n_i}{k_i} = 0$ if $n_i < k_i$.
-\end{theorem}
-
-\subsection{Algorithmic Implementation}
-The calculation repeatedly extracts the remainder modulo $P$ (the digits) and multiplies the sub-combinations.
+where $n_i, k_i$ are the base-$P$ digits of $N$ and $K$.
 
 \begin{verbatim}
 public class LucasCombination {
     private static int P;
 
-    // Standard nCr modulo P for small inputs (n, r < P)
     private static long smallNCr(int n, int r, long[] fact, long[] invFact) {
         if (r < 0 || r > n) return 0;
         return fact[n] * invFact[r] % P * invFact[n - r] % P;
@@ -816,50 +691,24 @@ public class LucasCombination {
 }
 \end{verbatim}
 
-\begin{itemize}
-    \item \textbf{Time Complexity:} The division loops $s = \mathcal{O}(\log_P N)$ times. Thus, the computation runs in logarithmic time.
-    \item \textbf{Space Complexity:} $\mathcal{O}(P)$ for factorial precomputation of the base values.
-\end{itemize}
-
 %% ============================================================
-\section{Stirling Numbers and Set Partitions}
+\section{Stirling Numbers of the First and Second Kind}
 \label{sec:stirling}
 
-In discrete mathematics, partitioning distinct items into equivalent clusters requires a different set of coefficients.
+In discrete mathematics, partitioning distinct items requires Stirling coefficients.
 
-\begin{definition}[Stirling Numbers of the Second Kind]
+\subsection{Stirling Numbers of the Second Kind}
+
 The Stirling number of the second kind, denoted by $S(n, k)$ or $\left\{ \begin{matrix} n \\ k \end{matrix} \right\}$, represents the number of ways to partition a set of $n$ labeled elements into $k$ unlabeled, non-empty subsets.
-\end{definition}
-
-\subsection{Recurrence Relation}
-The Stirling numbers satisfy the recurrence:
 \begin{equation}
-S(n, k) = k \cdot S(n - 1, k) + S(n - 1, k - 1) \quad \text{for } 1 \le k \le n
+S(n, k) = k \cdot S(n - 1, k) + S(n - 1, k - 1)
 \end{equation}
-with base cases:
-\begin{align}
-S(0, 0) &= 1 \\
-S(n, 0) &= 0 \quad \text{for } n > 0 \\
-S(n, k) &= 0 \quad \text{for } k > n
-\end{align}
-
-\subsection{Combinatorial Proof of Recurrence}
-Consider a specific target element $x \in S$, where $|S| = n$. When partitioning $S$ into $k$ subsets:
-\begin{enumerate}
-    \item \textbf{Case 1:} Element $x$ is placed in its own singleton subset $\{x\}$. The remaining $n-1$ elements must be partitioned into $k-1$ subsets. The count of such partitions is $S(n - 1, k - 1)$.
-    \item \textbf{Case 2:} Element $x$ is placed in a subset containing other elements. The remaining $n-1$ elements are partitioned into $k$ subsets first. Then, element $x$ can be inserted into any of these $k$ subsets. The count of such arrangements is $k \cdot S(n - 1, k)$.
-\end{enumerate}
-Summing these two mutually exclusive cases yields the recurrence relation.
-
-\subsection{Dynamic Programming Implementation}
-Stirling numbers can be precomputed using a 2D dynamic programming grid.
 
 \begin{verbatim}
 public class StirlingNumbers {
     public static long[][] computeStirling(int n, int k) {
         long[][] dp = new long[n + 1][k + 1];
         dp[0][0] = 1;
-
         for (int i = 1; i <= n; i++) {
             for (int j = 1; j <= Math.min(i, k); j++) {
                 dp[i][j] = (j * dp[i - 1][j] + dp[i - 1][j - 1]);
@@ -869,75 +718,101 @@ public class StirlingNumbers {
     }
 }
 \end{verbatim}
-The time and space complexities are both $\mathcal{O}(N \cdot K)$.
+
+\subsection{Stirling Numbers of the First Kind}
+
+The Stirling number of the first kind, denoted by $s(n, k)$ or $\left[ \begin{matrix} n \\ k \end{matrix} \right]$, represents the number of permutations of $n$ elements containing exactly $k$ disjoint cycles.
+\begin{equation}
+s(n, k) = (n - 1) \cdot s(n - 1, k) + s(n - 1, k - 1)
+\end{equation}
+with base cases $s(0,0)=1$, $s(n,0)=s(0,k)=0$.
+
+%% ============================================================
+\section{Integer Partitions}
+\label{sec:integer_partitions}
+
+Decomposing an integer into smaller non-negative components is another fundamental dynamic programming and counting structure.
+
+\begin{definition}[Integer Partition]
+The partition function $p(n, k)$ represents the number of ways to write $n$ as a sum of exactly $k$ positive integers, where the order of summands does not matter.
+\end{definition}
+
+\subsection{Recurrence Relation}
+We compute partitions using the recurrence:
+\begin{equation}
+p(n, k) = p(n - 1, k - 1) + p(n - k, k)
+\end{equation}
+where:
+* $p(n-1, k-1)$ represents partitions containing at least one summand equal to $1$ (we subtract $1$ from the number and $1$ from the allowed parts).
+* $p(n-k, k)$ represents partitions where all parts are strictly greater than $1$ (we subtract $1$ from each of the $k$ parts, leaving $n-k$ value).
+
+with base cases:
+\begin{align}
+p(0, 0) &= 1 \\
+p(n, 0) &= 0 \quad \text{for } n > 0 \\
+p(n, k) &= 0 \quad \text{for } k > n \text{ or } k < 0
+\end{align}
+
+\subsection{Dynamic Programming Implementation}
+We precompute integer partitions using a 2D dynamic programming grid.
+
+\begin{verbatim}
+public class IntegerPartitions {
+    public static long[][] computePartitions(int n, int k) {
+        long[][] dp = new long[n + 1][k + 1];
+        dp[0][0] = 1;
+
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= k; j++) {
+                long term1 = dp[i - 1][j - 1];
+                long term2 = (i - j >= 0) ? dp[i - j][j] : 0;
+                dp[i][j] = term1 + term2;
+            }
+        }
+        return dp;
+    }
+}
+\end{verbatim}
+This runs in $\mathcal{O}(N \cdot K)$ time and space.
 
 %% ============================================================
 \section{The Inclusion-Exclusion Principle (PIE)}
 \label{sec:pie}
 
 The Principle of Inclusion-Exclusion (PIE) is a general counting technique used to find the cardinality of the union of multiple finite sets.
-
-\begin{theorem}[Principle of Inclusion-Exclusion]
-Let $A_1, A_2, \ldots, A_m$ be finite sets. Then:
 \begin{equation}
-\left| \bigcup_{i=1}^{m} A_i \right| = \sum_{i=1}^{m} |A_i| - \sum_{1 \le i < j \le m} |A_i \cap A_j| + \sum_{1 \le i < j < k \le m} |A_i \cap A_j \cap A_k| - \cdots + (-1)^{m-1} |A_1 \cap A_2 \cap \cdots \cap A_m|
+\left| \bigcup_{i=1}^{m} A_i \right| = \sum_{\emptyset \neq J \subseteq \{1, \dots, m\}} (-1)^{|J|-1} \left| \bigcap_{j \in J} A_j \right|
 \end{equation}
-\end{theorem}
-
-In compact notation:
-\begin{equation}
-\left| \bigcup_{i=1}^{m} A_i \right| = \sum_{\emptyset \neq J \subseteq \{1, \ldots, m\}} (-1)^{|J|-1} \left| \bigcap_{j \in J} A_j \right|
-\end{equation}
-
-We can find the cardinality of the complement (elements belonging to none of the sets) using:
-\begin{equation}
-\left| \bigcap_{i=1}^{m} A_i^c \right| = |U| - \left| \bigcup_{i=1}^{m} A_i \right|
-\end{equation}
-where $U$ is the universal set.
+And the complement cardinality: $\left| \bigcap_{i=1}^{m} A_i^c \right| = |U| - \left| \bigcup_{i=1}^{m} A_i \right|$.
 
 %% ============================================================
 \section{The Pigeonhole Principle (PHP)}
 \label{sec:php}
 
-The Pigeonhole Principle is a simple yet powerful discrete mathematical tool used to guarantee the existence of certain configurations.
+The Pigeonhole Principle is a simple yet powerful discrete mathematical tool.
+\begin{itemize}
+    \item \textbf{Simple Form:} If $n > m$, at least one container must contain more than 1 item.
+    \item \textbf{Generalized Form:} If $n$ items are put into $m$ containers, at least one container must contain at least $\lceil n/m \rceil$ items.
+\end{itemize}
 
-\subsection{Formal Statements}
-
-\begin{theorem}[Simple Pigeonhole Principle]
-If $n$ items (pigeons) are put into $m$ containers (pigeonholes), and $n > m$, then at least one container must contain more than one item.
+\subsection{Subarray Modulo Divisibility Proof}
+\begin{theorem}[Subarray Modulo Divisibility]
+In any array of $N$ integers, there exists a contiguous subarray whose sum is divisible by $N$.
 \end{theorem}
 
-\begin{theorem}[Generalized Pigeonhole Principle]
-If $n$ items are put into $m$ containers, then at least one container must contain at least:
-\begin{equation}
-N_{\text{items}} \ge \left\lceil \frac{n}{m} \right\rceil
-\end{equation}
-items.
-\end{theorem}
-
-\subsection{Algorithmic Application: Subarray Modulo Divisibility}
-In competitive programming, PHP is used to prove that certain conditions always hold. For example:
-\begin{quote}
-*Theorem:* In any array of $N$ integers, there exists a contiguous subarray whose sum is divisible by $N$.
-\end{quote}
-*Proof:* Define the prefix sums $P_i = \sum_{j=0}^{i} A_j \pmod N$ for $i \in \{0, 1, \ldots, n-1\}$. The possible remainders modulo $N$ are $\{0, 1, \ldots, n-1\}$, which represents $N$ possible values (pigeonholes).
-If any prefix sum $P_i \equiv 0 \pmod N$, then the subarray $A[0 \dots i]$ has a sum divisible by $N$, and we are done.
-Otherwise, the $N$ prefix sums must fall into the remaining $N-1$ pigeonholes $\{1, \ldots, n-1\}$. By the Pigeonhole Principle, at least two prefix sums must be equal, say $P_a = P_b$ for $a < b$. Thus:
+\begin{proof}
+Define the prefix sums $P_i = \sum_{j=0}^{i} A[j] \pmod N$ for $i \in \{0, 1, \dots, N-1\}$. If any $P_i = 0$, the subarray $A[0 \dots i]$ is divisible by $N$. Otherwise, the $N$ prefix sums fall into the remaining $N-1$ pigeonholes $\{1, \dots, N-1\}$. By the Pigeonhole Principle, at least two prefix sums must be equal: $P_a = P_b$ for $a < b$. Thus:
 \begin{equation}
 P_b - P_a \equiv 0 \pmod N \implies \sum_{j=a+1}^{b} A[j] \equiv 0 \pmod N
 \end{equation}
-So, the subarray $A[a+1 \dots b]$ has a sum divisible by $N$. This guarantees a solution always exists, and we can find it in $\mathcal{O}(N)$ time.
+Thus, the subarray $A[a+1 \dots b]$ has a sum divisible by $N$.
+\end{proof}
 
 %% ============================================================
 \section{The Twelvefold Way Classification}
 \label{sec:twelvefold}
 
-The Twelvefold Way is a systematic framework used to classify 12 basic problems concerning the counting of distributions of $n$ balls into $k$ boxes. The classification depends on three parameters:
-1. **Balls:** Distinct (labeled) vs. Identical (unlabeled).
-2. **Boxes:** Distinct (labeled) vs. Identical (unlabeled).
-3. **Constraint:** Any mapping (no restrictions), Injective mapping (at most 1 ball per box, $n \le k$), and Surjective mapping (at least 1 ball per box, $n \ge k$).
-
-Table~\ref{tab:twelvefold} provides the complete Twelvefold Way mathematical summary.
+The Twelvefold Way is a systematic framework used to classify 12 basic problems concerning the counting of distributions of $n$ balls into $k$ boxes.
 
 \begin{table*}[h]
 \centering
@@ -955,9 +830,8 @@ Identical & Identical & $p_{\le k}(n)$ & $[n \le k]$ & $p(n, k)$ \\ \bottomrule
 
 where:
 * $S(n, k)$ is the Stirling number of the second kind.
-* $p(n, k)$ is the number of integer partitions of $n$ into exactly $k$ non-zero parts.
-* $p_{\le k}(n)$ is the partition of $n$ into at most $k$ parts, equal to $\sum_{i=1}^{k} p(n, i)$.
-* $[n \le k]$ evaluates to $1$ if $n \le k$, and $0$ otherwise.
+* $p(n, k)$ is the integer partition of $n$ into exactly $k$ non-zero parts.
+* $p_{\le k}(n) = \sum_{i=1}^k p(n, i)$.
 
 %% ============================================================
 \section{Exhaustive Problem Walkthroughs}
@@ -1146,7 +1020,6 @@ Evaluating the fractions:
 D_4 &= 24 \left( 1 - 1 + \frac{1}{2} - \frac{1}{6} + \frac{1}{24} \right) \\
 &= 24 \left( \frac{12 - 4 + 1}{24} \right) \\
 &= 24 \left( \frac{9}{24} \right) = 9
-\Delta_4 = 9
 \end{align}
 Thus, there are exactly \textbf{9} complete derangements.
 
@@ -1215,13 +1088,13 @@ We calculate their individual sizes:
 \end{equation}
 Now, we calculate the sizes of double intersections:
 \begin{align}
-|A_1 \cap A_2| &= \left\lfloor \frac{1000}{\text{lcm}(2,3)} \right\rfloor = \left\lfloor \frac{1000}{6} \right\rfloor = 166 \\
-|A_1 \cap A_3| &= \left\lfloor \frac{1000}{\text{lcm}(2,5)} \right\rfloor = \left\lfloor \frac{1000}{10} \right\rfloor = 100 \\
-|A_2 \cap A_3| &= \left\lfloor \frac{1000}{\text{lcm}(3,5)} \right\rfloor = \left\lfloor \frac{1000}{15} \right\rfloor = 66
+|A_1 \cap A_2| &= \left\lfloor \frac{1000}{6} \right\rfloor = 166 \\
+|A_1 \cap A_3| &= \left\lfloor \frac{1000}{10} \right\rfloor = 100 \\
+|A_2 \cap A_3| &= \left\lfloor \frac{1000}{15} \right\rfloor = 66
 \end{align}
 Now, we calculate the triple intersection:
 \begin{equation}
-|A_1 \cap A_2 \cap A_3| = \left\lfloor \frac{1000}{\text{lcm}(2,3,5)} \right\rfloor = \left\lfloor \frac{1000}{30} \right\rfloor = 33
+|A_1 \cap A_2 \cap A_3| = \left\lfloor \frac{1000}{30} \right\rfloor = 33
 \end{equation}
 Applying the Principle of Inclusion-Exclusion, the union size is:
 \begin{align}
@@ -1230,7 +1103,7 @@ Applying the Principle of Inclusion-Exclusion, the union size is:
 \end{align}
 The number of integers not divisible by 2, 3, or 5 is the complement size:
 \begin{equation}
-N = |U| - \left| A_1 \cup A_2 \cup A_3 \right| = 1000 - 734 = 266
+N = 1000 - 734 = 266
 \end{equation}
 Thus, there are \textbf{266} such integers.
 
@@ -1240,13 +1113,10 @@ Thus, there are \textbf{266} such integers.
 Prove that in any set of 5 integers, there exist two whose difference is divisible by 4.
 
 \textbf{Solution:}
-Let $S = \{x_1, x_2, x_3, x_4, x_5\}$ be a set of 5 integers (pigeons).
-We define a mapping from each integer in $S$ to its remainder modulo 4:
-\begin{equation}
-f(x_i) = x_i \pmod 4
-\end{equation}
-The possible remainders modulo 4 are $\{0, 1, 2, 3\}$, which represents $m = 4$ possible containers (pigeonholes).
-Since we have $n = 5$ items and $m = 4$ containers, and $5 > 4$, by the Pigeonhole Principle, at least two integers in $S$ must map to the same remainder modulo 4.
+Let $S = \{x_1, x_2, x_3, x_4, x_5\}$ be a set of 5 integers.
+We map each integer to its remainder modulo 4.
+The possible remainders are $\{0, 1, 2, 3\}$, which represents $m = 4$ pigeonholes.
+Since we have $n = 5$ items and $m = 4$ containers, and $5 > 4$, by the Pigeonhole Principle, at least two integers in $S$ must share the same remainder modulo 4.
 Let these integers be $x_a$ and $x_b$ for $a \neq b$. Thus:
 \begin{equation}
 x_a \equiv x_b \pmod 4 \implies x_a - x_b \equiv 0 \pmod 4
@@ -1259,7 +1129,7 @@ This means the difference $x_a - x_b$ is divisible by 4. The proof is complete.
 
 This paper has presented a rigorous formal analysis of the fundamental principles of combinatorics: counting rules, selection coefficients, Pascal's Triangle, and the Binomial and Multinomial Theorems. We investigated three computational approaches for Pascal's Triangle construction, proving that a space-optimized dynamic programming algorithm reduces the operational memory footprint from $\mathcal{O}(N^2)$ to $\mathcal{O}(N)$. 
 
-By analyzing multinomial expansions, multiset permutations, Catalan sequences, derangements, modular divisions, Stirling set partitions, the Inclusion-Exclusion Principle, and Pigeonhole divisions under the Twelvefold Way distribution matrix, we established mathematical structures to calculate algebraic coefficients and predict terms in polynomial systems. These tools form the baseline for analyzing algorithms and resolving complex counting challenges in computer science.
+By analyzing multinomial expansions, multiset permutations, Catalan sequences, derangements, rotational symmetries under Burnside's Lemma, Stirling cycle and set partitions, integer decompositions, the Inclusion-Exclusion Principle, and Pigeonhole divisions under the Twelvefold Way distribution matrix, we established mathematical structures to calculate algebraic coefficients and predict terms in polynomial systems. These tools form the baseline for analyzing algorithms and resolving complex counting challenges in computer science.
 
 
 \end{document}
