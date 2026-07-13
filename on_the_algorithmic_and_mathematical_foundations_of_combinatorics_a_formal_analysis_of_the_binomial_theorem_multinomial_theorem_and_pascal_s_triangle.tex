@@ -44,9 +44,9 @@ The structure of this paper is organized as follows:
 \begin{enumerate}
     \item \textbf{Fundamental Counting and Selection Principles (\S\ref{sec:counting}):} A formal treatment of the sum and product rules, permutations, and combinations, concluding with a rigorous algebraic proof of Pascal's Identity.
     \item \textbf{Pascal's Triangle: Algebraic Invariants and Algorithmic Complexity (\S\ref{sec:pascal}):} Analysis of Pascal's Triangle, algebraic row sum invariants, and three distinct algorithmic paradigms (naive recursion, 2D dynamic programming, and space-optimized dynamic programming) accompanied by their asymptotic complexity bounds and complete Java reference implementations.
-    \item \textbf{The Binomial Theorem and Mathematical Proofs (\S\ref{sec:binomial}):} Detailed mathematical statements, a formal proof using mathematical induction, a combinatorial proof, and various algebraic corollaries (e.g., alternating sums and derivative-based identities).
-    \item \textbf{The Multinomial Theorem and Multiset Permutations (\S\ref{sec:multinomial}):} Generalization of the binomial expansion to $m$ variables, derivation of multinomial coefficients via multiset arrangements, and a formal proof of the number of terms in a multinomial expansion using the "Stars and Bars" combinatorial method.
-    \item \textbf{GATE-style Problem Walkthroughs (\S\ref{sec:problems}):} Step-by-step mathematical solutions to typical high-level combinatorics problems.
+    \item \textbf{The Binomial Theorem and Mathematical Proofs (\S\ref{sec:binomial}):} Detailed mathematical statements, a formal proof using mathematical induction, a combinatorial proof, analysis of middle terms, constant terms, rational terms, and various algebraic corollaries (e.g., alternating sums and derivative-based identities).
+    \item \textbf{The Multinomial Theorem and Multiset Permutations (\S\ref{sec:multinomial}):} Generalization of the binomial expansion to $m$ variables, derivation of multinomial coefficients via multiset arrangements, the sum of multinomial coefficients, and a formal proof of the number of terms in a multinomial expansion using the "Stars and Bars" combinatorial method.
+    \item \textbf{GATE-style Problem Walkthroughs (\S\ref{sec:problems}):} Step-by-step mathematical solutions to typical high-level combinatorics problems, including trinomial coefficients, term counts, constant terms, and rational terms.
 \end{enumerate}
 
 %% ============================================================
@@ -307,7 +307,7 @@ public class PascalsTriangle1DDP {
 \section{The Binomial Theorem and Mathematical Proofs}
 \label{sec:binomial}
 
-The Binomial Theorem generalizes the expansion of the algebraic expression $(x + y)^n$.
+The Binomial Theorem provides a closed-form algebraic expansion for the powers of a binomial expression.
 
 \subsection{Theorem Statement}
 
@@ -393,6 +393,47 @@ The number of ways to choose $k$ factors from a set of $n$ factors is given by t
 (x + y)^n = \sum_{k=0}^{n} \binom{n}{k} x^{n - k} y^k
 \end{equation}
 
+\subsection{Middle Terms in Binomial Expansion}
+
+Locating the middle term(s) of $(x+y)^n$ depends on the parity of $n$:
+\begin{itemize}
+    \item \textbf{Case 1: $n$ is even.} The expansion contains $n+1$ terms (an odd number). There is a single middle term, which is the $(\frac{n}{2} + 1)$-th term:
+    \begin{equation}
+    T_{\text{mid}} = T_{\frac{n}{2} + 1} = \binom{n}{n/2} x^{n/2} y^{n/2}
+    \end{equation}
+    \item \textbf{Case 2: $n$ is odd.} The expansion contains $n+1$ terms (an even number). There are two middle terms, namely the $(\frac{n+1}{2})$-th and $(\frac{n+3}{2})$-th terms:
+    \begin{equation}
+    T_{\text{mid}, 1} = T_{\frac{n+1}{2}} = \binom{n}{\frac{n-1}{2}} x^{\frac{n+1}{2}} y^{\frac{n-1}{2}}
+    \end{equation}
+    \begin{equation}
+    T_{\text{mid}, 2} = T_{\frac{n+3}{2}} = \binom{n}{\frac{n+1}{2}} x^{\frac{n-1}{2}} y^{\frac{n+1}{2}}
+    \end{equation}
+\end{itemize}
+
+\subsection{Constant Terms (Terms Independent of $x$)}
+
+In algebraic expressions of the form $(ax^p + \frac{b}{x^q})^n$, we are often tasked with finding the term that does not contain $x$ (the constant term). We locate this by writing the general term:
+\begin{equation}
+T_{k+1} = \binom{n}{k} (ax^p)^{n-k} \left(\frac{b}{x^q}\right)^k = \binom{n}{k} a^{n-k} b^k x^{p(n-k) - qk}
+\end{equation}
+To make this term independent of $x$, we set the exponent of $x$ to $0$:
+\begin{equation}
+p(n-k) - qk = 0 \implies pn - (p+q)k = 0 \implies k = \frac{pn}{p+q}
+\end{equation}
+If $k$ is a non-negative integer such that $0 \le k \le n$, the constant term exists and is given by $T_{k+1}$. Otherwise, no constant term exists.
+
+\subsection{Rational and Irrational Terms}
+
+In expansions of the form $(a^{1/p} + b^{1/q})^n$, where $a, b$ are distinct prime numbers, the terms are rational if and only if the exponents of both terms are integers. The general term is:
+\begin{equation}
+T_{k+1} = \binom{n}{k} (a^{1/p})^{n-k} (b^{1/q})^k = \binom{n}{k} a^{\frac{n-k}{p}} b^{\frac{k}{q}}
+\end{equation}
+For $T_{k+1}$ to be rational, we require:
+\begin{equation}
+\frac{n-k}{p} \in \mathbb{Z} \quad \text{and} \quad \frac{k}{q} \in \mathbb{Z} \quad \text{for } 0 \le k \le n
+\end{equation}
+This means $k$ must be a multiple of $q$, and $n-k$ must be a multiple of $p$. Finding the number of rational terms amounts to finding the number of integer values of $k$ that satisfy these simultaneous divisibility constraints. The remaining terms in the expansion ($n + 1 - N_{\text{rational}}$) are irrational.
+
 \subsection{Important Corollaries and Algebraic Identities}
 
 By substituting specific values for $x$ and $y$, we derive standard identities frequently tested in competitive examinations.
@@ -476,6 +517,26 @@ Observe the telescoping cancellations of terms in the numerators and denominator
 This completes the derivation.
 \end{proof}
 
+\subsection{Sum of Multinomial Coefficients}
+
+The sum of all multinomial coefficients for a given $n$ and $m$ can be found by evaluating the expansion where all variables are set to $1$. 
+
+\begin{theorem}[Sum of Multinomial Coefficients]
+The sum of all multinomial coefficients for parameters $n$ and $m$ is:
+\begin{equation}
+\sum_{k_1+k_2+\cdots+k_m=n} \binom{n}{k_1, k_2, \ldots, k_m} = m^n
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Let $x_1 = x_2 = \cdots = x_m = 1$ in the Multinomial Theorem:
+\begin{align}
+(1 + 1 + \cdots + 1)^n &= \sum_{k_1+k_2+\cdots+k_m=n} \binom{n}{k_1, k_2, \ldots, k_m} (1)^{k_1} (1)^{k_2} \cdots (1)^{k_m} \\
+m^n &= \sum_{k_1+k_2+\cdots+k_m=n} \binom{n}{k_1, k_2, \ldots, k_m}
+\end{align}
+This proves the sum of all coefficients equals $m^n$.
+\end{proof}
+
 \subsection{Number of Terms in a Multinomial Expansion}
 
 A common question in combinatorial exams is finding the total number of distinct terms in the expanded form of a multinomial.
@@ -505,7 +566,7 @@ This proves the theorem.
 \section{GATE-style Problem Walkthroughs}
 \label{sec:problems}
 
-In this section, we walk through detailed solutions for two common styles of combinatorics problems found in the GATE Computer Science syllabus.
+In this section, we walk through detailed solutions for various combinatorics problems found in the GATE Computer Science syllabus.
 
 \subsection{Problem 1: Coefficient in Trinomial Expansion}
 
@@ -551,6 +612,62 @@ Evaluating the combination:
 \binom{13}{3} = \frac{13 \times 12 \times 11}{3 \times 2 \times 1} = \frac{1716}{6} = 286
 \end{equation}
 Thus, there are \textbf{286} distinct terms in the expansion.
+
+\subsection{Problem 3: Term Independent of $x$}
+
+\textbf{Problem Statement:}
+Find the term independent of $x$ in the expansion of $\left(3x^2 - \frac{1}{2x}\right)^9$.
+
+\textbf{Solution:}
+The expression can be framed as a binomial of order $n = 9$ with terms $A = 3x^2$ and $B = -\frac{1}{2x}$.
+The general term is:
+\begin{align}
+T_{k+1} &= \binom{9}{k} A^{9-k} B^k \\
+&= \binom{9}{k} (3x^2)^{9-k} \left(-\frac{1}{2x}\right)^k \\
+&= \binom{9}{k} 3^{9-k} \left(-\frac{1}{2}\right)^k x^{2(9-k)} x^{-k} \\
+&= \binom{9}{k} 3^{9-k} \left(-\frac{1}{2}\right)^k x^{18 - 3k}
+\end{align}
+For the term to be independent of $x$, we require the exponent of $x$ to be $0$:
+\begin{equation}
+18 - 3k = 0 \implies 3k = 18 \implies k = 6
+\end{equation}
+Since $k = 6$ is an integer satisfying $0 \le k \le 9$, the term independent of $x$ is $T_7$:
+\begin{align}
+T_7 &= \binom{9}{6} 3^{9-6} \left(-\frac{1}{2}\right)^6 \\
+&= \binom{9}{3} 3^3 \left(\frac{1}{64}\right) \\
+&= \frac{9 \times 8 \times 7}{6} \cdot 27 \cdot \frac{1}{64} \\
+&= 84 \cdot \frac{27}{64} = \frac{21 \times 27}{16} = \frac{567}{16}
+\end{align}
+Thus, the term independent of $x$ is \textbf{$\frac{567}{16}$}.
+
+\subsection{Problem 4: Number of Rational Terms}
+
+\textbf{Problem Statement:}
+Find the number of rational terms in the expansion of $\left(2^{1/3} + 3^{1/5}\right)^{15}$.
+
+\textbf{Solution:}
+The expansion is of order $n = 15$ with terms $A = 2^{1/3}$ and $B = 3^{1/5}$.
+The general term is:
+\begin{equation}
+T_{k+1} = \binom{15}{k} \left(2^{1/3}\right)^{15-k} \left(3^{1/5}\right)^k = \binom{15}{k} 2^{\frac{15-k}{3}} 3^{\frac{k}{5}}
+\end{equation}
+For $T_{k+1}$ to be rational, the exponents must be integers:
+\begin{equation}
+\frac{15-k}{3} \in \mathbb{Z} \quad \text{and} \quad \frac{k}{5} \in \mathbb{Z} \quad \text{for } k \in \{0, 1, \ldots, 15\}
+\end{equation}
+From $\frac{k}{5} \in \mathbb{Z}$, the possible values for $k$ are:
+\begin{equation}
+k \in \{0, 5, 10, 15\}
+\end{equation}
+Now, we substitute these values into the first exponent $\frac{15-k}{3}$ to check for integrality:
+\begin{itemize}
+    \item If $k = 0$: $\frac{15-0}{3} = 5$ (Integer) $\rightarrow$ \textbf{Rational}
+    \item If $k = 5$: $\frac{15-5}{3} = \frac{10}{3}$ (Not an Integer) $\rightarrow$ \textbf{Irrational}
+    \item If $k = 10$: $\frac{15-10}{3} = \frac{5}{3}$ (Not an Integer) $\rightarrow$ \textbf{Irrational}
+    \item If $k = 15$: $\frac{15-15}{3} = 0$ (Integer) $\rightarrow$ \textbf{Rational}
+\end{itemize}
+The only values of $k$ yielding rational terms are $k = 0$ and $k = 15$.
+Thus, there are exactly \textbf{2} rational terms (and $16 - 2 = 14$ irrational terms).
 
 %% ============================================================
 \section{Conclusion}
