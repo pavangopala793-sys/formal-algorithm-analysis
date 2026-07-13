@@ -44,9 +44,9 @@ The structure of this paper is organized as follows:
 \begin{enumerate}
     \item \textbf{Fundamental Counting and Selection Principles (\S\ref{sec:counting}):} A formal treatment of the sum and product rules, permutations, and combinations, concluding with a rigorous algebraic proof of Pascal's Identity.
     \item \textbf{Pascal's Triangle: Algebraic Invariants and Algorithmic Complexity (\S\ref{sec:pascal}):} Analysis of Pascal's Triangle, algebraic row sum invariants, and three distinct algorithmic paradigms (naive recursion, 2D dynamic programming, and space-optimized dynamic programming) accompanied by their asymptotic complexity bounds and complete Java reference implementations.
-    \item \textbf{The Binomial Theorem and Mathematical Proofs (\S\ref{sec:binomial}):} Detailed mathematical statements, a formal proof using mathematical induction, a combinatorial proof, analysis of middle terms, constant terms, rational terms, and various algebraic corollaries (e.g., alternating sums and derivative-based identities).
+    \item \textbf{The Binomial Theorem and Mathematical Proofs (\S\ref{sec:binomial}):} Detailed mathematical statements, a formal proof using mathematical induction, a combinatorial proof, analysis of middle terms, constant terms, rational terms, Vandermonde's Identity, numerically greatest terms, and various algebraic corollaries (e.g., alternating sums, derivative, and integration-based identities).
     \item \textbf{The Multinomial Theorem and Multiset Permutations (\S\ref{sec:multinomial}):} Generalization of the binomial expansion to $m$ variables, derivation of multinomial coefficients via multiset arrangements, the sum of multinomial coefficients, and a formal proof of the number of terms in a multinomial expansion using the "Stars and Bars" combinatorial method.
-    \item \textbf{GATE-style Problem Walkthroughs (\S\ref{sec:problems}):} Step-by-step mathematical solutions to typical high-level combinatorics problems, including trinomial coefficients, term counts, constant terms, and rational terms.
+    \item \textbf{GATE-style Problem Walkthroughs (\S\ref{sec:problems}):} Step-by-step mathematical solutions to typical high-level combinatorics problems, including trinomial coefficients, term counts, constant terms, rational terms, and numerically greatest terms.
 \end{enumerate}
 
 %% ============================================================
@@ -434,6 +434,73 @@ For $T_{k+1}$ to be rational, we require:
 \end{equation}
 This means $k$ must be a multiple of $q$, and $n-k$ must be a multiple of $p$. Finding the number of rational terms amounts to finding the number of integer values of $k$ that satisfy these simultaneous divisibility constraints. The remaining terms in the expansion ($n + 1 - N_{\text{rational}}$) are irrational.
 
+\subsection{Vandermonde's Identity (Sum of Squares of Coefficients)}
+
+Vandermonde's Identity provides a beautiful formulation for the sum of the squares of the binomial coefficients.
+
+\begin{theorem}[Vandermonde's Identity for Squares]
+For any positive integer $n$:
+\begin{equation}
+\sum_{k=0}^{n} \binom{n}{k}^2 = \binom{2n}{n}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Consider the identity:
+\begin{equation}
+(1+x)^{2n} = (1+x)^n (1+x)^n
+\end{equation}
+Using the Binomial Theorem, the coefficient of $x^n$ on the left-hand side of the equation is:
+\begin{equation}
+\text{Coeff of } x^n \text{ in } (1+x)^{2n} = \binom{2n}{n}
+\end{equation}
+On the right-hand side, we expand both factors:
+\begin{equation}
+(1+x)^n (1+x)^n = \left( \sum_{i=0}^{n} \binom{n}{i} x^i \right) \left( \sum_{j=0}^{n} \binom{n}{j} x^j \right)
+\end{equation}
+To obtain a term of degree $n$ in the product, we must multiply a term of degree $i$ from the first factor by a term of degree $n-i$ from the second factor. The coefficient of $x^n$ is the sum of these products over all valid $i$:
+\begin{equation}
+\text{Coeff of } x^n = \sum_{i=0}^{n} \binom{n}{i} \binom{n}{n-i}
+\end{equation}
+By the symmetry property of binomial coefficients, we know that $\binom{n}{n-i} = \binom{n}{i}$. Substituting this in yields:
+\begin{equation}
+\text{Coeff of } x^n = \sum_{i=0}^{n} \binom{n}{i} \binom{n}{i} = \sum_{i=0}^{n} \binom{n}{i}^2
+\end{equation}
+Equating the coefficients of $x^n$ from both sides:
+\begin{equation}
+\sum_{k=0}^{n} \binom{n}{k}^2 = \binom{2n}{n}
+\end{equation}
+This completes the proof.
+\end{proof}
+
+\subsection{Numerically Greatest Term (NGT)}
+
+For a given real value of $x$, the terms in the expansion of $(1+x)^n$ vary in magnitude. We want to find the index $r$ that yields the numerically greatest term, $T_{r+1}$.
+
+We define $T_{r+1}$ to be the numerically greatest term if:
+\begin{equation}
+|T_{r+1}| \ge |T_r| \quad \text{and} \quad |T_{r+1}| \ge |T_{r+2}|
+\end{equation}
+To find this index, we examine the ratio of consecutive terms in $(1+x)^n$:
+\begin{equation}
+\frac{|T_{r+1}|}{|T_r|} = \frac{\left| \binom{n}{r} x^r \right|}{\left| \binom{n}{r-1} x^{r-1} \right|} = \frac{n-r+1}{r} |x|
+\end{equation}
+Setting this ratio to be greater than or equal to $1$:
+\begin{align}
+\frac{n-r+1}{r} |x| \ge 1 &\implies (n-r+1)|x| \ge r \\
+&\implies (n+1)|x| - r|x| \ge r \\
+&\implies (n+1)|x| \ge r(1 + |x|) \\
+&\implies r \le \frac{(n+1)|x|}{1 + |x|}
+\end{align}
+Let:
+\begin{equation}
+m = \frac{(n+1)|x|}{1 + |x|}
+\end{equation}
+\begin{enumerate}
+    \item \textbf{Case 1: $m$ is an integer.} In this case, the ratio equals $1$ when $r = m$. This means $|T_{m+1}| = |T_m|$, and both terms are numerically greatest.
+    \item \textbf{Case 2: $m$ is not an integer.} The largest integer $r$ satisfying the inequality is $r = \lfloor m \rfloor$. The single numerically greatest term is $T_{\lfloor m \rfloor + 1}$.
+\end{enumerate}
+
 \subsection{Important Corollaries and Algebraic Identities}
 
 By substituting specific values for $x$ and $y$, we derive standard identities frequently tested in competitive examinations.
@@ -470,6 +537,20 @@ n(1 + x)^{n-1} = \sum_{k=1}^{n} k \binom{n}{k} x^{k-1}
 Substituting $x = 1$:
 \begin{equation}
 \sum_{k=1}^{n} k \binom{n}{k} = n \cdot 2^{n-1}
+\end{equation}
+\end{corollary}
+
+\begin{corollary}[Integration-based Identity]
+Consider the integration of $(1+x)^n$ from $0$ to $1$:
+\begin{equation}
+\int_{0}^{1} (1+x)^n dx = \int_{0}^{1} \left( \sum_{k=0}^{n} \binom{n}{k} x^k \right) dx
+\end{equation}
+Evaluating the integrals:
+\begin{equation}
+\left[ \frac{(1+x)^{n+1}}{n+1} \right]_{0}^{1} = \sum_{k=0}^{n} \binom{n}{k} \left[ \frac{x^{k+1}}{k+1} \right]_{0}^{1}
+\end{equation}
+\begin{equation}
+\frac{2^{n+1} - 1}{n+1} = \sum_{k=0}^{n} \frac{1}{k+1} \binom{n}{k}
 \end{equation}
 \end{corollary}
 
@@ -668,6 +749,37 @@ Now, we substitute these values into the first exponent $\frac{15-k}{3}$ to chec
 \end{itemize}
 The only values of $k$ yielding rational terms are $k = 0$ and $k = 15$.
 Thus, there are exactly \textbf{2} rational terms (and $16 - 2 = 14$ irrational terms).
+
+\subsection{Problem 5: Numerically Greatest Term}
+
+\textbf{Problem Statement:}
+Find the numerically greatest term in the expansion of $(1 + 3x)^{10}$ when $x = 1/2$.
+
+\textbf{Solution:}
+Let $y = 3x$. For $x = 1/2$, we have $y = 3(1/2) = 3/2$.
+We write the expansion as $(1+y)^{10}$ where $y = 1.5$.
+Applying the formulation for the numerically greatest term index:
+\begin{equation}
+m = \frac{(n+1)|y|}{1 + |y|} = \frac{(10+1)|1.5|}{1 + |1.5|} = \frac{11 \times 1.5}{2.5} = \frac{16.5}{2.5} = 6.6
+\end{equation}
+Since $m = 6.6$ is not an integer, the single numerically greatest term is:
+\begin{equation}
+T_{\lfloor m \rfloor + 1} = T_{6 + 1} = T_7
+\end{equation}
+We evaluate the value of $T_7$:
+\begin{equation}
+T_7 = \binom{10}{6} 1^{10-6} (y)^6 = \binom{10}{4} (1.5)^6
+\end{equation}
+Evaluating the combination and exponent:
+\begin{align}
+\binom{10}{4} &= \frac{10 \times 9 \times 8 \times 7}{4 \times 3 \times 2 \times 1} = 210 \\
+(1.5)^6 &= \left(\frac{3}{2}\right)^6 = \frac{729}{64} = 11.390625
+\end{align}
+Multiplying these values:
+\begin{equation}
+T_7 = 210 \times \frac{729}{64} = \frac{105 \times 729}{32} = \frac{76545}{32} \approx 2392.03125
+\end{equation}
+Thus, the numerically greatest term is \textbf{$T_7$}, and its value is \textbf{$\frac{76545}{32}$}.
 
 %% ============================================================
 \section{Conclusion}
