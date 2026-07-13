@@ -49,7 +49,11 @@ The structure of this paper is organized as follows:
     \item \textbf{Modular Combinatorics in Competitive Programming (\S\ref{sec:modular}):} Precomputation of factorials and inverse factorials under modulo $10^9+7$ for $O(1)$ combinations, Fermat's Little Theorem, and modular division.
     \item \textbf{Advanced Counting Sequences: Catalan Numbers and Derangements (\S\ref{sec:sequences}):} Formulations, proofs, and applications of Catalan Numbers and Derangements, with complete code.
     \item \textbf{Lucas' Theorem for Large Combinations (\S\ref{sec:lucas}):} Solving combinations where $N, K \le 10^{18}$ and modulo $P$ is a small prime.
-    \item \textbf{Exhaustive Problem Walkthroughs (\S\ref{sec:problems}):} Step-by-step mathematical and algorithmic solutions to 9 classic GATE and CP problems.
+    \item \textbf{Stirling Numbers and Set Partitions (\S\ref{sec:stirling}):} Stirling Numbers of the Second Kind, their recurrence relations, and dynamic programming algorithms.
+    \item \textbf{The Inclusion-Exclusion Principle (PIE) (\S\ref{sec:pie}):} Formal union cardinality formulation and alternating sign proofs.
+    \item \textbf{The Pigeonhole Principle (PHP) (\S\ref{sec:php}):} Simple and generalized formulations, and application to subarray sum divisibility.
+    \item \textbf{The Twelvefold Way Classification (\S\ref{sec:twelvefold}):} Systematic mapping of $n$ balls into $k$ boxes.
+    \item \textbf{Exhaustive Problem Walkthroughs (\S\ref{sec:problems}):} Step-by-step mathematical and algorithmic solutions to 12 classic GATE and CP problems.
 \end{enumerate}
 
 %% ============================================================
@@ -454,6 +458,7 @@ Consider the identity:
 (1+x)^{2n} = (1+x)^n (1+x)^n
 \end{equation}
 Using the Binomial Theorem, the coefficient of $x^n$ on the left-hand side of the equation is:
+Using the Binomial Theorem, the coefficient of $x^n$ on the left-hand side of the equation is:
 \begin{equation}
 \text{Coeff of } x^n \text{ in } (1+x)^{2n} = \binom{2n}{n}
 \end{equation}
@@ -817,6 +822,144 @@ public class LucasCombination {
 \end{itemize}
 
 %% ============================================================
+\section{Stirling Numbers and Set Partitions}
+\label{sec:stirling}
+
+In discrete mathematics, partitioning distinct items into equivalent clusters requires a different set of coefficients.
+
+\begin{definition}[Stirling Numbers of the Second Kind]
+The Stirling number of the second kind, denoted by $S(n, k)$ or $\left\{ \begin{matrix} n \\ k \end{matrix} \right\}$, represents the number of ways to partition a set of $n$ labeled elements into $k$ unlabeled, non-empty subsets.
+\end{definition}
+
+\subsection{Recurrence Relation}
+The Stirling numbers satisfy the recurrence:
+\begin{equation}
+S(n, k) = k \cdot S(n - 1, k) + S(n - 1, k - 1) \quad \text{for } 1 \le k \le n
+\end{equation}
+with base cases:
+\begin{align}
+S(0, 0) &= 1 \\
+S(n, 0) &= 0 \quad \text{for } n > 0 \\
+S(n, k) &= 0 \quad \text{for } k > n
+\end{align}
+
+\subsection{Combinatorial Proof of Recurrence}
+Consider a specific target element $x \in S$, where $|S| = n$. When partitioning $S$ into $k$ subsets:
+\begin{enumerate}
+    \item \textbf{Case 1:} Element $x$ is placed in its own singleton subset $\{x\}$. The remaining $n-1$ elements must be partitioned into $k-1$ subsets. The count of such partitions is $S(n - 1, k - 1)$.
+    \item \textbf{Case 2:} Element $x$ is placed in a subset containing other elements. The remaining $n-1$ elements are partitioned into $k$ subsets first. Then, element $x$ can be inserted into any of these $k$ subsets. The count of such arrangements is $k \cdot S(n - 1, k)$.
+\end{enumerate}
+Summing these two mutually exclusive cases yields the recurrence relation.
+
+\subsection{Dynamic Programming Implementation}
+Stirling numbers can be precomputed using a 2D dynamic programming grid.
+
+\begin{verbatim}
+public class StirlingNumbers {
+    public static long[][] computeStirling(int n, int k) {
+        long[][] dp = new long[n + 1][k + 1];
+        dp[0][0] = 1;
+
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= Math.min(i, k); j++) {
+                dp[i][j] = (j * dp[i - 1][j] + dp[i - 1][j - 1]);
+            }
+        }
+        return dp;
+    }
+}
+\end{verbatim}
+The time and space complexities are both $\mathcal{O}(N \cdot K)$.
+
+%% ============================================================
+\section{The Inclusion-Exclusion Principle (PIE)}
+\label{sec:pie}
+
+The Principle of Inclusion-Exclusion (PIE) is a general counting technique used to find the cardinality of the union of multiple finite sets.
+
+\begin{theorem}[Principle of Inclusion-Exclusion]
+Let $A_1, A_2, \ldots, A_m$ be finite sets. Then:
+\begin{equation}
+\left| \bigcup_{i=1}^{m} A_i \right| = \sum_{i=1}^{m} |A_i| - \sum_{1 \le i < j \le m} |A_i \cap A_j| + \sum_{1 \le i < j < k \le m} |A_i \cap A_j \cap A_k| - \cdots + (-1)^{m-1} |A_1 \cap A_2 \cap \cdots \cap A_m|
+\end{equation}
+\end{theorem}
+
+In compact notation:
+\begin{equation}
+\left| \bigcup_{i=1}^{m} A_i \right| = \sum_{\emptyset \neq J \subseteq \{1, \ldots, m\}} (-1)^{|J|-1} \left| \bigcap_{j \in J} A_j \right|
+\end{equation}
+
+We can find the cardinality of the complement (elements belonging to none of the sets) using:
+\begin{equation}
+\left| \bigcap_{i=1}^{m} A_i^c \right| = |U| - \left| \bigcup_{i=1}^{m} A_i \right|
+\end{equation}
+where $U$ is the universal set.
+
+%% ============================================================
+\section{The Pigeonhole Principle (PHP)}
+\label{sec:php}
+
+The Pigeonhole Principle is a simple yet powerful discrete mathematical tool used to guarantee the existence of certain configurations.
+
+\subsection{Formal Statements}
+
+\begin{theorem}[Simple Pigeonhole Principle]
+If $n$ items (pigeons) are put into $m$ containers (pigeonholes), and $n > m$, then at least one container must contain more than one item.
+\end{theorem}
+
+\begin{theorem}[Generalized Pigeonhole Principle]
+If $n$ items are put into $m$ containers, then at least one container must contain at least:
+\begin{equation}
+N_{\text{items}} \ge \left\lceil \frac{n}{m} \right\rceil
+\end{equation}
+items.
+\end{theorem}
+
+\subsection{Algorithmic Application: Subarray Modulo Divisibility}
+In competitive programming, PHP is used to prove that certain conditions always hold. For example:
+\begin{quote}
+*Theorem:* In any array of $N$ integers, there exists a contiguous subarray whose sum is divisible by $N$.
+\end{quote}
+*Proof:* Define the prefix sums $P_i = \sum_{j=0}^{i} A_j \pmod N$ for $i \in \{0, 1, \ldots, n-1\}$. The possible remainders modulo $N$ are $\{0, 1, \ldots, n-1\}$, which represents $N$ possible values (pigeonholes).
+If any prefix sum $P_i \equiv 0 \pmod N$, then the subarray $A[0 \dots i]$ has a sum divisible by $N$, and we are done.
+Otherwise, the $N$ prefix sums must fall into the remaining $N-1$ pigeonholes $\{1, \ldots, n-1\}$. By the Pigeonhole Principle, at least two prefix sums must be equal, say $P_a = P_b$ for $a < b$. Thus:
+\begin{equation}
+P_b - P_a \equiv 0 \pmod N \implies \sum_{j=a+1}^{b} A[j] \equiv 0 \pmod N
+\end{equation}
+So, the subarray $A[a+1 \dots b]$ has a sum divisible by $N$. This guarantees a solution always exists, and we can find it in $\mathcal{O}(N)$ time.
+
+%% ============================================================
+\section{The Twelvefold Way Classification}
+\label{sec:twelvefold}
+
+The Twelvefold Way is a systematic framework used to classify 12 basic problems concerning the counting of distributions of $n$ balls into $k$ boxes. The classification depends on three parameters:
+1. **Balls:** Distinct (labeled) vs. Identical (unlabeled).
+2. **Boxes:** Distinct (labeled) vs. Identical (unlabeled).
+3. **Constraint:** Any mapping (no restrictions), Injective mapping (at most 1 ball per box, $n \le k$), and Surjective mapping (at least 1 ball per box, $n \ge k$).
+
+Table~\ref{tab:twelvefold} provides the complete Twelvefold Way mathematical summary.
+
+\begin{table*}[h]
+\centering
+\caption{The Twelvefold Way: Distributing $n$ balls into $k$ boxes}
+\label{tab:twelvefold}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+\textbf{Balls (size $n$)} & \textbf{Boxes (size $k$)} & \textbf{Any Mapping} & \textbf{Injective ($n \le k$)} & \textbf{Surjective ($n \ge k$)} \\ \midrule
+Distinct & Distinct & $k^n$ & $P(k, n) = \frac{k!}{(k-n)!}$ & $k! \cdot S(n, k)$ \\
+Identical & Distinct & $\binom{n+k-1}{n}$ & $\binom{k}{n}$ & $\binom{n-1}{n-k}$ \\
+Distinct & Identical & $\sum_{i=1}^{k} S(n, i)$ & $[n \le k]$ & $S(n, k)$ \\
+Identical & Identical & $p_{\le k}(n)$ & $[n \le k]$ & $p(n, k)$ \\ \bottomrule
+\end{tabular}
+\end{table*}
+
+where:
+* $S(n, k)$ is the Stirling number of the second kind.
+* $p(n, k)$ is the number of integer partitions of $n$ into exactly $k$ non-zero parts.
+* $p_{\le k}(n)$ is the partition of $n$ into at most $k$ parts, equal to $\sum_{i=1}^{k} p(n, i)$.
+* $[n \le k]$ evaluates to $1$ if $n \le k$, and $0$ otherwise.
+
+%% ============================================================
 \section{Exhaustive Problem Walkthroughs}
 \label{sec:problems}
 
@@ -1003,6 +1146,7 @@ Evaluating the fractions:
 D_4 &= 24 \left( 1 - 1 + \frac{1}{2} - \frac{1}{6} + \frac{1}{24} \right) \\
 &= 24 \left( \frac{12 - 4 + 1}{24} \right) \\
 &= 24 \left( \frac{9}{24} \right) = 9
+\Delta_4 = 9
 \end{align}
 Thus, there are exactly \textbf{9} complete derangements.
 
@@ -1034,13 +1178,88 @@ Dividing 120 by 3:
 \end{equation}
 The result is correct and verified.
 
+\subsection{Problem 10: Stirling Partitioning}
+
+\textbf{Problem Statement:}
+Find the number of ways to partition 5 distinct students into 3 identical groups such that no group is empty.
+
+\textbf{Solution:}
+This is a direct application of the Stirling Number of the Second Kind, $S(n, k)$ for $n=5$ and $k=3$.
+Applying the recurrence relation:
+\begin{equation}
+S(5, 3) = 3 \cdot S(4, 3) + S(4, 2)
+\end{equation}
+We expand the subproblems:
+\begin{align}
+S(4, 3) &= 3 \cdot S(3, 3) + S(3, 2) = 3(1) + S(3, 2) \\
+S(3, 2) &= 2 \cdot S(2, 2) + S(2, 1) = 2(1) + 1 = 3 \implies S(4, 3) = 3 + 3 = 6 \\
+S(4, 2) &= 2 \cdot S(3, 2) + S(3, 1) = 2(3) + 1 = 7
+\end{align}
+Now, substitute these back:
+\begin{equation}
+S(5, 3) = 3(6) + 7 = 18 + 7 = 25
+\end{equation}
+Thus, there are exactly \textbf{25} ways to partition the students.
+
+\subsection{Problem 11: Inclusion-Exclusion Counting}
+
+\textbf{Problem Statement:}
+Find the number of integers from 1 to 1000 (inclusive) that are not divisible by 2, 3, or 5.
+
+\textbf{Solution:}
+Let $U = \{1, 2, \ldots, 1000\}$, so $|U| = 1000$.
+Let $A_1, A_2, A_3$ be the sets of integers in $U$ divisible by 2, 3, and 5, respectively.
+We calculate their individual sizes:
+\begin{equation}
+|A_1| = \left\lfloor \frac{1000}{2} \right\rfloor = 500, \quad |A_2| = \left\lfloor \frac{1000}{3} \right\rfloor = 333, \quad |A_3| = \left\lfloor \frac{1000}{5} \right\rfloor = 200
+\end{equation}
+Now, we calculate the sizes of double intersections:
+\begin{align}
+|A_1 \cap A_2| &= \left\lfloor \frac{1000}{\text{lcm}(2,3)} \right\rfloor = \left\lfloor \frac{1000}{6} \right\rfloor = 166 \\
+|A_1 \cap A_3| &= \left\lfloor \frac{1000}{\text{lcm}(2,5)} \right\rfloor = \left\lfloor \frac{1000}{10} \right\rfloor = 100 \\
+|A_2 \cap A_3| &= \left\lfloor \frac{1000}{\text{lcm}(3,5)} \right\rfloor = \left\lfloor \frac{1000}{15} \right\rfloor = 66
+\end{align}
+Now, we calculate the triple intersection:
+\begin{equation}
+|A_1 \cap A_2 \cap A_3| = \left\lfloor \frac{1000}{\text{lcm}(2,3,5)} \right\rfloor = \left\lfloor \frac{1000}{30} \right\rfloor = 33
+\end{equation}
+Applying the Principle of Inclusion-Exclusion, the union size is:
+\begin{align}
+\left| A_1 \cup A_2 \cup A_3 \right| &= (500 + 333 + 200) - (166 + 100 + 66) + 33 \\
+&= 1033 - 332 + 33 = 734
+\end{align}
+The number of integers not divisible by 2, 3, or 5 is the complement size:
+\begin{equation}
+N = |U| - \left| A_1 \cup A_2 \cup A_3 \right| = 1000 - 734 = 266
+\end{equation}
+Thus, there are \textbf{266} such integers.
+
+\subsection{Problem 12: Pigeonhole Principle Divisibility}
+
+\textbf{Problem Statement:}
+Prove that in any set of 5 integers, there exist two whose difference is divisible by 4.
+
+\textbf{Solution:}
+Let $S = \{x_1, x_2, x_3, x_4, x_5\}$ be a set of 5 integers (pigeons).
+We define a mapping from each integer in $S$ to its remainder modulo 4:
+\begin{equation}
+f(x_i) = x_i \pmod 4
+\end{equation}
+The possible remainders modulo 4 are $\{0, 1, 2, 3\}$, which represents $m = 4$ possible containers (pigeonholes).
+Since we have $n = 5$ items and $m = 4$ containers, and $5 > 4$, by the Pigeonhole Principle, at least two integers in $S$ must map to the same remainder modulo 4.
+Let these integers be $x_a$ and $x_b$ for $a \neq b$. Thus:
+\begin{equation}
+x_a \equiv x_b \pmod 4 \implies x_a - x_b \equiv 0 \pmod 4
+\end{equation}
+This means the difference $x_a - x_b$ is divisible by 4. The proof is complete.
+
 %% ============================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
 This paper has presented a rigorous formal analysis of the fundamental principles of combinatorics: counting rules, selection coefficients, Pascal's Triangle, and the Binomial and Multinomial Theorems. We investigated three computational approaches for Pascal's Triangle construction, proving that a space-optimized dynamic programming algorithm reduces the operational memory footprint from $\mathcal{O}(N^2)$ to $\mathcal{O}(N)$. 
 
-By analyzing multinomial expansions, multiset permutations, Catalan sequences, derangements, modular divisions, and Lucas' prime digit splits, we established mathematical structures to calculate algebraic coefficients and predict terms in polynomial systems. These tools form the baseline for analyzing algorithms and resolving complex counting challenges in computer science.
+By analyzing multinomial expansions, multiset permutations, Catalan sequences, derangements, modular divisions, Stirling set partitions, the Inclusion-Exclusion Principle, and Pigeonhole divisions under the Twelvefold Way distribution matrix, we established mathematical structures to calculate algebraic coefficients and predict terms in polynomial systems. These tools form the baseline for analyzing algorithms and resolving complex counting challenges in computer science.
 
 
 \end{document}
