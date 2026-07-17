@@ -1,0 +1,567 @@
+\documentclass[10pt,journal,compsoc,onecolumn]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{textcomp}
+\usepackage{tikz}
+\usetikzlibrary{arrows,positioning,shapes.geometric}
+\usepackage{booktabs}
+\usepackage{url}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\begin{document}
+
+\title{Mathematical Modeling and Greedy Optimization: Base Conversions, Binary Exponentiation, and Two-Pointer Algorithms for Linear Search Space Reduction}
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+This paper presents a formal mathematical analysis and algorithmic treatment of four classic computer science problems at the intersection of number theory, bijective arithmetic, and two-pointer greedy optimization. First, we examine the Excel Column Title problem, modeling it as a bijective base-26 positional numeral system without a zero element, and develop its inverse, Excel Column Number. Second, we analyze Binary Exponentiation (modular power), proving its logarithmic time complexity $O(\log N)$ via recursive halving and binary bit representation. Third, we address the Container With Most Water problem, formalizing its search space and proving the correctness of the two-pointer greedy strategy via linear search space reduction. Fourth, we examine the Three Sum problem, showing how sorting combined with a two-pointer search reduces the time complexity from cubic $O(N^3)$ to quadratic $O(N^2)$, and formalize the duplicate-avoidance invariants. For each problem, we present complete, production-ready Java code templates, rigorous proofs of correctness, and detailed asymptotic time and space complexity analyses.
+\end{abstract}
+
+\begin{IEEEkeywords}
+binary trees, algorithms, data structures, computational complexity, tree traversal, recursive algorithms, formal analysis
+\end{IEEEkeywords}
+}
+
+\maketitle
+\IEEEdisplaynontitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+\section{Introduction}
+\label{sec:intro}
+
+Algorithmic optimization frequently requires combining mathematical properties with greedy pointer manipulations to reduce the computational search space of a problem. In technical evaluations, competitive programming (CP), and rigorous academic curricula such as the Graduate Aptitude Test in Engineering (GATE), problems that seem to demand brute-force enumerations are optimized to linear or logarithmic execution times through first-principles analysis. 
+
+This paper presents an exhaustive, graduate-level formalization of four primary algorithms that lie at the intersection of number theory, base arithmetic, and the two-pointer technique. Rather than treating these techniques as heuristics, we model their operations mathematically and prove their correctness using greedy search space pruning and logarithmic reduction.
+
+The structure of this paper is organized as follows:
+\begin{enumerate}
+    \item \textbf{Bijective Base-26 conversions (\S\ref{sec:base26}):} A rigorous analysis of positional numeral systems without a zero digit, formalizing the algorithms and providing complete Java implementations for converting integers to Excel column titles and vice-versa.
+    \item \textbf{Logarithmic Power Computation (\S\ref{sec:pow}):} An investigation of modular binary exponentiation, proving its $\mathcal{O}(\log N)$ complexity and providing iterative and recursive templates.
+    \item \textbf{Linear Search Space Reduction via Two Pointers (\S\ref{sec:water}):} A mathematical proof of the correctness of the greedy pointer convergence strategy for the "Container With Most Water" problem, demonstrating how $\mathcal{O}(N^2)$ candidate states are pruned to $\mathcal{O}(N)$.
+    \item \textbf{Sorting-Assisted Target Searching (\S\ref{sec:threesum}):} A formalization of the "Three Sum" problem, demonstrating how sorting enables a quadratic-time two-pointer search with invariant-based duplicate avoidance.
+    \item \textbf{Exhaustive Problem Walkthroughs (\S\ref{sec:problems}):} Detailed execution traces, math steps, and verification of edge cases for each of the four domains.
+\end{enumerate}
+
+%% ============================================================
+\section{Bijective Base-26 Positional Numeral Systems}
+\label{sec:base26}
+
+Standard positional numeral systems of base $B$ map integers using digits from the set $\{0, 1, \ldots, B-1\}$. However, the system utilized for Excel column titles represents a \emph{bijective base-B} system (specifically, $B=26$), which does not contain a symbol representing zero. Instead, the digit set is $\{1, 2, \ldots, 26\}$, mapped to the characters $\{A, B, \ldots, Z\}$.
+
+\subsection{Mathematical Model of Excel Column Conversion}
+
+In a standard base-26 system with digits $\{0, \ldots, 25\}$, a string $S = s_{k-1}s_{k-2}\ldots s_0$ evaluates to:
+\begin{equation}
+V_{\text{standard}}(S) = \sum_{i=0}^{k-1} s_i \cdot 26^i \quad \text{where } s_i \in \{0, \ldots, 25\}
+\end{equation}
+In the bijective base-26 system used for Excel columns, the value of the string is computed as:
+\begin{equation}
+V_{\text{bijective}}(S) = \sum_{i=0}^{k-1} \text{val}(s_i) \cdot 26^i \quad \text{where } \text{val}(s_i) \in \{1, \ldots, 26\}
+\end{equation}
+Here, $\text{val}(A) = 1, \text{val}(B) = 2, \ldots, \text{val}(Z) = 26$. This bijection guarantees that every positive integer maps to a unique, non-empty string, eliminating the ambiguity of leading zeros (e.g., in a standard base system, $A$ and $AA$ would evaluate to the same value if $A=0$, but here $\text{val}(A) = 1$ while $\text{val}(AA) = 1 \cdot 26^1 + 1 \cdot 26^0 = 27$).
+
+\subsection{Algorithm 1: Integer to Excel Title}
+
+To convert a positive integer $A$ to its bijective base-26 string representation, we cannot perform standard modulo division directly. In standard division, $A \pmod{26}$ yields a remainder in $\{0, \dots, 25\}$. Because our digits represent $\{1, \dots, 26\}$, we shift the integer by subtracting $1$ before performing the division. This maps the range $[1, 26]$ to $[0, 25]$:
+\begin{align}
+\text{rem} &= (A - 1) \pmod{26} \\
+A_{\text{next}} &= \lfloor (A - 1) / 26 \rfloor
+\end{align}
+The character corresponding to $\text{rem}$ (where $0 \rightarrow A, 1 \rightarrow B, \dots, 25 \rightarrow Z$) is prepended to the result, and the process repeats until $A = 0$.
+
+\subsubsection{Java Reference Implementation}
+
+\begin{verbatim}
+public class ExcelColumnTitle {
+    public static String convertToTitle(int A) {
+        StringBuilder sb = new StringBuilder();
+        while (A > 0) {
+            A--; // Shift to 0-indexed range [0, 25]
+            int rem = A % 26;
+            sb.append((char) ('A' + rem));
+            A /= 26;
+        }
+        return sb.reverse().toString();
+    }
+}
+\end{verbatim}
+
+\begin{itemize}
+    \item \textbf{Time Complexity:} In each step, the integer is divided by 26. The number of iterations is proportional to the number of digits in the output string:
+    \begin{equation}
+    T(A) = \mathcal{O}(\log_{26} A)
+    \end{equation}
+    \item \textbf{Space Complexity:} The only memory used is the `StringBuilder` to accumulate the characters. The length of the string is:
+    \begin{equation}
+    S(A) = \mathcal{O}(\log_{26} A)
+    \end{equation}
+\end{itemize}
+
+\subsection{Algorithm 2: Excel Title to Integer}
+
+The inverse operation converts a string of uppercase letters back to a decimal integer. We scan the string from left to right. At each character $s_i$, we multiply our accumulated value by 26 and add the numeric value of the character:
+\begin{align}
+V_0 &= 0 \\
+V_{i+1} &= V_i \cdot 26 + (\text{character } s_i - 'A' + 1)
+\end{align}
+
+\subsubsection{Java Reference Implementation}
+
+\begin{verbatim}
+public class ExcelColumnNumber {
+    public static int titleToNumber(String A) {
+        int result = 0;
+        for (int i = 0; i < A.length(); i++) {
+            result = result * 26 + (A.charAt(i) - 'A' + 1);
+        }
+        return result;
+    }
+}
+\end{verbatim}
+
+\begin{itemize}
+    \item \textbf{Time Complexity:} We iterate through the string exactly once. For a string of length $L$:
+    \begin{equation}
+    T(L) = \mathcal{O}(L) = \mathcal{O}(\log_{26} A)
+    \end{equation}
+    \item \textbf{Space Complexity:} The algorithm uses a single integer accumulator, requiring:
+    \begin{equation}
+    S(L) = \mathcal{O}(1)
+    \end{equation}
+\end{itemize}
+
+%% ============================================================
+\section{Logarithmic Power Computation (Binary Exponentiation)}
+\label{sec:pow}
+
+Computing the power of a base $x^n \pmod M$ is a fundamental operation in modular arithmetic, primality testing, and cryptography. A naive approach of multiplying $x$ by itself $n$ times requires $\mathcal{O}(n)$ multiplications. Binary Exponentiation utilizes the binary representation of the exponent to reduce this complexity to $\mathcal{O}(\log n)$.
+
+\subsection{Mathematical Formulation}
+
+The recursive property of binary exponentiation is formulated as:
+\begin{equation}
+x^n = \begin{cases} 
+1 & \text{if } n = 0 \\
+\left(x^{n/2}\right)^2 & \text{if } n \text{ is even} \\
+x \cdot \left(x^{(n-1)/2}\right)^2 & \text{if } n \text{ is odd} 
+\end{cases}
+\end{equation}
+By applying this property, the exponent is halved at each step, bounding the total number of multiplication operations by $2 \lfloor \log_2 n \rfloor$.
+
+\subsection{Java Reference Implementations}
+
+We present both the recursive (top-down) and iterative (bottom-up) implementations of modular binary exponentiation.
+
+\subsubsection{Iterative Formulation}
+
+The iterative version processes the bits of the exponent $n$ from least significant to most significant. If the current bit of $n$ is $1$, we multiply our result by the current base. We then square the base and shift $n$ right by $1$ bit.
+
+\begin{verbatim}
+public class BinaryExponentiation {
+    public static long power(long x, long n, long M) {
+        if (n == 0) return 1 % M;
+        long res = 1;
+        x = x % M; // Handle cases where x >= M
+        if (x < 0) x += M; // Handle negative base cases
+        
+        while (n > 0) {
+            if ((n & 1) == 1) {
+                res = (res * x) % M;
+            }
+            x = (x * x) % M;
+            n >>= 1;
+        }
+        return res;
+    }
+}
+\end{verbatim}
+
+\subsubsection{Recursive Formulation}
+
+\begin{verbatim}
+public class BinaryExponentiationRecursive {
+    public static long power(long x, long n, long M) {
+        if (n == 0) return 1 % M;
+        x = x % M;
+        if (x < 0) x += M;
+        
+        long half = power(x, n / 2, M);
+        long halfSq = (half * half) % M;
+        
+        if (n % 2 == 0) {
+            return halfSq;
+        } else {
+            return (halfSq * x) % M;
+        }
+    }
+}
+\end{verbatim}
+
+\subsection{Complexity Analysis}
+
+\begin{itemize}
+    \item \textbf{Time Complexity:} At each step of the loop (or recursive call), the exponent $n$ is divided by $2$ (via `n >>= 1` or `n / 2`). The loop terminates when $n = 0$. The total number of multiplications is bounded by $2 \log_2 n$:
+    \begin{equation}
+    T(n) = \mathcal{O}(\log n)
+    \end{equation}
+    \item \textbf{Space Complexity:} The iterative version utilizes a constant number of primitive variables, yielding $S(n) = \mathcal{O}(1)$. The recursive version requires stack frames proportional to the recursion depth, yielding $S(n) = \mathcal{O}(\log n)$.
+\end{itemize}
+
+%% ============================================================
+\section{Linear Search Space Reduction via Two Pointers}
+\label{sec:water}
+
+The "Container With Most Water" problem presents a classic optimization task. Given an array $A$ of $N$ non-negative integers representing vertical wall heights, we seek to find two indices $i$ and $j$ ($0 \le i < j < N$) that maximize the volume of water enclosed:
+\begin{equation}
+V(i, j) = (j - i) \cdot \min(A[i], A[j])
+\end{equation}
+A naive search of all pairs $(i, j)$ requires $\mathcal{O}(N^2)$ evaluations. By using a two-pointer approach, we reduce the search space to $\mathcal{O}(N)$.
+
+\subsection{Formal Proof of Correctness (Linear Search Space Reduction)}
+
+We initialize two pointers, $i$ at $0$ (the left boundary) and $j$ at $N-1$ (the right boundary). We calculate the current volume $V(i, j)$. To update the pointers, we compare the heights $A[i]$ and $A[j]$, and move the pointer pointing to the smaller height inward. We present the mathematical proof showing why this greedy pruning is correct and safe.
+
+\begin{theorem}
+Let $i$ and $j$ be the current left and right pointer boundaries respectively, with $i < j$. If $A[i] \le A[j]$, then for any intermediate index $k$ such that $i < k < j$, the volume $V(i, k)$ is strictly bounded by $V(i, j)$:
+\begin{equation}
+V(i, k) < V(i, j)
+\end{equation}
+Consequently, the index $i$ can be safely discarded (i.e., we increment $i \leftarrow i + 1$) without missing the global maximum.
+\end{theorem}
+
+\begin{proof}
+Let $k$ be any index satisfying $i < k < j$. By definition, the volume of the container formed by boundaries $i$ and $k$ is:
+\begin{equation}
+V(i, k) = (k - i) \cdot \min(A[i], A[k])
+\end{equation}
+Since $k$ lies strictly to the left of $j$, the width of this container satisfies:
+\begin{equation}
+(k - i) < (j - i)
+\end{equation}
+Now consider the height of this container, $\min(A[i], A[k])$. By definition of the minimum function:
+\begin{equation}
+\min(A[i], A[k]) \le A[i]
+\end{equation}
+Multiplying these two inequalities:
+\begin{equation}
+(k - i) \cdot \min(A[i], A[k]) < (j - i) \cdot A[i]
+\end{equation}
+Because we assumed $A[i] \le A[j]$, the height of the original container at boundaries $i$ and $j$ is:
+\begin{equation}
+\min(A[i], A[j]) = A[i]
+\end{equation}
+Substituting this back into the right side of the inequality:
+\begin{equation}
+(k - i) \cdot \min(A[i], A[k]) < (j - i) \cdot \min(A[i], A[j])
+\end{equation}
+Which simplifies to:
+\begin{equation}
+V(i, k) < V(i, j)
+\end{equation}
+This proves that no container starting at boundary $i$ and ending at any intermediate boundary $k$ can ever exceed the volume of the container formed by boundaries $i$ and $j$. Thus, the state space $\{(i, k) \mid i < k < j\}$ contains no candidates that could be the global maximum. The boundary $i$ can be safely discarded by incrementing $i \leftarrow i + 1$. 
+
+By symmetry, if $A[j] < A[i]$, then for any intermediate index $k$ such that $i < k < j$, the volume satisfies $V(k, j) < V(i, j)$. Thus, the right boundary $j$ can be safely discarded by decrementing $j \leftarrow j - 1$.
+\end{proof}
+
+\subsection{Java Reference Implementation}
+
+\begin{verbatim}
+import java.util.ArrayList;
+
+public class ContainerWithMostWater {
+    public static int maxArea(ArrayList<Integer> A) {
+        if (A == null || A.size() < 2) return 0;
+        
+        int maxVal = 0;
+        int i = 0;
+        int j = A.size() - 1;
+        
+        while (i < j) {
+            int width = j - i;
+            int height = Math.min(A.get(i), A.get(j));
+            int area = width * height;
+            
+            maxVal = Math.max(maxVal, area);
+            
+            // Greedy pointer movement based on our theorem
+            if (A.get(i) <= A.get(j)) {
+                i++;
+            } else {
+                j--;
+            }
+        }
+        return maxVal;
+    }
+}
+\end{verbatim}
+
+\subsection{Complexity Analysis}
+
+\begin{itemize}
+    \item \textbf{Time Complexity:} In each iteration of the loop, the distance between the two pointers $j - i$ decreases by exactly $1$ (either $i$ increments or $j$ decrements). The loop terminates when $i = j$. The number of iterations is exactly $N - 1$. In each step, we perform constant-time arithmetic and comparisons. Therefore:
+    \begin{equation}
+    T(N) = \mathcal{O}(N)
+    \end{equation}
+    \item \textbf{Space Complexity:} The algorithm only utilizes a few primitive pointer and area variables. No auxiliary data structures are allocated:
+    \begin{equation}
+    S(N) = \mathcal{O}(1)
+    \end{equation}
+\end{itemize}
+
+%% ============================================================
+\section{Sorting-Assisted Target Searching (Three Sum)}
+\label{sec:threesum}
+
+The "Three Sum" problem requires us to find all unique triplets $[A[i], A[j], A[k]]$ in an unsorted array of integers such that their sum is exactly zero:
+\begin{equation}
+A[i] + A[j] + A[k] = 0 \quad \text{where } i < j < k
+\end{equation}
+A naive cubic search takes $\mathcal{O}(N^3)$ time and generates duplicates. By sorting the array and combining it with a two-pointer search, we can solve this in $\mathcal{O}(N^2)$ time while avoiding duplicates.
+
+\subsection{Invariant-Based Duplicate Avoidance}
+
+To ensure that the triplets in our output are unique, we establish mathematical invariants during the search:
+\begin{enumerate}
+    \item \textbf{Outer Loop Invariant:} Let the sorted array be $A$. We fix the first element $A[i]$. If $i > 0$ and $A[i] = A[i-1]$, we skip this index. This prevents processing duplicate triplets starting with the same value.
+    \item \textbf{Two-Pointer Invariants:} Let the two pointers be $L = i+1$ and $R = N-1$. If we find a triplet such that $A[i] + A[L] + A[R] = 0$, we record it. Then, to find other potential triplets with the same fixed $A[i]$, we must move both pointers inward. To prevent duplicates, we advance $L$ and decrement $R$ past any elements equal to their neighbors:
+    \begin{align}
+    \text{while } A[L] = A[L-1], \quad L \leftarrow L+1 \\
+    \text{while } A[R] = A[R+1], \quad R \leftarrow R-1
+    \end{align}
+\end{enumerate}
+
+\subsection{Java Reference Implementation}
+
+\begin{verbatim}
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class ThreeSum {
+    public static List<List<Integer>> threeSum(int[] A) {
+        List<List<Integer>> result = new ArrayList<>();
+        if (A == null || A.length < 3) return result;
+        
+        Arrays.sort(A); // Sort the array to enable two-pointer search
+        int n = A.length;
+        
+        for (int i = 0; i < n - 2; i++) {
+            // Avoid duplicates for the first element of the triplet
+            if (i > 0 && A[i] == A[i - 1]) continue;
+            
+            int left = i + 1;
+            int right = n - 1;
+            
+            while (left < right) {
+                int sum = A[i] + A[left] + A[right];
+                
+                if (sum == 0) {
+                    result.add(Arrays.asList(A[i], A[left], A[right]));
+                    left++;
+                    right--;
+                    
+                    // Avoid duplicates for the second element
+                    while (left < right && A[left] == A[left - 1]) left++;
+                    // Avoid duplicates for the third element
+                    while (left < right && A[right] == A[right + 1]) right--;
+                    
+                } else if (sum < 0) {
+                    left++; // Sum is too small, move left pointer to increase sum
+                } else {
+                    right--; // Sum is too large, move right pointer to decrease sum
+                }
+            }
+        }
+        return result;
+    }
+}
+\end{verbatim}
+
+\subsection{Complexity Analysis}
+
+\begin{itemize}
+    \item \textbf{Time Complexity:}
+    Sorting the array of size $N$ takes $\mathcal{O}(N \log N)$ time.
+    The outer loop runs $N - 2$ times. In each iteration, the inner two-pointer search runs in $\mathcal{O}(N)$ because $left$ and $right$ start at opposite ends and meet in the middle. The total time for the search phase is:
+    \begin{equation}
+    T_{\text{search}}(N) = \sum_{i=0}^{N-3} \mathcal{O}(N - i) = \mathcal{O}(N^2)
+    \end{equation}
+    Combining the sorting and search phases:
+    \begin{equation}
+    T(N) = \mathcal{O}(N \log N) + \mathcal{O}(N^2) = \mathcal{O}(N^2)
+    \end{equation}
+    \item \textbf{Space Complexity:} The two-pointer search uses $\mathcal{O}(1)$ auxiliary space. The space complexity is determined by the sorting algorithm, which typically requires $\mathcal{O}(\log N)$ or $\mathcal{O}(N)$ memory. Thus:
+    \begin{equation}
+    S(N) = \mathcal{O}(\log N) \quad \text{to } \mathcal{O}(N)
+    \end{equation}
+\end{itemize}
+
+%% ============================================================
+\section{Exhaustive Problem Walkthroughs}
+\label{sec:problems}
+
+In this section, we walk through detailed, step-by-step executions of the algorithms.
+
+\subsection{Problem 1: Excel Column conversions}
+\textbf{Task:} Find the string representation of $A = 702$ and verify by converting it back to an integer.
+
+\textbf{Execution Trace (Integer to Title):}
+\begin{enumerate}
+    \item \textbf{Iteration 1:}
+    \begin{align}
+    A &= 702 \\
+    A_{\text{shifted}} &= 701 \\
+    \text{rem} &= 701 \pmod{26} = 25 \quad (\text{character } 'Z') \\
+    A_{\text{next}} &= \lfloor 701 / 26 \rfloor = 26
+    \end{align}
+    \item \textbf{Iteration 2:}
+    \begin{align}
+    A &= 26 \\
+    A_{\text{shifted}} &= 25 \\
+    \text{rem} &= 25 \pmod{26} = 25 \quad (\text{character } 'Z') \\
+    A_{\text{next}} &= \lfloor 25 / 26 \rfloor = 0
+    \end{align}
+    The loop terminates since $A = 0$. Reversing our collected characters yields: \textbf{"ZZ"}.
+\end{enumerate}
+
+\textbf{Execution Trace (Title to Integer):}
+\begin{align}
+A_{\text{string}} &= \text{"ZZ"} \\
+V_0 &= 0 \\
+V_1 &= V_0 \cdot 26 + (\text{value of 'Z'}) = 0 \cdot 26 + 26 = 26 \\
+V_2 &= V_1 \cdot 26 + (\text{value of 'Z'}) = 26 \cdot 26 + 26 = 676 + 26 = 702
+\end{align}
+The value is verified.
+
+\subsection{Problem 2: Binary Exponentiation}
+\textbf{Task:} Calculate $3^{10} \pmod 7$ using binary exponentiation.
+
+\textbf{Execution Trace (Iterative):}
+We write the exponent $n = 10$ in binary: $(1010)_2$. We initialize $\text{res} = 1$, base $x = 3$.
+\begin{enumerate}
+    \item \textbf{Iteration 1 (Bit 0 of exponent is 0):}
+    \begin{align}
+    n &= 10 \quad (\text{binary } 1010) \\
+    \text{Last bit} &= 0 \implies \text{res remains } 1 \\
+    x &\leftarrow (3 \cdot 3) \pmod 7 = 9 \pmod 7 = 2 \\
+    n &\leftarrow 10 \gg 1 = 5
+    \end{align}
+    \item \textbf{Iteration 2 (Bit 1 of exponent is 1):}
+    \begin{align}
+    n &= 5 \quad (\text{binary } 101) \\
+    \text{Last bit} &= 1 \implies \text{res} \leftarrow (1 \cdot 2) \pmod 7 = 2 \\
+    x &\leftarrow (2 \cdot 2) \pmod 7 = 4 \\
+    n &\leftarrow 5 \gg 1 = 2
+    \end{align}
+    \item \textbf{Iteration 3 (Bit 2 of exponent is 0):}
+    \begin{align}
+    n &= 2 \quad (\text{binary } 10) \\
+    \text{Last bit} &= 0 \implies \text{res remains } 2 \\
+    x &\leftarrow (4 \cdot 4) \pmod 7 = 16 \pmod 7 = 2 \\
+    n &\leftarrow 2 \gg 1 = 1
+    \end{align}
+    \item \textbf{Iteration 4 (Bit 3 of exponent is 1):}
+    \begin{align}
+    n &= 1 \quad (\text{binary } 1) \\
+    \text{Last bit} &= 1 \implies \text{res} \leftarrow (2 \cdot 2) \pmod 7 = 4 \\
+    x &\leftarrow (2 \cdot 2) \pmod 7 = 4 \\
+    n &\leftarrow 1 \gg 1 = 0
+    \end{align}
+    The loop terminates since $n = 0$. The final answer is \textbf{4}.
+\end{enumerate}
+We verify this result: $3^{10} = 59049$. Dividing by 7: $59049 = 7 \cdot 8435 + 4 \implies 59049 \equiv 4 \pmod 7$. The result is verified.
+
+\subsection{Problem 3: Container With Most Water}
+\textbf{Task:} Find the maximum water container area in the array $A = [1, 5, 4, 3]$.
+
+\textbf{Execution Trace:}
+We initialize left pointer $i = 0$, right pointer $j = 3$, and $\text{maxArea} = 0$.
+\begin{enumerate}
+    \item \textbf{Step 1:}
+    \begin{align}
+    i &= 0, \quad j = 3 \\
+    A[i] &= 1, \quad A[j] = 3 \\
+    \text{width} &= 3 - 0 = 3 \\
+    \text{height} &= \min(1, 3) = 1 \\
+    \text{area} &= 3 \cdot 1 = 3 \\
+    \text{maxArea} &\leftarrow \max(0, 3) = 3
+    \end{align}
+    Since $A[i] \le A[j]$, we increment $i \leftarrow 1$.
+    \item \textbf{Step 2:}
+    \begin{align}
+    i &= 1, \quad j = 3 \\
+    A[i] &= 5, \quad A[j] = 3 \\
+    \text{width} &= 3 - 1 = 2 \\
+    \text{height} &= \min(5, 3) = 3 \\
+    \text{area} &= 2 \cdot 3 = 6 \\
+    \text{maxArea} &\leftarrow \max(3, 6) = 6
+    \end{align}
+    Since $A[i] > A[j]$, we decrement $j \leftarrow 2$.
+    \item \textbf{Step 3:}
+    \begin{align}
+    i &= 1, \quad j = 2 \\
+    A[i] &= 5, \quad A[j] = 4 \\
+    \text{width} &= 2 - 1 = 1 \\
+    \text{height} &= \min(5, 4) = 4 \\
+    \text{area} &= 1 \cdot 4 = 4 \\
+    \text{maxArea} &\leftarrow \max(6, 4) = 6
+    \end{align}
+    Since $A[i] > A[j]$, we decrement $j \leftarrow 1$.
+    The loop terminates since $i = j = 1$. The final maximum area is \textbf{6}.
+\end{enumerate}
+
+\subsection{Problem 4: Three Sum}
+\textbf{Task:} Find all unique triplets summing to zero in the array $A = [-1, 0, 1, 2, -1, -4]$.
+
+\textbf{Execution Trace:}
+\begin{enumerate}
+    \item \textbf{Sorting Step:} We sort the array: $A = [-4, -1, -1, 0, 1, 2]$. Length $N = 6$.
+    \item \textbf{Outer Loop $i = 0$ ($A[i] = -4$):}
+    We initialize $left = 1$ ($A[left] = -1$), $right = 5$ ($A[right] = 2$).
+    \begin{itemize}
+        \item Step 1: $\text{sum} = -4 + (-1) + 2 = -3 < 0 \implies left \leftarrow 2$ ($A[left] = -1$).
+        \item Step 2: $\text{sum} = -4 + (-1) + 2 = -3 < 0 \implies left \leftarrow 3$ ($A[left] = 0$).
+        \item Step 3: $\text{sum} = -4 + 0 + 2 = -2 < 0 \implies left \leftarrow 4$ ($A[left] = 1$).
+        \item Step 4: $\text{sum} = -4 + 1 + 2 = -1 < 0 \implies left \leftarrow 5$.
+        Loop terminates since $left = right = 5$.
+    \end{itemize}
+    \item \textbf{Outer Loop $i = 1$ ($A[i] = -1$):}
+    We initialize $left = 2$ ($A[left] = -1$), $right = 5$ ($A[right] = 2$).
+    \begin{itemize}
+        \item Step 1: $\text{sum} = -1 + (-1) + 2 = 0$.
+        We record the triplet: \textbf{$[-1, -1, 2]$}.
+        We update pointers: $left \leftarrow 3$, $right \leftarrow 4$.
+        We check for duplicates: $A[left] = A[3] = 0 \neq A[2] \implies$ no skip. $A[right] = A[4] = 1 \neq A[5] \implies$ no skip.
+        \item Step 2: Now $left = 3$ ($A[left] = 0$), $right = 4$ ($A[right] = 1$).
+        $\text{sum} = -1 + 0 + 1 = 0$.
+        We record the triplet: \textbf{$[-1, 0, 1]$}.
+        We update pointers: $left \leftarrow 4$, $right \leftarrow 3$.
+        Loop terminates since $left > right$.
+    \end{itemize}
+    \item \textbf{Outer Loop $i = 2$ ($A[i] = -1$):}
+    Since $i > 0$ and $A[2] == A[1] == -1$, we execute `continue` to avoid duplicates.
+    \item \textbf{Outer Loop $i = 3$ ($A[i] = 0$):}
+    We initialize $left = 4$ ($A[left] = 1$), $right = 5$ ($A[right] = 2$).
+    $\text{sum} = 0 + 1 + 2 = 3 > 0 \implies right \leftarrow 4$.
+    Loop terminates since $left = right = 4$.
+    \item The outer loop completes since $i < N - 2 = 4$.
+    The final list of unique triplets is: \textbf{$[[-1, -1, 2], [-1, 0, 1]]$}.
+\end{enumerate}
+
+%% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper has presented a formal, mathematically grounded treatment of base conversion arithmetic, binary exponentiation, and two-pointer search strategies. We demonstrated how positional number systems without zero elements (bijective systems) can be modeled recursively, and how logarithmic exponentiation processes can be implemented using binary bit manipulation. 
+
+Furthermore, we proved that the greedy pointer convergence algorithm for finding the container with the most water reduces the time complexity from $\mathcal{O}(N^2)$ to $\mathcal{O}(N)$ by systematically pruning suboptimal states. Finally, we formalized duplicate-avoidance invariants for sorted multi-pointer arrays. These algorithms represent essential optimization paradigms for engineering high-performance software systems.
+
+
+\end{document}
