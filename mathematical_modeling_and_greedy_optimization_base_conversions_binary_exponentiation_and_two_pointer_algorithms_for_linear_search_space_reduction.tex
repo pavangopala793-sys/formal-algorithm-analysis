@@ -98,7 +98,7 @@ public class ExcelColumnTitle {
     \begin{equation}
     T(A) = \mathcal{O}(\log_{26} A)
     \end{equation}
-    \item \textbf{Space Complexity:} The only memory used is the `StringBuilder` to accumulate the characters. The length of the string is:
+    \item \textbf{Space Complexity:} The only memory used is the \texttt{StringBuilder} to accumulate the characters. The length of the string is:
     \begin{equation}
     S(A) = \mathcal{O}(\log_{26} A)
     \end{equation}
@@ -207,7 +207,7 @@ public class BinaryExponentiationRecursive {
 \subsection{Complexity Analysis}
 
 \begin{itemize}
-    \item \textbf{Time Complexity:} At each step of the loop (or recursive call), the exponent $n$ is divided by $2$ (via `n >>= 1` or `n / 2`). The loop terminates when $n = 0$. The total number of multiplications is bounded by $2 \log_2 n$:
+    \item \textbf{Time Complexity:} At each step of the loop (or recursive call), the exponent $n$ is divided by $2$ (via \texttt{n >>= 1} or \texttt{n / 2}). The loop terminates when $n = 0$. The total number of multiplications is bounded by $2 \log_2 n$:
     \begin{equation}
     T(n) = \mathcal{O}(\log n)
     \end{equation}
@@ -546,7 +546,7 @@ We initialize left pointer $i = 0$, right pointer $j = 3$, and $\text{maxArea} =
         Loop terminates since $left > right$.
     \end{itemize}
     \item \textbf{Outer Loop $i = 2$ ($A[i] = -1$):}
-    Since $i > 0$ and $A[2] == A[1] == -1$, we execute `continue` to avoid duplicates.
+    Since $i > 0$ and $A[2] == A[1] == -1$, we execute \texttt{continue} to avoid duplicates.
     \item \textbf{Outer Loop $i = 3$ ($A[i] = 0$):}
     We initialize $left = 4$ ($A[left] = 1$), $right = 5$ ($A[right] = 2$).
     $\text{sum} = 0 + 1 + 2 = 3 > 0 \implies right \leftarrow 4$.
