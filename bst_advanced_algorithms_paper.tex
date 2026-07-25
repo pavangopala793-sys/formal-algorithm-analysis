@@ -1,0 +1,428 @@
+\documentclass[10pt,journal,compsoc,onecolumn]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{textcomp}
+\usepackage{tikz}
+\usetikzlibrary{arrows,positioning,shapes.geometric}
+\usepackage{booktabs}
+\usepackage{url}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\begin{document}
+
+\title{Advanced Binary Search Tree Algorithms: Kth Smallest, Morris Traversal, Lowest Common Ancestor, and BST Recovery --- A Formal Unified Analysis}
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+This paper presents a formal, unified algorithmic analysis of four advanced Binary Search Tree (BST) problems: (1) finding the $k$-th smallest element, (2) Morris Traversal for $O(1)$-space inorder traversal via threaded binary tree links, (3) computing the Lowest Common Ancestor (LCA) in both general Binary Trees and BSTs, and (4) recovering a BST from exactly two swapped nodes. We prove that all four problems reduce to controlled instances of BST inorder traversal, exploiting the BST Inorder Invariant as a unifying primitive. Complete algorithm correctness proofs, complexity analyses, and comparative tables are provided. Key results include: a formal proof that Morris Traversal achieves $O(n)$ time and $O(1)$ auxiliary space while fully restoring tree structure; a proof that BST-LCA runs in $O(\log n)$ time for balanced trees; and an inversion-counting argument for $O(n)$ BST recovery, with an $O(1)$-space variant combining Morris Traversal with inversion detection. These results have direct applications in database B-tree indexing, compiler AST optimization, and space-constrained embedded system algorithms.
+\end{abstract}
+
+\begin{IEEEkeywords}
+binary search trees, Morris traversal, lowest common ancestor, BST recovery, inorder traversal, algorithmic complexity, threaded binary trees, tree algorithms
+\end{IEEEkeywords}
+}
+
+\maketitle
+\IEEEdisplaynontitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+\section{Introduction}
+\label{sec:intro}
+
+Binary Search Trees (BSTs) are foundational data structures in computer science, enabling ordered storage with average-case $O(\log n)$ search, insertion, and deletion operations. Despite their ubiquity in database indexing, compiler symbol tables, and priority queuing systems, several advanced algorithmic challenges remain pedagogically significant and practically relevant. This paper formalizes four such advanced BST and Binary Tree problems drawn from first-principles analysis: (1) finding the $k$-th smallest element in a BST, (2) Morris Traversal for space-optimal inorder traversal, (3) finding the Lowest Common Ancestor (LCA) in a Binary Tree and BST, and (4) recovering a BST from exactly two swapped nodes.
+
+We present complete algorithmic solutions, formal proofs of correctness, complexity analysis, and illustrative code implementations. The novelty of this treatment lies in the unified formal framework connecting all four problems via inorder traversal, threading, and BST structural invariants.
+
+\subsection{Background and Motivation}
+
+A Binary Search Tree $T$ is defined recursively: for every node $v \in T$, all values in the left subtree of $v$ are strictly less than $v.\texttt{val}$, and all values in the right subtree of $v$ are strictly greater than $v.\texttt{val}$. This invariant implies a critical structural property:
+
+\begin{theorem}[BST Inorder Theorem]
+The inorder traversal of a valid BST $T$ produces a strictly monotonically increasing sequence. Formally, let $\sigma = \langle v_1, v_2, \ldots, v_n \rangle$ be the inorder traversal sequence of $T$. Then:
+\[
+v_1.\texttt{val} < v_2.\texttt{val} < \cdots < v_n.\texttt{val}
+\]
+\end{theorem}
+
+This theorem serves as the foundational invariant exploited in all four algorithmic problems analyzed in this paper.
+
+\section{Kth Smallest Element in a BST}
+\label{sec:kth-smallest}
+
+\subsection{Problem Statement}
+
+Given a Binary Search Tree $T$ with $n$ nodes and an integer $k$ such that $1 \leq k \leq n$, find the value of the $k$-th smallest element. This problem has practical applications in database range queries, statistical rank computation, and order-statistic trees.
+
+\subsection{Approach I: Inorder Traversal with Array}
+
+By the BST Inorder Theorem, the $k$-th element in the inorder traversal corresponds exactly to the $k$-th smallest element.
+
+\begin{verbatim}
+void inorderHelper(TreeNode root, List<Integer> res) {
+    if (root == null) return;
+    inorderHelper(root.left, res);
+    res.add(root.val);
+    inorderHelper(root.right, res);
+}
+
+int kthSmallest(TreeNode root, int k) {
+    List<Integer> res = new ArrayList<>();
+    inorderHelper(root, res);
+    return res.get(k - 1);
+}
+\end{verbatim}
+
+\textbf{Complexity:} Time $O(n)$, Space $O(n)$ for the auxiliary list.
+
+\subsection{Approach II: Recursive Inorder with Global Counter}
+
+To avoid storing all $n$ values, we maintain a global counter $c$ that increments at each inorder visit and terminates early when $c = k$.
+
+\begin{verbatim}
+int count = 0, result = -1;
+
+void inorder(TreeNode root, int k) {
+    if (root == null) return;
+    inorder(root.left, k);
+    count++;
+    if (count == k) { result = root.val; return; }
+    inorder(root.right, k);
+}
+\end{verbatim}
+
+\textbf{Complexity:} Time $O(k)$ best case, $O(n)$ worst case. Space $O(h)$ for the call stack.
+
+\begin{theorem}[Correctness of k-th Smallest]
+The recursive inorder traversal visits nodes in strictly increasing order. The counter $c$ increments in exact correspondence with inorder visits. When $c = k$, the current node is the $k$-th smallest.
+\end{theorem}
+
+\begin{proof}
+By the BST Inorder Theorem, inorder sequence $\sigma = \langle v_1, v_2, \ldots, v_n \rangle$ is strictly sorted. Counter $c$ starts at 0 and reaches $k$ precisely when the $k$-th inorder node $v_k$ is visited. By the monotonicity of $\sigma$, $v_k$ is the $k$-th smallest value.
+\end{proof}
+
+\section{Morris Traversal: Space-Optimal Inorder Traversal}
+\label{sec:morris}
+
+\subsection{Motivation}
+
+Standard inorder traversal requires $O(h)$ auxiliary space for the call stack, where $h = O(n)$ for degenerate trees. Morris Traversal~\cite{morris1979} achieves $O(n)$ time and $O(1)$ space by temporarily modifying tree structure using \emph{threaded links}.
+
+\begin{definition}[Inorder Predecessor]
+For a node $v$ with a non-null left child, the inorder predecessor is:
+\[
+\mathrm{pred}(v) = \mathrm{rightmost}(v.\texttt{left})
+\]
+\end{definition}
+
+\subsection{Algorithm}
+
+\begin{verbatim}
+List<Integer> morrisInorder(TreeNode root) {
+    List<Integer> result = new ArrayList<>();
+    TreeNode curr = root;
+
+    while (curr != null) {
+        if (curr.left == null) {
+            result.add(curr.val);
+            curr = curr.right;
+        } else {
+            TreeNode pred = curr.left;
+            while (pred.right != null && pred.right != curr)
+                pred = pred.right;
+
+            if (pred.right == null) {
+                pred.right = curr;   // Create thread
+                curr = curr.left;
+            } else {
+                pred.right = null;   // Break thread
+                result.add(curr.val);
+                curr = curr.right;
+            }
+        }
+    }
+    return result;
+}
+\end{verbatim}
+
+\subsection{Correctness and Complexity}
+
+\begin{theorem}[Morris Traversal Correctness]
+Morris Traversal visits all nodes exactly once in inorder sequence and fully restores the original tree structure.
+\end{theorem}
+
+\begin{proof}
+By structural induction on $n$.
+
+\textbf{Base case} ($n=1$): Single node has no left child. Case 1 applies: visit, move right, terminate. Structure unchanged. $\checkmark$
+
+\textbf{Inductive step:} For root $r$ with left subtree $L$ and right subtree $R$:
+\begin{enumerate}
+    \item Predecessor $p = \mathrm{pred}(r)$ is found in $L$. Thread $p.right \leftarrow r$ created.
+    \item Traversal descends into $L$. By induction, all nodes of $L$ are visited in inorder.
+    \item When $p$ is revisited: $p.right = r \neq \texttt{null}$ (thread detected). Thread broken: $p.right \leftarrow \texttt{null}$. Node $r$ visited.
+    \item Traversal proceeds to $R$. By induction, all nodes of $R$ visited in inorder.
+\end{enumerate}
+Visit order is $L$ (inorder) $\to$ $r$ $\to$ $R$ (inorder) = correct inorder for $T$. Thread created and destroyed symmetrically, restoring structure.
+\end{proof}
+
+\begin{theorem}[Morris Traversal Complexity]
+Time: $O(n)$. Space: $O(1)$.
+\end{theorem}
+
+\begin{proof}
+\textbf{Space:} Only constant pointers \texttt{curr}, \texttt{pred}. No stack or recursion. $O(1)$.
+
+\textbf{Time:} Each node visited $\leq 2$ times (thread creation and thread breaking). Each right-pointer in left subtrees traversed $\leq 2$ times total across all iterations. Total pointer operations $= O(n)$.
+\end{proof}
+
+\begin{table}[h]
+\centering
+\caption{Comparison of Inorder Traversal Approaches}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Method} & \textbf{Time} & \textbf{Space} & \textbf{Modifies Tree?} \\
+\midrule
+Recursive & $O(n)$ & $O(h)$ & No \\
+Iterative (Stack) & $O(n)$ & $O(h)$ & No \\
+Morris Traversal & $O(n)$ & $O(1)$ & Temporarily \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Lowest Common Ancestor}
+\label{sec:lca}
+
+\subsection{Problem Statement}
+
+Given a Binary Tree $T$ and two nodes $A$, $B$ in $T$, the \emph{Lowest Common Ancestor} (LCA) is the deepest node $v$ such that $v$ is an ancestor of both $A$ and $B$. A node is its own ancestor.
+
+\subsection{LCA in General Binary Trees}
+
+\begin{verbatim}
+TreeNode lca(TreeNode root, int A, int B) {
+    if (root == null) return null;
+    if (root.val == A || root.val == B) return root;
+
+    TreeNode left  = lca(root.left,  A, B);
+    TreeNode right = lca(root.right, A, B);
+
+    if (left != null && right != null) return root;
+    return (left != null) ? left : right;
+}
+\end{verbatim}
+
+\begin{theorem}[LCA Correctness --- Guaranteed Presence]
+If $A$ and $B$ are both present in $T$, the above algorithm returns the correct LCA in $O(n)$ time, $O(h)$ space.
+\end{theorem}
+
+\begin{proof}
+Let $v^*$ be the true LCA.
+
+\textbf{Case 1:} $v^* = A$ or $v^* = B$. Base case returns $v^*$ immediately. Correct, since a node is its own ancestor.
+
+\textbf{Case 2:} $A$ and $B$ are in different subtrees of $v^*$. Recursive calls return non-null from both children of $v^*$. Both \texttt{left} and \texttt{right} are non-null at $v^*$, which is returned. Every node is visited once, giving $O(n)$ time.
+\end{proof}
+
+When existence is not guaranteed, verify presence first:
+
+\begin{verbatim}
+boolean find(TreeNode root, int target) {
+    if (root == null) return false;
+    return root.val == target ||
+           find(root.left, target) ||
+           find(root.right, target);
+}
+
+TreeNode solve(TreeNode root, int A, int B) {
+    if (!find(root, A) || !find(root, B)) return null;
+    return lca(root, A, B);
+}
+\end{verbatim}
+
+\subsection{LCA in BSTs: Exploiting Ordering}
+
+For a BST with nodes $A \leq B$, the LCA is the first node where $A \leq v.\texttt{val} \leq B$:
+
+\begin{verbatim}
+TreeNode lcaBST(TreeNode root, int A, int B) {
+    if (root == null || root.val == A || root.val == B)
+        return root;
+    if (root.val > B) return lcaBST(root.left,  A, B);
+    if (root.val < A) return lcaBST(root.right, A, B);
+    return root;
+}
+\end{verbatim}
+
+\begin{theorem}[BST LCA Complexity]
+For a balanced BST of height $h = O(\log n)$, LCA runs in $O(\log n)$ time and $O(1)$ iterative space.
+\end{theorem}
+
+\begin{proof}
+At each node, one comparison directs traversal to exactly one subtree. Recursion depth $\leq h$. For balanced BST, $h = O(\log n)$. Implemented iteratively, space is $O(1)$.
+\end{proof}
+
+\begin{table}[h]
+\centering
+\caption{LCA Complexity Comparison}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Method} & \textbf{Time} & \textbf{Space} \\
+\midrule
+Binary Tree & $O(n)$ & $O(h)$ \\
+BST (balanced) & $O(\log n)$ & $O(1)$ iterative \\
+BST (degenerate) & $O(n)$ & $O(1)$ iterative \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Recover BST: Two Swapped Nodes}
+\label{sec:recover}
+
+\subsection{Problem Statement}
+
+Given a BST where exactly two nodes have been swapped, restore the BST without altering its structure.
+
+\subsection{Core Observation}
+
+By the BST Inorder Theorem, swapping two nodes $v_i$ and $v_j$ ($i < j$) in the inorder sequence produces exactly 1 or 2 consecutive inversions:
+
+\begin{itemize}
+    \item \textbf{Adjacent} ($j = i+1$): One inversion at position $i$.
+    \item \textbf{Non-adjacent} ($j > i+1$): Two inversions, at positions $i$ and $j-1$.
+\end{itemize}
+
+\subsection{Algorithm: O(n) Inversion Detection}
+
+\begin{verbatim}
+TreeNode first = null, second = null, prev = null;
+
+void detect(TreeNode root) {
+    if (root == null) return;
+    detect(root.left);
+    if (prev != null && prev.val > root.val) {
+        if (first == null) first = prev;
+        second = root;
+    }
+    prev = root;
+    detect(root.right);
+}
+
+void recoverTree(TreeNode root) {
+    detect(root);
+    int tmp = first.val;
+    first.val = second.val;
+    second.val = tmp;
+}
+\end{verbatim}
+
+\begin{theorem}[Correctness of BST Recovery]
+Swapping \texttt{first.val} and \texttt{second.val} after inversion detection restores the BST.
+\end{theorem}
+
+\begin{proof}
+Let $\sigma^* = \langle a_1, \ldots, a_n \rangle$ and $\sigma$ be the corrupted sequence with $a_i, a_j$ swapped.
+
+\textbf{Adjacent case:} One inversion at $i$. Algorithm sets \texttt{first} $= v_i$ (value $a_j$), \texttt{second} $= v_{i+1}$ (value $a_i$). Swap restores $\sigma^*$.
+
+\textbf{Non-adjacent case:} First inversion at $i$: \texttt{first} $= v_i$ (value $a_j$). Second inversion at $j-1$: \texttt{second} $= v_j$ (value $a_i$). Swap restores $\sigma^*$. $\square$
+\end{proof}
+
+\subsection{Morris-Enhanced O(1) Space Recovery}
+
+By integrating inversion detection into Morris Traversal, we achieve BST recovery in $O(n)$ time and $O(1)$ space:
+
+\begin{verbatim}
+void recoverTreeMorris(TreeNode root) {
+    TreeNode first=null, second=null, prev=null, curr=root;
+    while (curr != null) {
+        if (curr.left == null) {
+            if (prev != null && prev.val > curr.val) {
+                if (first == null) first = prev;
+                second = curr;
+            }
+            prev = curr; curr = curr.right;
+        } else {
+            TreeNode pred = curr.left;
+            while (pred.right != null && pred.right != curr)
+                pred = pred.right;
+            if (pred.right == null) {
+                pred.right = curr; curr = curr.left;
+            } else {
+                pred.right = null;
+                if (prev != null && prev.val > curr.val) {
+                    if (first == null) first = prev;
+                    second = curr;
+                }
+                prev = curr; curr = curr.right;
+            }
+        }
+    }
+    int tmp = first.val; first.val = second.val; second.val = tmp;
+}
+\end{verbatim}
+
+\begin{table}[h]
+\centering
+\caption{Recover BST Complexity Comparison}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Method} & \textbf{Time} & \textbf{Space} & \textbf{Notes} \\
+\midrule
+Sort-based & $O(n\log n)$ & $O(n)$ & Simple \\
+Inorder + Inversion & $O(n)$ & $O(h)$ & Efficient \\
+Morris + Inversion & $O(n)$ & $O(1)$ & Optimal \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Unified Framework}
+\label{sec:unified}
+
+\begin{corollary}[Inorder as Universal BST Primitive]
+All four algorithms reduce to controlled inorder traversal of BSTs:
+\begin{itemize}
+    \item \textbf{$k$-th Smallest:} Terminate at inorder visit $k$.
+    \item \textbf{Morris Traversal:} Perform inorder in $O(1)$ space via predecessor threading.
+    \item \textbf{LCA (BST):} Navigate to first node $v$ with $A \leq v.\texttt{val} \leq B$.
+    \item \textbf{Recover BST:} Detect inversions during inorder to find swapped nodes.
+\end{itemize}
+\end{corollary}
+
+This unification motivates a key pedagogical principle: mastery of BST inorder traversal---including its space-time tradeoffs across recursive, iterative, and Morris variants---unlocks efficient solutions to a wide class of advanced tree problems.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper presented a formal, unified treatment of four advanced BST algorithms connected by the BST Inorder Invariant. Key contributions include:
+
+\begin{itemize}
+    \item A formal inductive proof that Morris Traversal correctly visits all nodes in inorder order in $O(n)$ time and $O(1)$ space while fully restoring tree structure.
+    \item A proof that BST-LCA achieves $O(\log n)$ time for balanced trees by exploiting BST ordering to halve the search space at each level.
+    \item A rigorous inversion-counting argument proving the correctness of $O(n)$ BST recovery, with an $O(1)$-space variant via Morris integration.
+    \item Comparative complexity tables enabling principled algorithm selection for space-constrained deployments.
+\end{itemize}
+
+Future work includes extending Morris Traversal to generalized $k$-ary trees, designing cache-oblivious BST traversal algorithms, and quantifying practical performance impacts of $O(1)$-space traversal in large-scale in-memory database systems.
+
+\begin{thebibliography}{9}
+\bibitem{morris1979}
+J. H. Morris Jr., ``Traversing binary trees simply and cheaply,'' \textit{Information Processing Letters}, vol.~9, no.~5, pp.~197--200, 1979.
+
+\bibitem{cormen2009}
+T. H. Cormen, C. E. Leiserson, R. L. Rivest, and C. Stein, \textit{Introduction to Algorithms}, 3rd ed. MIT Press, 2009.
+
+\bibitem{knuth1997}
+D. E. Knuth, \textit{The Art of Computer Programming, Vol.~1: Fundamental Algorithms}, 3rd ed. Addison-Wesley, 1997.
+
+\bibitem{skiena2008}
+S. S. Skiena, \textit{The Algorithm Design Manual}, 2nd ed. Springer, 2008.
+\end{thebibliography}
+
+\end{document}
