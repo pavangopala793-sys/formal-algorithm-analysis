@@ -1,0 +1,400 @@
+\documentclass[10pt,journal,compsoc,onecolumn]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{textcomp}
+\usepackage{tikz}
+\usetikzlibrary{arrows,positioning,shapes.geometric}
+\usepackage{booktabs}
+\usepackage{url}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\begin{document}
+
+\title{Foundations of Dynamic Programming Part I: Formalization, State Space Reduction, Combinatorial Proofs, and Implementation of 0/1 Knapsack, Subset Sum, Target Sum, Unbounded Knapsack, and Fractional Knapsack}
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+This paper presents a formal, unified algorithmic analysis of foundational Knapsack paradigms in Dynamic Programming (DP) derived from advanced computer science instruction. First, we provide an explicit reference guide detailing every asymptotic symbol, state-space vector, modular property, and pseudo-polynomial bound notation. Second, we establish the theoretical foundations of multi-dimensional state caching and contrast optimal substructure with overlapping subproblems. Third, we formalize the 0/1 Knapsack problem, proving its Bellman recurrence $dp[i][w] = \max(dp[i-1][w], v_i + dp[i-1][w-w_i])$ and demonstrating the backward-iteration space collapse theorem from $O(N \cdot W)$ to $O(W)$. Fourth, we analyze Subset Sum and Partition Equal Subset Sum, deriving boolean state transitions and proving $O(N \cdot S / 64)$ bitset parallel acceleration. Fifth, we model the Target Sum problem, deriving a closed-form parity reduction $S_1 = (S_{total} + T) / 2$. Sixth, we prove forward-iteration space optimization for Unbounded Knapsack ($x_i \in \mathbb{N}_0$). Seventh, we contrast discrete 0/1 Knapsack with Fractional Knapsack ($x_i \in [0,1]$), proving greedy optimality under value density sorting $\rho_i = v_i / w_i$ and providing a mathematical counterexample for discrete failure. Production-grade, compilable Java implementations are provided for all discussed algorithms.
+\end{abstract}
+
+\begin{IEEEkeywords}
+binary trees, algorithms, data structures, computational complexity, tree traversal, recursive algorithms, formal analysis
+\end{IEEEkeywords}
+}
+
+\maketitle
+\IEEEdisplaynontitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+\section{Mathematical Symbols, Formal Notation, and Accessible Reference Guide}
+\label{sec:math-notation}
+
+To maintain rigorous theoretical clarity and accessibility across all computational backgrounds, this section provides an explicit, self-contained reference guide for every mathematical symbol, dynamic programming state operator, set-theoretic notation, and asymptotic complexity bound utilized throughout this paper.
+
+\subsection{Asymptotic Complexity Notations}
+
+\begin{itemize}
+    \item \textbf{Big-O Notation ($\mathcal{O}$ or $O$): Worst-Case Upper Bound}
+    \begin{itemize}
+        \item \emph{Formal Definition:} $f(N) = O(g(N))$ if there exist positive constants $c$ and $N_0$ such that $f(N) \le c \cdot g(N)$ for all $N \ge N_0$.
+        \item \emph{Plain Explanation:} Represents the guaranteed maximum consumption of time or space resources.
+        \item \emph{Context:} The 0/1 Knapsack problem operates in $O(N \cdot W)$ pseudo-polynomial time, where $N$ is the item count and $W$ is the knapsack capacity.
+    \end{itemize}
+
+    \item \textbf{Big-Theta Notation ($\Theta$): Exact Asymptotic Bound}
+    \begin{itemize}
+        \item \emph{Formal Definition:} $f(N) = \Theta(g(N))$ if $f(N) = O(g(N))$ and $f(N) = \Omega(g(N))$.
+        \item \emph{Plain Explanation:} Describes the precise growth rate of an algorithm when upper and lower bounds coincide.
+    \end{itemize}
+
+    \item \textbf{Pseudo-Polynomial Time Complexity:}
+    \begin{itemize}
+        \item \emph{Formal Definition:} An algorithm whose running time is polynomial in the \emph{numeric value} of the input (e.g., $W$), but exponential in the \emph{bit-length} of the input ($\log W$).
+        \item \emph{Context:} While 0/1 Knapsack is NP-Hard in the general sense, its dynamic programming formulation runs in $O(N \cdot W)$ time, which is polynomial when $W$ is bounded.
+    \end{itemize}
+\end{itemize}
+
+\begin{table}[htbp]
+\centering
+\caption{Mathematical Notation Quick Reference Guide}
+\label{tab:math-symbols}
+\begin{tabular}{lll}
+\toprule
+\textbf{Symbol} & \textbf{Name / Meaning} & \textbf{Plain-Language Explanation} \\
+\midrule
+$O(g(N, W))$ & Big-O Notation & Asymptotic upper bound on execution time or space. \\
+$\Theta(g(N, W))$ & Big-Theta Notation & Exact asymptotic complexity bound. \\
+$dp[i][w]$ & 2D Dynamic State Table & Maximum value using first $i$ items with capacity $w$. \\
+$dp[w]$ & 1D Compressed State Vector & Maximum value achievable with exact capacity $w$. \\
+$w_i, v_i$ & Weight and Value of Item $i$ & Attributes of the $i$-th candidate element. \\
+$W$ & Knapsack Capacity Bound & Upper constraint on total permissible weight. \\
+$\rho_i = v_i / w_i$ & Value Density Ratio & Profit per unit weight of item $i$. \\
+$x_i \in \{0, 1\}$ & Discrete Inclusion Variable & Decision variable (0 = Exclude, 1 = Include). \\
+$x_i \in [0, 1]$ & Continuous Inclusion Fraction & Fraction of item $i$ selected (Fractional Knapsack). \\
+$x_i \in \mathbb{N}_0$ & Unbounded Selection Quantity & Integer quantity of item $i$ selected ($0, 1, 2, \dots$). \\
+$\lor$ & Logical OR Operator & Boolean state transition for feasibility problems. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\section{Taxonomy and Theoretical Foundations of Knapsack Paradigms}
+\label{sec:knapsack-foundations}
+
+The Knapsack family represents one of the most thoroughly studied optimization paradigms in theoretical computer science. Originating in operations research and combinatorial optimization, knapsack problems encapsulate resource allocation under hard capacity constraints.
+
+\subsection{Categorization of Knapsack Variants}
+
+Knapsack problems are classified along two primary dimensions: item divisibility and item supply multiplicity.
+
+\begin{enumerate}
+    \item \textbf{0/1 Knapsack Problem (Discrete \& Bounded Supply):} Each item $i \in \{1, \dots, N\}$ is indivisible ($x_i \in \{0, 1\}$) and available in at most one copy.
+    \item \textbf{Bounded Knapsack Problem (Discrete \& Multi-Copy Supply):} Each item $i$ is available in at most $c_i$ copies ($x_i \in \{0, 1, \dots, c_i\}$).
+    \item \textbf{Unbounded Knapsack Problem (Discrete \& Infinite Supply):} Each item $i$ is indivisible, but available in unlimited quantities ($x_i \in \mathbb{N}_0$).
+    \item \textbf{Fractional Knapsack Problem (Continuous \& Divisible):} Items can be arbitrarily split into fractional quantities ($x_i \in [0, 1]$).
+\end{enumerate}
+
+\subsection{Core Prerequisites for Dynamic Programming}
+
+For discrete knapsack problems, dynamic programming is applicable due to two fundamental properties:
+
+\begin{definition}[Optimal Substructure]
+An optimal solution to a knapsack problem with $N$ items and capacity $W$ contains within it optimal solutions to subproblems involving $N-1$ items and capacity $W - w_N$ (if item $N$ is included) or capacity $W$ (if item $N$ is excluded).
+\end{definition}
+
+\begin{definition}[Overlapping Subproblems]
+The recursive decision tree branches into duplicate subproblem instances parameterised by the tuple $(i, w)$, where multiple distinct selection choices lead to identical remaining capacity $w$ at item index $i$.
+\end{definition}
+
+
+\section{Case Study I: The 0/1 Knapsack Problem}
+\label{sec:01-knapsack}
+
+\subsection{Formal Problem Definition}
+
+Given $N$ items, where item $i$ has weight $w_i \in \mathbb{Z}^+$ and value $v_i \in \mathbb{Z}^+$, and a total knapsack capacity $W \in \mathbb{Z}^+$, maximize total value:
+\[
+\max \sum_{i=1}^{N} v_i x_i \quad \text{subject to} \quad \sum_{i=1}^{N} w_i x_i \le W, \quad x_i \in \{0, 1\}
+\]
+
+\subsection{Bellman Recurrence Formulation}
+
+Let $dp[i][w]$ denote the maximum value achievable considering a subset of the first $i$ items with total weight capacity $w$. For $1 \le i \le N$ and $0 \le w \le W$:
+
+\[
+dp[i][w] = 
+\begin{cases}
+dp[i-1][w] & \text{if } w_i > w \\
+\max\Big(dp[i-1][w], \; v_i + dp[i-1][w - w_i]\Big) & \text{if } w_i \le w
+\end{cases}
+\]
+
+with base conditions $dp[0][w] = 0$ for all $0 \le w \le W$ and $dp[i][0] = 0$ for all $0 \le i \le N$.
+
+\subsection{Space Optimization: 2D Table to 1D Vector}
+
+\begin{theorem}[Backward Iteration Space Collapse for 0/1 Knapsack]
+The 2D dynamic programming table of size $(N+1) \times (W+1)$ can be compressed into a 1D vector of size $W+1$ by iterating the capacity parameter $w$ backwards from $W$ down to $w_i$.
+\end{theorem}
+
+\begin{proof}
+In the 2D recurrence, computing row $i$ depends exclusively on values from row $i-1$:
+\[
+dp^{(i)}[w] = \max\Big(dp^{(i-1)}[w], \; v_i + dp^{(i-1)}[w - w_i]\Big)
+\]
+If we update a single 1D array $dp[w]$ in-place, updating $dp[w]$ requires the value of $dp[w - w_i]$ from the \emph{previous} step $i-1$. If we iterate $w$ in decreasing order ($W \to w_i$), the entry at index $w - w_i$ has not yet been modified in step $i$, thus preserving its state from step $i-1$. This prevents an item from being included multiple times in the same step.
+\end{proof}
+
+
+\section{Case Study II: Subset Sum and Partition Equal Subset Sum}
+\label{sec:subset-sum}
+
+\subsection{Problem Reduction and Boolean Recurrence}
+
+The Subset Sum problem asks whether there exists a subset of non-negative integers $A = \{a_1, a_2, \dots, a_N\}$ that sums to exactly $S$.
+
+Defining $dp[j]$ as a boolean flag indicating whether sum $j$ is achievable:
+\[
+dp[j] = dp[j] \lor dp[j - a_i] \quad \text{for } j \text{ from } S \text{ down to } a_i
+\]
+
+Partition Equal Subset Sum reduces to Subset Sum with target $S = \sum A / 2$. If $\sum A$ is odd, the partition is impossible ($dp = \text{false}$).
+
+\subsection{Bitset Parallel Acceleration}
+
+\begin{theorem}[Bitwise Word Parallelism for Subset Sum]
+Using bitset representation, Subset Sum transitions can be executed in $O(N \cdot S / w_{word})$ time complexity, where $w_{word}$ is the machine word size (64 bits).
+\end{theorem}
+
+The bitset update rule is:
+\[
+\text{bitset} = \text{bitset} \mid (\text{bitset} \ll a_i)
+\]
+
+
+\section{Case Study III: Target Sum Problem}
+\label{sec:target-sum}
+
+\subsection{Mathematical Transformation to Subset Sum}
+
+Given an array of integers $nums$ and a target $T$, assign $+1$ or $-1$ to each element such that the signed sum equals $T$.
+
+Let $P$ be the set of elements assigned a $+1$ sign, and $N_{set}$ be the set assigned a $-1$ sign:
+\[
+\sum P - \sum N_{set} = T
+\]
+Adding $\sum P + \sum N_{set} = \sum nums = S_{total}$ to both sides:
+\[
+2 \cdot \sum P = S_{total} + T \implies \sum P = \frac{S_{total} + T}{2}
+\]
+
+\begin{corollary}[Target Sum Parity and Bound Conditions]
+A valid sign assignment exists if and only if:
+1. $S_{total} + T \ge 0$
+2. $(S_{total} + T) \pmod 2 = 0$
+Under these conditions, Target Sum is mathematically identical to counting subsets that sum to $S_{target} = (S_{total} + T) / 2$.
+\end{corollary}
+
+
+\section{Case Study IV: Unbounded Knapsack and Coin Change}
+\label{sec:unbounded-knapsack}
+
+\subsection{Recurrence and Forward Iteration Proof}
+
+In Unbounded Knapsack, item supply is infinite ($x_i \in \mathbb{N}_0$).
+
+\[
+dp[w] = \max_{1 \le i \le N, \, w_i \le w} \Big(v_i + dp[w - w_i]\Big)
+\]
+
+\begin{theorem}[Forward Iteration Space Collapse for Unbounded Knapsack]
+Unbounded Knapsack is solved in $O(W)$ space by iterating capacity $w$ \emph{forwards} from $w_i$ up to $W$.
+\end{theorem}
+
+\begin{proof}
+Forwards iteration allows $dp[w - w_i]$ to reflect updates made within the \emph{current} item iteration. Thus, item $i$ can be repeatedly selected at capacities $w - w_i, w, w + w_i$, correctly modeling infinite item supply.
+\end{proof}
+
+
+\section{Case Study V: Fractional Knapsack --- Greedy vs Dynamic Programming}
+\label{sec:fractional-knapsack}
+
+\subsection{Continuous Relaxation and Density Sorting}
+
+When items are divisible ($x_i \in [0, 1]$), the problem is solved greedily.
+
+\begin{theorem}[Greedy Choice Optimality for Fractional Knapsack]
+Sorting items by value density ratio $\rho_i = v_i / w_i$ in descending order and greedily filling capacity $W$ yields a globally optimal solution in $O(N \log N)$ time.
+\end{theorem}
+
+\begin{proof}
+Suppose an optimal solution $O^*$ selects an item $j$ with lower ratio $\rho_j < \rho_k$ instead of an available item $k$. Replacing a fraction $\epsilon$ of item $j$ with item $k$ increases total value by $\epsilon(\rho_k - \rho_j) > 0$, contradicting the assumption that $O^*$ was optimal.
+\end{proof}
+
+\begin{corollary}[Failure of Greedy Strategy for 0/1 Knapsack]
+Greedy density sorting fails for discrete 0/1 Knapsack because item indivisibility leaves unused capacity gaps, preventing lower-density items from being replaced by optimal combinations of higher-density items.
+\end{corollary}
+
+
+\section{Production-Grade Java Implementations}
+\label{sec:java-implementations}
+
+This section provides complete, compilable Java reference implementations for all discussed algorithms.
+
+\subsection{0/1 Knapsack (2D Tabulation and 1D Space Optimized)}
+
+\begin{verbatim}
+public class Knapsack01 {
+    // 2D Tabulation Approach: O(N*W) Time, O(N*W) Space
+    public static int solve2D(int[] wt, int[] val, int W) {
+        int n = wt.length;
+        int[][] dp = new int[n + 1][W + 1];
+
+        for (int i = 1; i <= n; i++) {
+            for (int w = 1; w <= W; w++) {
+                if (wt[i - 1] <= w) {
+                    dp[i][w] = Math.max(dp[i - 1][w], val[i - 1] + dp[i - 1][w - wt[i - 1]]);
+                } else {
+                    dp[i][w] = dp[i - 1][w];
+                }
+            }
+        }
+        return dp[n][W];
+    }
+
+    // 1D Space-Optimized Approach: O(N*W) Time, O(W) Space
+    public static int solve1D(int[] wt, int[] val, int W) {
+        int n = wt.length;
+        int[] dp = new int[W + 1];
+
+        for (int i = 0; i < n; i++) {
+            for (int w = W; w >= wt[i]; w--) { // Backward iteration preserves 0/1 constraint
+                dp[w] = Math.max(dp[w], val[i] + dp[w - wt[i]]);
+            }
+        }
+        return dp[W];
+    }
+}
+\end{verbatim}
+
+\subsection{Subset Sum and Target Sum Solvers}
+
+\begin{verbatim}
+public class SubsetAndTargetSum {
+    // Subset Sum: O(N*S) Time, O(S) Space
+    public static boolean isSubsetSum(int[] arr, int target) {
+        boolean[] dp = new boolean[target + 1];
+        dp[0] = true;
+
+        for (int num : arr) {
+            for (int j = target; j >= num; j--) {
+                dp[j] = dp[j] || dp[j - num];
+            }
+        }
+        return dp[target];
+    }
+
+    // Target Sum: O(N*S) Time, O(S) Space
+    public static int findTargetSumWays(int[] nums, int target) {
+        int totalSum = 0;
+        for (int num : nums) totalSum += num;
+
+        if (totalSum + target < 0 || (totalSum + target) % 2 != 0) return 0;
+        int s1 = (totalSum + target) / 2;
+
+        int[] dp = new int[s1 + 1];
+        dp[0] = 1;
+
+        for (int num : nums) {
+            for (int j = s1; j >= num; j--) {
+                dp[j] += dp[j - num];
+            }
+        }
+        return dp[s1];
+    }
+}
+\end{verbatim}
+
+\subsection{Unbounded Knapsack and Fractional Knapsack Solvers}
+
+\begin{verbatim}
+import java.util.Arrays;
+import java.util.Comparator;
+
+public class UnboundedAndFractionalKnapsack {
+    // Unbounded Knapsack: O(N*W) Time, O(W) Space
+    public static int unboundedKnapsack(int[] wt, int[] val, int W) {
+        int[] dp = new int[W + 1];
+
+        for (int w = 1; w <= W; w++) {
+            for (int i = 0; i < wt.length; i++) {
+                if (wt[i] <= w) {
+                    dp[w] = Math.max(dp[w], val[i] + dp[w - wt[i]]);
+                }
+            }
+        }
+        return dp[W];
+    }
+
+    // Fractional Knapsack (Greedy): O(N log N) Time, O(N) Space
+    static class Item {
+        int weight, value;
+        Item(int w, int v) { this.weight = w; this.value = v; }
+    }
+
+    public static double getMaxValue(int[] wt, int[] val, int capacity) {
+        Item[] items = new Item[wt.length];
+        for (int i = 0; i < wt.length; i++) items[i] = new Item(wt[i], val[i]);
+
+        Arrays.sort(items, (a, b) -> Double.compare(
+            (double)b.value / b.weight, (double)a.value / a.weight));
+
+        double totalValue = 0.0;
+        int currentCapacity = capacity;
+
+        for (Item item : items) {
+            if (currentCapacity >= item.weight) {
+                currentCapacity -= item.weight;
+                totalValue += item.value;
+            } else {
+                totalValue += ((double)item.value / item.weight) * currentCapacity;
+                break;
+            }
+        }
+        return totalValue;
+    }
+}
+\end{verbatim}
+
+
+\section{Comparative Synthesis and Master Decision Taxonomy}
+\label{sec:master-taxonomy}
+
+\begin{table}[htbp]
+\centering
+\caption{Master Comparative Taxonomy of Knapsack Algorithmic Paradigms}
+\label{tab:master-taxonomy}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Algorithm Paradigm} & \textbf{Item Supply} & \textbf{Time Complexity} & \textbf{Space Complexity} & \textbf{Capacity Loop} & \textbf{Optimality Class} \\
+\midrule
+0/1 Knapsack (2D) & Discrete ($\le 1$) & $O(N \cdot W)$ & $O(N \cdot W)$ & $1 \to W$ & Exact DP \\
+0/1 Knapsack (1D) & Discrete ($\le 1$) & $O(N \cdot W)$ & $O(W)$ & $W \to w_i$ & Exact DP \\
+Subset Sum & Discrete ($\le 1$) & $O(N \cdot S)$ & $O(S)$ & $S \to a_i$ & Exact DP \\
+Target Sum & Discrete ($\le 1$) & $O(N \cdot S)$ & $O(S)$ & $S_1 \to num$ & Exact DP \\
+Unbounded Knapsack & Infinite ($\mathbb{N}_0$) & $O(N \cdot W)$ & $O(W)$ & $w_i \to W$ & Exact DP \\
+Fractional Knapsack & Continuous ($[0,1]$) & $O(N \log N)$ & $O(N)$ & N/A & Greedy Optimal \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+\end{document}

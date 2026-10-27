@@ -1,0 +1,512 @@
+\documentclass[10pt,journal,compsoc,onecolumn]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{textcomp}
+\usepackage{tikz}
+\usetikzlibrary{arrows,positioning,shapes.geometric}
+\usepackage{booktabs}
+\usepackage{url}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\begin{document}
+
+\title{Graph Theory Foundations, Depth-First Search Mechanics, Structural Storage Representations, and Cycle Detection Algorithms in Directed and Undirected Graphs: A Formal Algorithmic Analysis}
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+This paper presents a formal, graduate-level mathematical formalization and algorithmic analysis of Graph Theory, Graph Storage Representations, Depth-First Search (DFS) Traversal Mechanics, and Cycle Detection Algorithms in both Undirected and Directed Graphs. We formalize graph properties, degree invariants, density metrics, and contrast Adjacency Matrix ($O(V^2)$ space) against Adjacency List ($O(V+E)$ space) representations with mathematical equivalence proofs and edge-list construction algorithms. We dissect Depth-First Search (DFS), demonstrating its recursive call stack mechanics and state space exploration across disconnected graph components. Furthermore, we address the challenge of cycle detection: for undirected graphs, we establish the Parent-Tracking invariant; for directed graphs, we formalize the distinction between reconvergent DAG paths (diamond structures) and true directed cycles, introducing the 3-Coloring State Machine (WHITE, GRAY, BLACK) and Back-Edge Theorem. Complete compilable Java reference implementations, execution trace tables, and a diagnostic taxonomy matrix are provided for all discussed algorithms.
+\end{abstract}
+
+\begin{IEEEkeywords}
+binary trees, algorithms, data structures, computational complexity, tree traversal, recursive algorithms, formal analysis
+\end{IEEEkeywords}
+}
+
+\maketitle
+\IEEEdisplaynontitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+\section{Introduction and Formal Graph Theory Specifications}
+\label{sec:intro}
+
+Graph structures constitute one of the most fundamental non-linear data structures in computer science and applied mathematics. Formally, a graph models pairwise relationships between discrete objects, serving as the core computational primitive for network routing, social network modeling, dependency resolution in software compilation, program analysis, and database query optimization.
+
+Efficient processing of graph structures requires a clear mathematical taxonomy of graph types, invariant properties, and structural storage formats. In this section, we present a graduate-level formalization of graph theory primitives, topological classifications, vertex degree metrics, and density formulations.
+
+\begin{definition}[Graph Topology]
+A graph $G$ is a 2-tuple $G = (V, E)$ consisting of a finite, non-empty set of vertices (or nodes) $V$ and a set of edges $E$. The order of the graph is denoted by $|V| = n$, and the size of the graph is denoted by $|E| = m$.
+\end{definition}
+
+\begin{definition}[Directed vs. Undirected Graphs]
+Graph topologies are broadly classified into two categories based on edge symmetry:
+\begin{itemize}
+    \item \textbf{Directed Graph (Digraph):} A directed graph $D = (V, E)$ consists of vertices $V$ and a set of ordered pairs $E \subseteq V \times V$. An edge $e = (u, v) \in E$ represents a unidirectional link from source vertex $u$ to target vertex $v$, where $(u, v) \neq (v, u)$.
+    \item \textbf{Undirected Graph:} An undirected graph $G = (V, E)$ consists of vertices $V$ and a set of unordered pairs $E \subseteq \{\{u, v\} \mid u, v \in V, u \neq v\}$. An edge $e = \{u, v\}$ represents a bidirectional relation between $u$ and $v$, rendering $(u, v)$ and $(v, u)$ identical.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Weighted vs. Unweighted Graphs]
+Edge sets may be augmented with a numeric weight mapping:
+\begin{equation}
+w: E \to \mathbb{R}
+\end{equation}
+In an unweighted graph, all edge weights are implicitly uniform, such that $w(e) = 1$ for all $e \in E$. In a weighted graph, $w(e)$ represents domain-specific metrics such as distance, latency, capacity, or cost.
+\end{definition}
+
+\begin{definition}[Graph Connectedness and Components]
+The connectivity structure of a graph dictates reachable paths across vertex pairs:
+\begin{itemize}
+    \item \textbf{Undirected Connectivity:} An undirected graph is \emph{connected} if for every pair of vertices $u, v \in V$, there exists a path $P = (u = v_0, v_1, v_2, \dots, v_k = v)$ such that $\{v_i, v_{i+1}\} \in E$ for all $0 \le i < k$. A disconnected undirected graph partitions into $k \ge 2$ maximal connected subgraphs termed \emph{Connected Components} $C_1, C_2, \dots, C_k$.
+    \item \textbf{Directed Connectivity:} A directed graph is \emph{strongly connected} if there exists a directed path from $u$ to $v$ AND from $v$ to $u$ for every pair $u, v \in V$. It is \emph{weakly connected} if replacing all directed edges with undirected edges yields a connected undirected graph.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Vertex Degree and In-Out Invariants]
+The degree of a vertex measures its local edge connectivity:
+\begin{itemize}
+    \item For an undirected graph $G=(V, E)$, the degree of a vertex $v \in V$, denoted $\deg(v)$, is the number of edges incident to $v$:
+    \begin{equation}
+    \deg(v) = |\{ u \in V \mid \{v, u\} \in E \}|
+    \end{equation}
+    \item For a directed graph $D=(V, E)$, the degree partitions into \emph{in-degree} $\deg^-(v)$ and \emph{out-degree} $\deg^+(v)$:
+    \begin{equation}
+    \deg^-(v) = |\{ u \in V \mid (u, v) \in E \}|, \quad \deg^+(v) = |\{ u \in V \mid (v, u) \in E \}|
+    \end{equation}
+    The total degree is given by $\deg(v) = \deg^-(v) + \deg^+(v)$.
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[Handshaking Lemma]
+\label{thm:handshaking}
+For any finite graph, the sum of vertex degrees is directly proportional to the total edge count:
+\begin{enumerate}
+    \item For an undirected graph $G = (V, E)$:
+    \begin{equation}
+    \sum_{v \in V} \deg(v) = 2|E|
+    \end{equation}
+    \item For a directed graph $D = (V, E)$:
+    \begin{equation}
+    \sum_{v \in V} \deg^-(v) = \sum_{v \in V} \deg^+(v) = |E|
+    \end{equation}
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+Every undirected edge $e = \{u, v\}$ contributes exactly 1 to $\deg(u)$ and 1 to $\deg(v)$, thereby contributing 2 to the sum $\sum_{v \in V} \deg(v)$. Summing across all $|E|$ edges yields $2|E|$. Similarly, each directed edge $e = (u, v)$ contributes exactly 1 to $\deg^+(u)$ and 1 to $\deg^-(v)$. Summing across all directed edges yields $\sum \deg^+(v) = |E|$ and $\sum \deg^-(v) = |E|$.
+\end{proof}
+
+\begin{definition}[Simple Graphs, Self-Loops, and Density]
+A \emph{simple graph} contains no self-loops ($(v, v) \notin E$) and no parallel (duplicate) edges between any node pair. Graph density $\rho$ expresses the ratio of existing edges to maximum possible edges:
+\begin{equation}
+\rho_{\text{undirected}} = \frac{2|E|}{|V|(|V|-1)}, \quad \rho_{\text{directed}} = \frac{|E|}{|V|(|V|-1)}
+\end{equation}
+A graph is \emph{sparse} if $|E| = O(|V|)$ (where $\rho \to 0$ as $|V| \to \infty$) and \emph{dense} if $|E| = \Theta(|V|^2)$ (where $\rho = \Theta(1)$).
+\end{definition}
+
+% -----------------------------------------------------------------------------
+\section{Graph Storage Representations and Structural Trade-offs}
+\label{sec:representations}
+
+Choosing an appropriate memory representation for a graph is a critical engineering decision that dictates spatial overhead and computational complexity for graph operations. The two primary structural formats are the \textbf{Adjacency Matrix} and the \textbf{Adjacency List}.
+
+\subsection{Adjacency Matrix Representation}
+
+An Adjacency Matrix represents a graph $G = (V, E)$ with $|V| = N$ as a two-dimensional square matrix $M$ of size $N \times N$, indexed from $0$ to $N-1$ (or $1$ to $N$).
+
+\begin{equation}
+M[u][v] = \begin{cases}
+1 \text{ (or } w(u, v) \text{)}, & \text{if } (u, v) \in E \\
+0 \text{ (or } \infty \text{)}, & \text{if } (u, v) \notin E
+\end{cases}
+\end{equation}
+
+For undirected graphs, $M$ is symmetric across the main diagonal ($M[u][v] = M[v][u]$). For directed graphs, $M[u][v] = 1$ indicates an edge originating at $u$ and terminating at $v$.
+
+\textbf{Properties of Adjacency Matrix:}
+\begin{itemize}
+    \item \textbf{Space Complexity:} $\Theta(V^2)$ memory words, independent of $|E|$.
+    \item \textbf{Edge Existence Query $(u, v) \in E$:} $O(1)$ constant time lookup via $M[u][v]$.
+    \item \textbf{Neighbor Exploration:} Iterating over all out-neighbors of $u$ requires scanning row $M[u]$, taking $\Theta(V)$ time regardless of $\deg^+(u)$.
+\end{itemize}
+
+\subsection{Adjacency List Representation}
+
+An Adjacency List represents a graph $G = (V, E)$ as an array of dynamic headers of size $N$, where entry $L[u]$ contains a dynamic collection (linked list or dynamic array) of all adjacent target vertices $v$ such that $(u, v) \in E$.
+
+\textbf{Properties of Adjacency List:}
+\begin{itemize}
+    \item \textbf{Space Complexity:} $\Theta(V + E)$ memory words ($\Theta(V + 2E)$ for undirected, $\Theta(V + E)$ for directed).
+    \item \textbf{Edge Existence Query $(u, v) \in E$:} $O(\deg^+(u))$ time, requiring a linear scan of list $L[u]$.
+    \item \textbf{Neighbor Exploration:} Iterating over out-neighbors of $u$ takes $O(\deg^+(u))$ time, which is strictly optimal.
+\end{itemize}
+
+\subsection{Comparative Analysis and Trade-off Matrix}
+
+Table~\ref{tab:rep_comparison} summarizes the asymptotic trade-offs between Adjacency Matrix and Adjacency List representations.
+
+\begin{table}[htbp]
+\caption{Asymptotic Comparison of Graph Storage Representations}
+\label{tab:rep_comparison}
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Operation / Property} & \textbf{Adjacency Matrix} & \textbf{Adjacency List} \\
+\midrule
+Space Complexity & $\Theta(V^2)$ & $\Theta(V + E)$ \\
+Edge Existence Query $(u, v) \in E$ & $\Theta(1)$ & $O(\deg(u))$ \\
+Enumerate Out-Neighbors of $u$ & $\Theta(V)$ & $\Theta(\deg(u))$ \\
+Enumerate In-Neighbors of $v$ & $\Theta(V)$ & $\Theta(V + E)$ (or $\Theta(\deg^-(v))$ w/ transpose) \\
+Add Edge $(u, v)$ & $\Theta(1)$ & $\Theta(1)$ \\
+Delete Edge $(u, v)$ & $\Theta(1)$ & $O(\deg(u))$ \\
+Optimal Application Domain & Dense Graphs ($E \approx V^2$) & Sparse Graphs ($E \ll V^2$) and General DSA \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Formal Java Implementation: Edge List Construction}
+
+\begin{verbatim}
+import java.util.*;
+
+public class GraphRepresentation {
+    // Construct Adjacency Matrix for Undirected Graph
+    public static int[][] buildAdjMatrixUndirected(int n, int[][] edges) {
+        int[][] matrix = new int[n + 1][n + 1];
+        for (int[] edge : edges) {
+            int u = edge[0];
+            int v = edge[1];
+            matrix[u][v] = 1;
+            matrix[v][u] = 1;
+        }
+        return matrix;
+    }
+
+    // Construct Adjacency List for Directed / Undirected Graph
+    public static List<List<Integer>> buildAdjList(int n, int[][] edges, boolean isDirected) {
+        List<List<Integer>> adj = new ArrayList<>();
+        for (int i = 0; i <= n; i++) {
+            adj.add(new ArrayList<>());
+        }
+        for (int[] edge : edges) {
+            int u = edge[0];
+            int v = edge[1];
+            adj.get(u).add(v);
+            if (!isDirected) {
+                adj.get(v).add(u);
+            }
+        }
+        return adj;
+    }
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{Depth-First Search (DFS) Traversal Mechanics and Call Stack Analysis}
+\label{sec:dfs}
+
+Depth-First Search (DFS) is a fundamental traversal paradigm for systematic state-space exploration of graph structures. While Breadth-First Search (BFS) explores vertices level-by-level using a Queue, DFS dives as deep as possible along each branch before backtracking using a Stack (either implicit via recursive call frames or explicit via data structures).
+
+\subsection{Algorithmic Invariants and Visited Tracking}
+
+Traversing a graph with cycles introduces the risk of infinite recursion loops. To guarantee termination and linear time bounds, DFS maintains a boolean state array \texttt{visited[]} of size $N+1$.
+
+\begin{definition}[DFS Traversal Invariant]
+During DFS execution on graph $G = (V, E)$:
+\begin{enumerate}
+    \item A vertex $u \in V$ is marked \texttt{visited[u] = true} at the exact moment its recursive frame is initiated.
+    \item A vertex $u$ is processed at most once across the entire execution.
+    \item The outer traversal loop iterates over all $v \in V$, triggering a new DFS tree root whenever \texttt{visited[v] == false}. This guarantees complete traversal across disconnected components (forming a \emph{DFS Forest}).
+\end{enumerate}
+\end{definition}
+
+\subsection{Formal Complexity Analysis}
+
+\begin{theorem}[DFS Time and Space Complexity]
+\label{thm:dfs_complexity}
+For a graph $G = (V, E)$ represented via Adjacency List, Depth-First Search completes in:
+\begin{equation}
+T(V, E) = \Theta(V + E) \text{ time}, \quad S(V) = O(V) \text{ auxiliary space}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+We prove time complexity via Aggregate Analysis:
+\begin{enumerate}
+    \item The outer forest loop executes $V$ times, checking \texttt{visited[i]}. This contributes $\Theta(V)$ time.
+    \item Each vertex $u \in V$ is marked \texttt{visited[u] = true} exactly once. Thus, \texttt{dfs(u)} is called at most once per vertex across the lifetime of the program.
+    \item Inside \texttt{dfs(u)}, the neighbor traversal loop runs $\deg(u)$ times ($\deg^+(u)$ for directed). Summing over all vertices:
+    \begin{equation}
+    \sum_{u \in V} O(1 + \deg(u)) = O(V) + O\left(\sum_{u \in V} \deg(u)\right) = O(V + 2E) = O(V + E)
+    \end{equation}
+    Hence, total execution time is $\Theta(V + E)$.
+    \item Auxiliary space is bounded by the maximum recursion depth (call stack frames) plus the \texttt{visited[]} array of size $V + 1$. In the worst-case (a linear path graph $1 \to 2 \to \dots \to N$), call stack depth is $V$. Thus, $S(V) = O(V)$.
+\end{enumerate}
+\end{proof}
+
+\subsection{Java Implementation for Graph Traversal}
+
+\begin{verbatim}
+import java.util.*;
+
+public class GraphDFS {
+    public static void dfs(int currNode, List<List<Integer>> adj, boolean[] visited, List<Integer> order) {
+        visited[currNode] = true;
+        order.add(currNode);
+
+        for (int neighbor : adj.get(currNode)) {
+            if (!visited[neighbor]) {
+                dfs(neighbor, adj, visited, order);
+            }
+        }
+    }
+
+    public static List<Integer> traverseGraph(int n, List<List<Integer>> adj) {
+        boolean[] visited = new boolean[n + 1];
+        List<Integer> traversalOrder = new ArrayList<>();
+
+        // Forest loop for disconnected components
+        for (int i = 1; i <= n; i++) {
+            if (!visited[i]) {
+                dfs(i, adj, visited, traversalOrder);
+            }
+        }
+        return traversalOrder;
+    }
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{Formal Analysis of Cycle Detection in Undirected Graphs}
+\label{sec:undirected_cycle}
+
+Detecting cycles is a foundational graph problem required to verify tree structures, detect deadlocks in resource allocation, and validate network topologies.
+
+\begin{definition}[Undirected Cycle]
+A cycle in an undirected graph $G = (V, E)$ is a sequence of vertices $(v_0, v_1, v_2, \dots, v_k = v_0)$ such that $k \ge 3$, $\{v_i, v_{i+1}\} \in E$ for $0 \le i < k$, and all intermediate vertices $v_0, v_1, \dots, v_{k-1}$ are distinct.
+\end{definition}
+
+\subsection{The Parent Tracking Strategy}
+
+In an undirected graph, every edge $\{u, v\}$ is symmetric, appearing in both $L[u]$ (pointing to $v$) and $L[v]$ (pointing to $u$). If DFS moves from $u \to v$, when exploring neighbors of $v$, it immediately sees $u$. If $u$ is treated as an ordinary visited neighbor, DFS would falsely classify the immediate reverse path $v \to u$ as a cycle.
+
+To eliminate this trivial false positive, DFS must pass a \texttt{parent} node parameter along each recursive frame.
+
+\begin{definition}[Undirected Cycle Detection Invariant]
+During DFS on an undirected graph, if a vertex $u$ encounters an adjacent neighbor $v$ such that:
+\begin{equation}
+\text{visited}[v] == \text{true} \quad \text{AND} \quad v \neq \text{parent}
+\end{equation}
+then a non-trivial cycle exists in the graph.
+\end{definition}
+
+\subsection{Lemma and Correctness Proof}
+
+\begin{lemma}[Undirected Cycle Characterization]
+\label{lem:undirected_cycle}
+An undirected graph $G = (V, E)$ contains a cycle if and only if DFS encounters an already-visited vertex $v$ that is distinct from the immediate parent of the current vertex $u$.
+\end{lemma}
+
+\begin{proof}
+$(\Leftarrow)$ Suppose DFS at vertex $u$ encounters neighbor $v$ with \texttt{visited[v] == true} and $v \neq \text{parent}$. Since $v$ is already visited, $v$ is an ancestor of $u$ in the current DFS tree. Therefore, there exists a path $P_{v \to \dots \to u}$ in the DFS tree from $v$ to $u$. Concatenating edge $\{u, v\}$ to $P_{v \to \dots \to u}$ forms a closed simple path $v \to \dots \to u \to v$ of length $\ge 3$, establishing a cycle.
+
+$(\Rightarrow)$ Conversely, suppose $G$ contains a cycle $C = (v_1, v_2, \dots, v_k, v_1)$. Let $v_i$ be the first vertex in $C$ discovered by DFS. DFS will traverse the cycle edges. Since $k \ge 3$, when DFS reaches the last vertex $v_j$ in the cycle adjacent to $v_i$, $v_i$ will be already marked visited, and $v_i$ will not be the immediate parent of $v_j$. Thus, DFS will detect the cycle condition.
+\end{proof}
+
+\subsection{Java Implementation: Undirected Cycle Detection}
+
+\begin{verbatim}
+import java.util.*;
+
+public class UndirectedCycleDetection {
+    private static boolean dfsCheckCycle(int node, int parent, List<List<Integer>> adj, boolean[] visited) {
+        visited[node] = true;
+
+        for (int neighbor : adj.get(node)) {
+            if (!visited[neighbor]) {
+                if (dfsCheckCycle(neighbor, node, adj, visited)) {
+                    return true;
+                }
+            } else if (neighbor != parent) {
+                // Visited neighbor that is NOT parent -> Cycle detected!
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean hasCycle(int n, List<List<Integer>> adj) {
+        boolean[] visited = new boolean[n + 1];
+
+        // Forest loop to handle disconnected graphs
+        for (int i = 1; i <= n; i++) {
+            if (!visited[i]) {
+                if (dfsCheckCycle(i, -1, adj, visited)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{Formal Analysis of Cycle Detection in Directed Graphs}
+\label{sec:directed_cycle}
+
+Cycle detection in directed graphs requires a significantly more sophisticated state model than undirected cycle detection.
+
+\subsection{The Reconvergent Path Fallacy vs. True Directed Cycles}
+
+A fundamental pitfall when extending undirected cycle detection to directed graphs is confusing \emph{reconvergent paths in Directed Acyclic Graphs (DAGs)} with \emph{true directed cycles}.
+
+Starting DFS at $A$ in a diamond DAG ($A \to B \to D$ and $A \to C \to D$): DFS explores path $A \to B \to D$. Vertex $D$ is marked \texttt{visited[D] = true}. DFS backtracks to $A$. DFS then explores path $A \to C \to D$. When at $C$, neighbor $D$ is inspected. \texttt{visited[D]} is \texttt{true}.
+
+If we applied the single \texttt{visited[]} array logic here, $D$ being visited would trigger a false cycle positive. However, there is NO directed cycle! The paths $A \to B \to D$ and $A \to C \to D$ merely \emph{reconverge} at $D$. $D$ is no longer on the current execution stack when $C$ visits it.
+
+\subsection{State Tracking: 3-Coloring State Machine}
+
+To correctly identify directed cycles, we must distinguish between:
+\begin{enumerate}
+    \item Vertices that are currently active on the recursive execution stack (\emph{in-path}).
+    \item Vertices that have been completely explored and popped from the call stack.
+\end{enumerate}
+
+This leads to the formal \textbf{3-Color State Machine}:
+
+\begin{definition}[3-Coloring States]
+Each vertex $u \in V$ resides in exactly one of three states during DFS:
+\begin{itemize}
+    \item \textbf{State 0 / WHITE / Unvisited:} Vertex $u$ has not yet been discovered by DFS.
+    \item \textbf{State 1 / GRAY / Visiting (\texttt{pathVisited[u] = true}):} Vertex $u$ has been discovered, and its recursive stack frame \texttt{dfs(u)} is currently ACTIVE on the call stack.
+    \item \textbf{State 2 / BLACK / Visited (\texttt{visited[u] = true} and \texttt{pathVisited[u] = false}):} Vertex $u$ and all its downstream descendants have been fully explored. \texttt{dfs(u)} has completed and popped from the call stack.
+\end{itemize}
+\end{definition}
+
+\subsection{Back-Edge Theorem and Correctness Proof}
+
+\begin{theorem}[Back-Edge Characterization of Directed Cycles]
+\label{thm:back_edge}
+A directed graph $D = (V, E)$ contains a directed cycle if and only if a Depth-First Search traversal encounters a \textbf{back-edge} --- an edge $(u, v) \in E$ targeting a vertex $v$ that is currently in State 1 / GRAY (\texttt{pathVisited[v] == true}).
+\end{theorem}
+
+\begin{proof}
+$(\Leftarrow)$ Suppose DFS at vertex $u$ encounters edge $(u, v)$ with $v$ in State 1 / GRAY. Since $v$ is in State 1, $v$ is currently active on the execution stack. Therefore, $v$ is an ancestor of $u$ in the current DFS call stack, meaning there exists a directed path $P_{v \to \dots \to u}$ on the call stack. Adding edge $(u, v)$ closes the loop $v \to \dots \to u \to v$, forming a valid directed cycle.
+
+$(\Rightarrow)$ Suppose $D$ contains a directed cycle $C = (v_0, v_1, \dots, v_k = v_0)$. Let $v_i$ be the first vertex of $C$ discovered by DFS. At the moment $v_i$ is visited, it enters State 1 / GRAY. By DFS mechanics, all vertices reachable from $v_i$ along unvisited paths will be explored before \texttt{dfs(v\_i)} finishes. Since $C$ is a directed cycle, $v_{i-1}$ (the predecessor of $v_i$ in $C$) is reachable from $v_i$. When DFS reaches $v_{i-1}$, \texttt{dfs(v\_i)} is still active on the stack (State 1 / GRAY). Thus, inspecting edge $(v_{i-1}, v_i)$ yields a target in State 1, discovering a back-edge.
+\end{proof}
+
+\subsection{Production Java Implementations}
+
+We provide two formal implementations: (1) using dual boolean arrays (\texttt{visited[]} + \texttt{pathVisited[]}), and (2) using a single integer state array (\texttt{state[]} with values 0, 1, 2).
+
+\begin{verbatim}
+import java.util.*;
+
+public class DirectedCycleDetection {
+
+    // Approach 1: Dual Boolean Arrays (visited[] and pathVisited[])
+    private static boolean dfsDualArray(int u, List<List<Integer>> adj, 
+                                        boolean[] visited, boolean[] pathVisited) {
+        visited[u] = true;
+        pathVisited[u] = true; // Push to recursion stack (GRAY)
+
+        for (int v : adj.get(u)) {
+            if (!visited[v]) {
+                if (dfsDualArray(v, adj, visited, pathVisited)) {
+                    return true;
+                }
+            } else if (pathVisited[v]) {
+                // Back-edge detected! v is currently on recursion stack
+                return true;
+            }
+        }
+
+        pathVisited[u] = false; // Backtrack / Pop from stack (BLACK)
+        return false;
+    }
+
+    // Approach 2: 3-Color State Array (0 = UNVISITED, 1 = VISITING, 2 = VISITED)
+    private static final int UNVISITED = 0;
+    private static final int VISITING = 1;
+    private static final int VISITED = 2;
+
+    private static boolean dfsThreeColor(int u, List<List<Integer>> adj, int[] state) {
+        state[u] = VISITING; // Mark GRAY
+
+        for (int v : adj.get(u)) {
+            if (state[v] == VISITING) {
+                // Target v is currently being visited -> Directed Cycle!
+                return true;
+            }
+            if (state[v] == UNVISITED) {
+                if (dfsThreeColor(v, adj, state)) {
+                    return true;
+                }
+            }
+        }
+
+        state[u] = VISITED; // Mark BLACK
+        return false;
+    }
+
+    public static boolean hasDirectedCycle(int n, List<List<Integer>> adj) {
+        int[] state = new int[n + 1];
+
+        for (int i = 1; i <= n; i++) {
+            if (state[i] == UNVISITED) {
+                if (dfsThreeColor(i, adj, state)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{Comparative Synthesis, Edge Cases, and Diagnostic Taxonomy Matrix}
+\label{sec:synthesis}
+
+To synthesize our findings, we present a unified taxonomy matrix in Table~\ref{tab:taxonomy_matrix} contrasting cycle detection paradigms across graph structural variations.
+
+\begin{table}[htbp]
+\caption{Diagnostic Taxonomy Matrix for Graph Traversal and Cycle Detection}
+\label{tab:taxonomy_matrix}
+\centering
+\begin{tabular}{p{2.2cm}p{3.2cm}p{3.2cm}p{2.2cm}p{2.5cm}}
+\toprule
+\textbf{Graph Domain} & \textbf{Cycle Invariant Condition} & \textbf{State Data Structure} & \textbf{Time Bound} & \textbf{Primary Edge Cases} \\
+\midrule
+Undirected Graph & Visited neighbor $v \neq \text{parent}$ & \texttt{visited[]} array + \texttt{parent} variable & $O(V + E)$ & Parallel edges, self-loops, 2-node cycles \\
+\midrule
+Directed Graph & Edge $(u, v)$ targeting $v$ with State == GRAY & Dual \texttt{visited[]} + \texttt{pathVisited[]} OR 3-Color \texttt{state[]} & $O(V + E)$ & Reconvergent DAG paths (Diamonds), self-loops \\
+\midrule
+Directed Acyclic Graph (DAG) & Guaranteed NO Back-Edges ($\forall$ edges target WHITE or BLACK) & Topological Sort / Kahn's In-Degree Queue & $O(V + E)$ & Disconnected components, isolated nodes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Analysis of Edge Cases and Boundary Conditions}
+
+\begin{enumerate}
+    \item \textbf{Self-Loops ($(u, u) \in E$):} A self-loop represents a cycle of length 1. In directed graphs, \texttt{dfs(u)} inspects neighbor $u$, sees state GRAY, and immediately returns \texttt{true}. In undirected graphs, $u$ is visited and $u \neq \text{parent}$ (since initial parent is -1 or caller), correctly returning \texttt{true}.
+    \item \textbf{Disconnected Graphs:} Handled seamlessly by the outer forest loop ($\forall i \in [1, N]$), ensuring that unreachable components are independently evaluated.
+    \item \textbf{Parallel Edges in Undirected Graphs:} If two edges exist between $u$ and $v$, moving $u \to v$ via edge 1 and back $v \to u$ via edge 2 constitutes a valid cycle of length 2. In simple graph adjacency lists, duplicate entries must be retained or handled via edge ID tracking.
+\end{enumerate}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper has presented a rigorous mathematical formalization and computational analysis of Graph Storage Representations, Depth-First Search mechanics, and Cycle Detection paradigms. We established the $O(V^2)$ vs $O(V+E)$ spatial trade-offs between Adjacency Matrices and Adjacency Lists, analyzed DFS activation stack frame transitions, proved the Undirected Parent-Tracking Invariant, and resolved the Directed Reconvergent Path Fallacy via the 3-Coloring State Machine and Back-Edge Theorem. The presented Java reference implementations and diagnostic taxonomy matrix provide a robust foundation for theoretical graph analysis and high-performance algorithmic execution.
+
+
+\end{document}

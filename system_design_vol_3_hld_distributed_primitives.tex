@@ -1,0 +1,310 @@
+\documentclass[10pt,journal,compsoc,onecolumn]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{textcomp}
+\usepackage{tikz}
+\usetikzlibrary{arrows,positioning,shapes.geometric}
+\usepackage{booktabs}
+\usepackage{url}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\begin{document}
+
+\title{System Design Masterclass Vol. 3: High-Level Design (HLD) --- Distributed Primitives, Databases, Caching, and Event-Driven Architecture}
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+A definitive, practical engineering masterclass on High-Level Design (HLD) and Distributed Systems Architecture, designed for Days 16--22 of the 30-day intensive mastery curriculum. This volume establishes the core architectural primitives required to engineer distributed systems serving millions of concurrent requests with 99.99% availability. It breaks down vertical versus horizontal scalability, tail latency metrics (P95, P99), Layer 4 versus Layer 7 Load Balancing, and provides an intuitive, math-free treatment of Consistent Hashing with virtual nodes. It dissects distributed caching architectures (Cache-Aside, Write-Through, Write-Behind, and defenses against cache stampedes, penetrations, and avalanches via Redis), database storage engines (B+ Trees vs. LSM Trees), sharding and replication topologies, real-world applications of the CAP and PACELC theorems, and asynchronous event streaming comparing Apache Kafka to RabbitMQ.
+\end{abstract}
+
+\begin{IEEEkeywords}
+binary trees, algorithms, data structures, computational complexity, tree traversal, recursive algorithms, formal analysis
+\end{IEEEkeywords}
+}
+
+\maketitle
+\IEEEdisplaynontitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+\section{Introduction: The Distributed Systems Paradigm}
+\label{sec:intro_vol3}
+
+Week 3 (Days 16 to 22) marks the transition from single-machine code execution to **High-Level Design (HLD)** and distributed systems architecture. In software engineering at scale, a single server cannot satisfy the demands of hundreds of thousands of concurrent requests, petabytes of persistent storage, or 99.99\% service availability.
+
+Distributed systems solve these challenges by coordinating hundreds of commodity servers over a network. However, distributed architectures introduce latency, partial network failures, data inconsistency, and complex concurrency. 
+
+This volume provides a clear, practical, engineering-first dissection of the fundamental building blocks of modern distributed architectures:
+\begin{enumerate}
+    \item Scalability, Availability (SLA), and Latency vs. Throughput metrics.
+    \item Load Balancing (L4 vs. L7) and the mechanics of **Consistent Hashing**.
+    \item Distributed Caching patterns (Cache-Aside, Write-Through, Write-Behind) and failure modes (Stampede, Penetration).
+    \item Database topologies: SQL vs. NoSQL, B+ Trees vs. LSM Trees, Replication, and Sharding strategies.
+    \item CAP and PACELC Theorems applied to real architectural decisions.
+    \item Asynchronous event-driven messaging: Apache Kafka vs. RabbitMQ.
+\end{enumerate}
+
+% -----------------------------------------------------------------------------
+\section{Scalability, High Availability, and Performance Metrics}
+\label{sec:metrics}
+
+\subsection{Vertical vs. Horizontal Scaling}
+\begin{itemize}
+    \item \textbf{Vertical Scaling (Scale-Up):} Adding more CPU cores, RAM, or SSD storage to an existing machine. Simple (no distributed coordination), but encounters a hard hardware limit, exponential financial costs, and creates a Single Point of Failure (SPOF).
+    \item \textbf{Horizontal Scaling (Scale-Out):} Adding more discrete machines to a distributed pool. Virtually unlimited scaling potential and fault tolerance, but requires load balancing, distributed state management, and network partitioning handling.
+\end{itemize}
+
+\subsection{Latency vs. Throughput}
+\begin{itemize}
+    \item \textbf{Throughput:} The volume of work executed per unit of time, typically measured in Queries Per Second (QPS) or Transactions Per Second (TPS).
+    \item \textbf{Latency:} The elapsed time required to process a single request from client dispatch to receipt of response, measured in milliseconds (ms).
+    \item \textbf{Percentiles (P50, P90, P99):} Averages are dangerous in distributed systems because a few slow queries hide behind millions of fast queries. A P99 latency of 200ms means 99\% of requests complete in $\le 200$ms, while the slowest 1\% experience $> 200$ms. Production SLAs are always written against P95 or P99.
+\end{itemize}
+
+\subsection{Availability Math: The "Nines" of SLA}
+Service Level Agreements (SLAs) measure system uptime:
+\begin{itemize}
+    \item \textbf{99\% ("Two Nines"):} Allows 3.65 days of total downtime per year.
+    \item \textbf{99.9\% ("Three Nines"):} Allows 8.76 hours of total downtime per year.
+    \item \textbf{99.99\% ("Four Nines"):} Allows 52.6 minutes of total downtime per year (Standard for Tier-1 services).
+    \item \textbf{99.999\% ("Five Nines"):} Allows only 5.26 minutes of total downtime per year (Telecommunications/Financial core).
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Load Balancing and Consistent Hashing}
+\label{sec:lb_hashing}
+
+A Load Balancer (LB) acts as a reverse-proxy traffic cop, distributing incoming network requests across a pool of backend application servers.
+
+\subsection{Layer 4 vs. Layer 7 Load Balancing}
+\begin{itemize}
+    \item \textbf{Layer 4 (Transport Layer):} Operates on TCP/UDP packets, inspecting only IP addresses and port numbers. It does not inspect the HTTP payload. Extremely fast, consumes minimal CPU, but cannot make content-based routing decisions.
+    \item \textbf{Layer 7 (Application Layer):} Operates at the HTTP/HTTPS protocol level. Inspects HTTP headers, cookies, URLs, and request bodies. Enables smart routing (e.g., routing `/video` requests to streaming servers, and `/api/order` to payment clusters), TLS termination, and rate-limiting. Examples: Nginx, HAProxy, AWS ALB, Envoy.
+\end{itemize}
+
+\subsection{The Consistent Hashing Breakthrough}
+
+\textbf{The Naive Hashing Flaw:}
+If you have $N$ cache servers, you might distribute key $K$ using:
+\begin{equation}
+\text{serverIndex} = \text{hash}(K) \pmod N
+\end{equation}
+If one server crashes (reducing capacity from $N$ to $N-1$) or a new server is added ($N+1$), almost \textbf{100\% of keys rehash to different servers}. This causes a catastrophic total cache invalidation and a massive thundering herd query storm that crashes the underlying database!
+
+\textbf{How Consistent Hashing Works:}
+Consistent Hashing maps both **servers** and **keys** to a circular 360-degree integer hash ring (e.g., $[0, 2^{32} - 1]$):
+\begin{enumerate}
+    \item Compute $\text{hash}(\text{serverIP})$ and place servers at positions along the ring.
+    \item To locate key $K$, compute $\text{hash}(K)$ to find its point on the ring.
+    \item Walk **clockwise** until encountering the first server. That server is responsible for key $K$.
+    \item \textbf{When Server $S_3$ fails:} Only keys between $S_2$ and $S_3$ must be reassigned (to the next clockwise server). All other keys remain completely undisturbed! On average, only $K/N$ keys move.
+\end{enumerate}
+
+\textbf{Virtual Nodes (V-Nodes):}
+If server positions are sparse, one server might accidentally control a huge arc of the ring (a Hotspot). To ensure uniform distribution, each physical machine is assigned 100--200 **Virtual Nodes** across the ring (e.g., $\text{hash}(S_1\#1), \text{hash}(S_1\#2), \dots$). This balances traffic evenly across all physical hardware.
+
+% -----------------------------------------------------------------------------
+\section{Distributed Caching Strategies and Failure Modes}
+\label{sec:caching}
+
+RAM access is approximately 100,000 times faster than disk I/O. Caching stores hot data in fast in-memory stores like **Redis** or **Memcached**.
+
+\subsection{Cache Access Patterns}
+
+\begin{table}[htbp]
+\caption{Comparison of Distributed Caching Patterns}
+\label{tab:cache_patterns}
+\centering
+\begin{tabular}{p{2.8cm}p{4.2cm}p{4.5cm}l}
+\toprule
+\textbf{Pattern} & \textbf{Operational Flow} & \textbf{Trade-offs \& Advantages} & \textbf{Best Used For} \\
+\midrule
+\textbf{Cache-Aside (Lazy Loading)} & App checks cache. If hit, return. If miss, app reads DB, populates cache, returns. & Only requested data is cached. Node failure is graceful (DB fallback). Cache miss incurs 2 hops. & General read-heavy workloads (User profiles). \\
+\midrule
+\textbf{Write-Through} & App writes to cache. Cache synchronously writes to DB before acknowledging. & Data is never stale in cache. Higher write latency due to dual-write penalty. & Critical data that cannot tolerate stale reads (Financial balances). \\
+\midrule
+\textbf{Write-Behind (Write-Back)} & App writes to cache and returns immediately. Cache asynchronously batches writes to DB. & Near-zero write latency; high write throughput. Risk of permanent data loss if cache crashes before flush. & Write-heavy analytics, view counters, IoT metrics. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Classic Caching Traps \& Production Defenses}
+\begin{enumerate}
+    \item \textbf{Cache Stampede (Thundering Herd):} A very hot key expires. Hundreds of concurrent requests experience a cache miss simultaneously and hammer the primary database at the same instant.
+    \begin{itemize}
+        \item \emph{Defense:} Use a distributed mutex lock (only 1 thread queries DB and updates cache; others wait) or employ probabilistic early expiration (XFetch algorithm).
+    \end{itemize}
+    \item \textbf{Cache Penetration:} Malicious or buggy clients query non-existent keys (e.g., `userId = -9999`). The key is not in cache, so every request hits the DB, finding nothing.
+    \begin{itemize}
+        \item \emph{Defense:} Use a **Bloom Filter** at the API Gateway to detect non-existent keys in $O(1)$ memory, or cache `null` with a short TTL (60s).
+    \end{itemize}
+    \item \textbf{Cache Avalanche:} Thousands of keys were seeded at the exact same timestamp with identical TTL (e.g., 2 hours). They all expire at the exact same minute.
+    \begin{itemize}
+        \item \emph{Defense:} Add random jitter to expiration times: $\text{TTL} = \text{baseTTL} \pm \text{random}(1, 300\text{s})$.
+    \end{itemize}
+\end{enumerate}
+
+% -----------------------------------------------------------------------------
+\section{Database Architecture: SQL vs. NoSQL, Storage Engines, and Sharding}
+\label{sec:databases}
+
+\subsection{SQL vs. NoSQL Decision Matrix}
+\begin{itemize}
+    \item \textbf{Relational (SQL) Databases (PostgreSQL, MySQL):} Highly structured schema, relations, ACID transactions, complex JOIN queries. Vertical scaling is standard; horizontal scaling requires complex application-level sharding. Best for e-commerce checkouts, banking ledgers, and inventory systems.
+    \item \textbf{NoSQL Databases:} Schemaless, horizontally scalable by default:
+    \begin{itemize}
+        \item \emph{Key-Value (Redis, DynamoDB):} Sub-millisecond simple key lookups, sessions.
+        \item \emph{Document (MongoDB):} Flexible JSON documents, rapid product catalogs.
+        \item \emph{Wide-Column (Cassandra, ScyllaDB):} Massive write volume, time-series, messaging history.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Storage Engines: B+ Trees vs. LSM Trees}
+How a database stores data on disk determines its performance trade-offs:
+\begin{itemize}
+    \item \textbf{B+ Tree (PostgreSQL, MySQL InnoDB):} Self-balancing tree stored in 4KB/8KB disk pages. Interior nodes store keys; leaf nodes store data and are linked sequentially. **Optimized for read-heavy workloads** ($O(\log N)$ random reads). Random writes incur random disk I/O and page splits.
+    \item \textbf{LSM Tree (Log-Structured Merge-Tree) (Cassandra, RocksDB):} Writes are appended sequentially to a write-ahead log (WAL) and an in-memory **MemTable**. When full, the MemTable flushes to disk as an immutable **SSTable** (Sorted String Table). Background threads continuously merge and compact SSTables. **Optimized for write-heavy workloads** (fast sequential writes). Reads may inspect multiple SSTables using Bloom filters.
+\end{itemize}
+
+\subsection{Database Sharding Strategies}
+When a dataset exceeds a single machine's storage capacity, the database is partitioned across multiple nodes:
+\begin{enumerate}
+    \item \textbf{Range-Based Sharding:} Partition by key ranges (e.g., Users A--E on Shard 1, F--J on Shard 2). Risk: Severe data skew (e.g., huge volume under letter S).
+    \item \textbf{Hash-Based Sharding:} Apply consistent hashing on a shard key (e.g., `hash(userId)`). Ensures uniform data distribution across all shards.
+    \item \textbf{Directory-Based Sharding:} A centralized lookup service maps shard keys to physical shard nodes. Enables flexible node rebalancing, but lookup service is a SPOF.
+\end{enumerate}
+
+% -----------------------------------------------------------------------------
+\section{The CAP and PACELC Theorems}
+\label{sec:cap}
+
+\subsection{The CAP Theorem}
+In any asynchronous distributed network, a system can provide at most **two of three** guarantees:
+\begin{itemize}
+    \item \textbf{C (Consistency):} Every read receives the most recent write or an error.
+    \item \textbf{A (Availability):} Every non-failing node returns a non-error response, without guaranteeing it is the most recent write.
+    \item \textbf{P (Partition Tolerance):} The system continues to operate despite arbitrary dropped or delayed network packets.
+\end{itemize}
+
+\textbf{The Real-World Rule:} In reality, network cables get cut, routers reboot, and latency spikes. Therefore, **Partition Tolerance (P) is mandatory** in distributed systems. Your real architectural choice is always:
+\begin{itemize}
+    \item \textbf{CP Systems (Consistency over Availability):} If network partitions occur, the system rejects writes to maintain absolute data correctness (e.g., Banking ledgers, Paxos, Zookeeper, Google Spanner).
+    \item \textbf{AP Systems (Availability over Consistency):} If network partitions occur, both sides accept writes, yielding temporary inconsistency resolved later via eventual consistency (e.g., DNS, Cassandra, DynamoDB, Shopping carts).
+\end{itemize}
+
+\subsection{The PACELC Theorem}
+CAP only describes system behavior during a network partition. But partitions are rare! What happens during normal operation?
+
+The **PACELC Theorem** answers this:
+$$\text{If } \mathbf{P} \text{ (Partition)}, \text{ trade } \mathbf{A} \text{ vs. } \mathbf{C}; \quad \mathbf{E} \text{ (Else)}, \text{ trade } \mathbf{L} \text{ (Latency) vs. } \mathbf{C} \text{ (Consistency)}.$$
+\begin{itemize}
+    \item \textbf{PC/EC (PostgreSQL, Spanner):} During partition choose Consistency; during normal operation choose Consistency (pay a latency penalty for synchronous replication).
+    \item \textbf{PA/EL (Cassandra, DynamoDB):} During partition choose Availability; during normal operation choose minimal Latency (rely on asynchronous eventual replication).
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Event-Driven Messaging: Apache Kafka vs. RabbitMQ}
+\label{sec:kafka}
+
+Modern distributed microservices avoid synchronous HTTP chaining (which cascades failures) by communicating asynchronously via message brokers.
+
+\begin{table}[htbp]
+\caption{Architectural Comparison: Apache Kafka vs. RabbitMQ}
+\label{tab:mq_comparison}
+\centering
+\begin{tabular}{p{3.2cm}p{5.0cm}p{5.0cm}}
+\toprule
+\textbf{Architectural Property} & \textbf{Apache Kafka} & \textbf{RabbitMQ} \\
+\midrule
+Core Model & Distributed Append-Only Commit Log & Traditional AMQP Message Broker \\
+Message Storage & Disk-persisted indefinitely (retention-based: e.g., 7 days) & Memory-first; messages deleted immediately upon consumer ACK \\
+Consumer Model & Pull-based (Dumb broker, Smart consumer maintains offset) & Push-based (Smart broker tracks consumer deliveries and queues) \\
+Throughput Capacity & Millions of messages/sec (High throughput, batch I/O) & Tens of thousands of messages/sec (Low latency, per-message routing) \\
+Message Ordering & Strictly ordered within a partition & Ordered in simple FIFO queue; complex with multiple consumers \\
+Replayability & Yes! Consumers can rewind offset to replay past events & No; once consumed, messages are gone \\
+Optimal Use Case & Event sourcing, real-time analytics, log aggregation, clickstreams & Complex routing, task queues, transactional background jobs \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% -----------------------------------------------------------------------------
+\section{Network Communication Protocols Decision Matrix}
+\label{sec:network_protocols}
+
+Choosing the wrong network transport can destroy system throughput or introduce unacceptable latency. Modern architectures select protocols based on directional requirements, payload serialization, and connection lifecycle.
+
+\begin{table}[htbp]
+\caption{Comprehensive Network Protocols Decision Matrix}
+\label{tab:protocol_matrix}
+\centering
+\begin{tabular}{lllllp{4.2cm}}
+\toprule
+\textbf{Protocol} & \textbf{Directionality} & \textbf{Transport} & \textbf{Payload} & \textbf{Multiplexing} & \textbf{Ideal Production Use Case} \\
+\midrule
+\textbf{REST} & Request-Response & HTTP/1.1 or 2 & JSON / Text & No (HTTP/1) / Yes (HTTP/2) & Public client-facing CRUD APIs, third-party integrations. \\
+\textbf{gRPC} & Bidirectional & HTTP/2 & Protobuf (Binary) & Native Streams & Internal microservice-to-microservice low-latency RPCs. \\
+\textbf{WebSockets} & Full-Duplex & Single TCP & Raw Frames / Text & Application level & Real-time chat (WhatsApp), multiplayer games, live Docs. \\
+\textbf{Server-Sent Events} & Server-to-Client & HTTP/1.1 or 2 & Text / EventStream & Native (HTTP/2) & Stock market tickers, sports scores, LLM token streaming. \\
+\textbf{Long Polling} & Request-Response & HTTP/1.1 & JSON / Text & No & Legacy fallback when WebSockets/SSE are blocked by firewalls. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% -----------------------------------------------------------------------------
+\section{Microservice Resiliency \& Cascading Failure Defenses}
+\label{sec:resiliency}
+
+In a microservice ecosystem with 50+ services, partial failures are guaranteed. A single hanging dependency can cascade through thread starvation and crash an entire company. Three patterns protect distributed systems:
+
+\subsection{1. The Circuit Breaker Pattern (Closed $\to$ Open $\to$ Half-Open)}
+A circuit breaker wraps remote network calls and monitors failure rates:
+\begin{itemize}
+    \item \textbf{Closed State:} Normal operation. Requests flow through. If the error rate exceeds a threshold (e.g., $50\%$ over 10 seconds), the circuit trips to \textbf{Open}.
+    \item \textbf{Open State:} Fast-fail mode. All incoming calls fail \emph{immediately} without touching the network, returning a fallback response. This protects the dying downstream service from being overwhelmed.
+    \item \textbf{Half-Open State:} After a sleep window (e.g., 30 seconds), the breaker allows a single trial request. If it succeeds, the breaker resets to \textbf{Closed}; if it fails, it trips back to \textbf{Open}.
+\end{itemize}
+
+\subsection{2. Exponential Backoff with Full Random Jitter}
+Retrying failed network requests at fixed intervals (e.g., every 100 ms) creates a **Retry Storm** (Thundering Herd) that prevents recovering servers from coming back up.
+\textbf{Production Formula:} Wait with exponential backoff plus randomized jitter:
+\begin{equation}
+    T_{\text{wait}} = \text{random}(0, \, \min(T_{\text{max}}, \, T_{\text{base}} \times 2^{\text{attempt}}))
+\end{equation}
+Jitter spreads out retry attempts uniformly across time, completely smoothing traffic spikes.
+
+\subsection{3. The Bulkhead Isolation Pattern}
+Named after ship bulkheads that prevent a hull breach from sinking the entire vessel. In software, you isolate resource pools (thread pools, connection pools) per downstream dependency. If the Payment Gateway hangs, only its dedicated 20-thread pool is exhausted; the Search and Recommendation services continue serving users with 0\% degradation.
+
+% -----------------------------------------------------------------------------
+\section{Distributed Observability \& Distributed Tracing (Google Dapper)}
+\label{sec:observability}
+
+Debugging a request that traverses 15 microservices requires correlation across process boundaries. Google invented **Dapper**, which formed the foundation of OpenTelemetry and Jaeger:
+\begin{itemize}
+    \item \textbf{Trace ID:} A globally unique 128-bit ID assigned at the API Gateway that travels through all downstream network hops via HTTP headers (W3C standard: \texttt{traceparent: 00-\{trace-id\}-\{span-id\}-01}).
+    \item \textbf{Span ID:} Represents an individual unit of work or RPC call within a service. Each child span records its \textbf{Parent Span ID}, forming a directed acyclic graph (DAG) of the complete execution tree.
+    \item \textbf{The Three Pillars:} Metrics (counter/gauge rates in Prometheus), Structured Logs (JSON with injected TraceID in Elasticsearch), and Distributed Traces (latency timeline in Jaeger).
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Daily 2-Hour Action Plan for Days 16 to 22}
+\label{sec:action_plan_vol3}
+
+\begin{itemize}
+    \item \textbf{Day 16 (2 hrs):} Master Scalability and Availability math. Calculate downtime for SLAs and practice P95/P99 latency trade-offs.
+    \item \textbf{Day 17 (2 hrs):} Study Layer 4 vs. Layer 7 Load Balancing. Implement a simple Consistent Hashing ring simulator in Java with virtual nodes.
+    \item \textbf{Day 18 (2 hrs):} Master Distributed Caching. Code a Cache-Aside wrapper in Java and design defenses against Cache Stampede and Cache Penetration.
+    \item \textbf{Day 19 (2 hrs):} Master SQL vs. NoSQL trade-offs. Compare B+ Tree disk access against LSM Tree sequential write mechanics.
+    \item \textbf{Day 20 (2 hrs):} Deep-dive into Database Sharding and Replication. Design a consistent hashing shard locator for a high-volume database.
+    \item \textbf{Day 21 (2 hrs):} Master the CAP and PACELC Theorems. Analyze real-world architectures (PostgreSQL vs. Cassandra vs. DynamoDB).
+    \item \textbf{Day 22 (2 hrs):} Master Event-Driven Architecture. Contrast Apache Kafka topic/partition mechanics with RabbitMQ routing exchanges.
+\end{itemize}
+
+
+\end{document}

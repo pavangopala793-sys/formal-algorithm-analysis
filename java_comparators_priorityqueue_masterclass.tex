@@ -1,0 +1,984 @@
+\documentclass[10pt,journal,compsoc,onecolumn]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{textcomp}
+\usepackage{booktabs}
+\usepackage{url}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\begin{document}
+
+\title{The Java Algorithmic Compendium: Mastering Comparators, PriorityQueues, Functional Idioms, and Modern Collections APIs}
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+A definitive, mathematically rigorous, and code-first reference manual for software engineers and competitive programmers preparing for top-tier technical interviews. This treatise systematically demystifies modern Java functional syntax, lambdas, and built-in collection primitives that frequently cause confusion in algorithmic problem solving. We deconstruct: (1) The anatomical mechanics of the \texttt{java.util.Comparator} functional interface, the three-way comparison contract, and the fatal integer-overflow pitfall of naive subtraction; (2) The four evolutionary stages of Java comparison syntax, culminating in modern fluent factory combinators like \texttt{Comparator.comparingInt()}; (3) Comprehensive \texttt{PriorityQueue} (Binary Heap) mastery, encompassing min-heaps, max-heaps, multi-tier tie-breaking comparators, and the bounded Top-$K$ pattern; (4) Primitive array vs. Object array sorting pitfalls and the generic type-erasure boundary; (5) The essential modern Collections APIs (\texttt{computeIfAbsent}, \texttt{merge}, \texttt{ArrayDeque}, binary search insertion-index mechanics); and (6) Battle-tested reference implementations for canonical algorithmic archetypes (Merge $K$ Sorted Lists, Top $K$ Frequent Words, Interval Scheduling, and Skyline Sweepline).
+\end{abstract}
+
+\begin{IEEEkeywords}
+Java, Comparator, PriorityQueue, Min-Heap, Max-Heap, Functional Programming, Lambdas, Method References, Algorithmic Engineering, LeetCode
+\end{IEEEkeywords}
+}
+
+\maketitle
+\IEEEdisplaynontitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+\section{Introduction: The Mental Model of Java Comparisons}
+\label{sec:intro}
+
+In technical interviews and competitive programming, candidates frequently stumble over the exact syntax for custom sorting and priority queues. Consider the idiomatic snippet:
+\begin{verbatim}
+PriorityQueue<int[]> minHeap = new PriorityQueue<>(Comparator.comparingInt(a -> a[1]));
+\end{verbatim}
+To an engineer unfamiliar with Java 8+ functional interfaces, this line resembles magical boilerplate. However, it is rooted in a precise, logical mathematical model.
+
+The goal of this compendium is to permanently eliminate hesitation with Java built-in methods, replacing rote memorization with first-principles understanding.
+
+% -----------------------------------------------------------------------------
+\section{The Core Comparison Contract: How Java Compares Objects}
+\label{sec:contract}
+
+Whenever Java sorts an array, rebalances a \texttt{TreeSet}, or sifts an element up a \texttt{PriorityQueue}, it relies on a single question: \emph{``Does element $A$ belong before element $B$, after $B$, or are they equivalent?''}
+
+\subsection{The Three-Way Comparison Contract}
+A comparator is formalized as a function $f: (T, T) \to \mathbb{Z}$ adhering to:
+\begin{equation}
+\text{compare}(a, b) = 
+\begin{cases} 
+\text{negative integer } (< 0), & \text{if } a < b \quad (a \text{ belongs before } b \text{ in ascending order}) \\
+0, & \text{if } a == b \quad (\text{equivalent ordering}) \\
+\text{positive integer } (> 0), & \text{if } a > b \quad (a \text{ belongs after } b \text{ in ascending order})
+\end{cases}
+\end{equation}
+
+\textbf{The Golden Memory Anchor:}
+\begin{quote}
+\emph{``If the result is negative, keep the order $(a, b)$. If the result is positive, swap the order to $(b, a)$.''}
+\end{quote}
+
+\subsection{The Catastrophic Integer Subtraction Trap}
+Junior candidates frequently write:
+\begin{verbatim}
+// DANGEROUS ANTI-PATTERN: DO NOT USE IN PRODUCTION OR INTERVIEWS
+(a, b) -> a[1] - b[1]
+\end{verbatim}
+\textbf{Why this causes silent failures:}
+If $a[1] = -2{,}000{,}000{,}000$ and $b[1] = 2{,}000{,}000{,}000$, mathematical subtraction yields:
+\begin{equation}
+-2{,}000{,}000{,}000 - 2{,}000{,}000{,}000 = -4{,}000{,}000{,}000
+\end{equation}
+In standard 32-bit signed two's-complement arithmetic, this underflows into positive \textbf{$+294{,}967{,}296$}. The comparator returns a positive integer, completely reversing the sort order and corrupting your heap!
+
+\textbf{The Iron Rule:} Always use \texttt{Integer.compare(a, b)} or \texttt{Comparator.comparingInt()}. They perform sign checks internally without arithmetic overflow:
+\begin{verbatim}
+// SAFE AND ROBUST
+(a, b) -> Integer.compare(a[1], b[1])
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{The 4 Evolutions of Java Comparator Syntax}
+\label{sec:evolution}
+
+To master \texttt{Comparator.comparingInt(a -> a[1])}, observe how Java evolved across four syntax generations for sorting 2D interval arrays by start time \texttt{a[0]}:
+
+\subsection{Evolution 1: The Anonymous Inner Class (Java 1.2 to 7)}
+\begin{verbatim}
+PriorityQueue<int[]> pq = new PriorityQueue<>(new Comparator<int[]>() {
+    @Override
+    public int compare(int[] a, int[] b) {
+        return Integer.compare(a[0], b[0]);
+    }
+});
+\end{verbatim}
+\textbf{Verdict:} Verbose, noisy boilerplate, but illustrates the underlying interface contract.
+
+\subsection{Evolution 2: The Explicit Two-Argument Lambda (Java 8+)}
+Because \texttt{Comparator<T>} is a Functional Interface with exactly one abstract method (\texttt{compare}), the compiler infers the interface type:
+\begin{verbatim}
+PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> Integer.compare(a[0], b[0]));
+\end{verbatim}
+\textbf{Verdict:} Clean, direct, and universally accepted in competitive programming.
+
+\subsection{Evolution 3: The Functional Key Extractor --- \texttt{Comparator.comparingInt}}
+Instead of writing the comparison logic yourself, modern Java provides high-order combinator functions. You simply tell Java: \emph{``Here is a function that extracts an integer key from my object. Compare elements based on that key.''}
+\begin{verbatim}
+PriorityQueue<int[]> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a[0]));
+\end{verbatim}
+\textbf{Anatomy Breakdown:}
+\begin{enumerate}
+    \item \texttt{a -> a[0]}: A lambda function (implements \texttt{ToIntFunction<int[]>}) that accepts array \texttt{a} and extracts the primitive \texttt{int} key at index \texttt{0}.
+    \item \texttt{Comparator.comparingInt(...)}: A static factory method that accepts this key extractor and produces a fully optimized, zero-boxing \texttt{Comparator<int[]>}.
+\end{enumerate}
+
+\subsection{Evolution 4: Method References (Cleanest for Objects)}
+When sorting custom objects with getters, the lambda can be replaced with a method reference:
+\begin{verbatim}
+class Interval { int start; int end; public int getStart() { return start; } }
+
+// Modern Declarative Syntax:
+PriorityQueue<Interval> pq = new PriorityQueue<>(Comparator.comparingInt(Interval::getStart));
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{PriorityQueue Mastery: Min-Heaps, Max-Heaps, and Tie-Breakers}
+\label{sec:priority_queue}
+
+A Java \texttt{PriorityQueue} is a min-heap by default. The root of the heap (\texttt{pq.peek()}) is the smallest element according to the specified comparator.
+
+\subsection{Min-Heap vs. Max-Heap Cheat-Sheet}
+The following four archetypes cover 100\% of heap declarations needed in algorithmic interviews:
+
+\begin{enumerate}
+    \item \textbf{Integer Min-Heap (Natural Ascending Order):}
+\begin{verbatim}
+PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+\end{verbatim}
+    \item \textbf{Integer Max-Heap (Descending Order):}
+\begin{verbatim}
+PriorityQueue<Integer> maxHeap = new PriorityQueue<>(Collections.reverseOrder());
+// Or via explicit lambda:
+PriorityQueue<Integer> maxHeap = new PriorityQueue<>((a, b) -> Integer.compare(b, a));
+\end{verbatim}
+    \item \textbf{2D Array Min-Heap (Ordered by index 1 ascending):}
+\begin{verbatim}
+PriorityQueue<int[]> minHeap = new PriorityQueue<>(Comparator.comparingInt(a -> a[1]));
+// Or via explicit lambda:
+PriorityQueue<int[]> minHeap = new PriorityQueue<>((a, b) -> Integer.compare(a[1], b[1]));
+\end{verbatim}
+    \item \textbf{2D Array Max-Heap (Ordered by index 1 descending):}
+\begin{verbatim}
+PriorityQueue<int[]> maxHeap = new PriorityQueue<>((a, b) -> Integer.compare(b[1], a[1]));
+// Or via modern combinator:
+PriorityQueue<int[]> maxHeap = new PriorityQueue<>(
+    Comparator.comparingInt((int[] a) -> a[1]).reversed()
+);
+\end{verbatim}
+\end{enumerate}
+
+\subsection{Multi-Criteria Sorting (Tie-Breakers)}
+In many classic problems (e.g., LeetCode 692: \emph{Top K Frequent Words}), you must sort by multiple criteria:
+\begin{quote}
+\emph{``Sort words by frequency in descending order; if frequencies are identical, sort alphabetically in ascending order.''}
+\end{quote}
+
+\subsubsection{Approach A: The Idiomatic Lambda (Fastest in Interviews)}
+\begin{verbatim}
+PriorityQueue<Map.Entry<String, Integer>> pq = new PriorityQueue<>((a, b) -> {
+    if (!a.getValue().equals(b.getValue())) {
+        return Integer.compare(b.getValue(), a.getValue()); // Descending Frequency (Max-Heap)
+    }
+    return a.getKey().compareTo(b.getKey());                // Ascending Alphabetical (Min-Heap)
+});
+\end{verbatim}
+
+\subsubsection{Approach B: The Modern Fluent Combinator (\texttt{thenComparing})}
+\begin{verbatim}
+Comparator<Map.Entry<String, Integer>> comp = Comparator
+    .<Map.Entry<String, Integer>>comparingInt(Map.Entry::getValue).reversed()
+    .thenComparing(Map.Entry::getKey);
+
+PriorityQueue<Map.Entry<String, Integer>> pq = new PriorityQueue<>(comp);
+\end{verbatim}
+\textbf{Rule of Thumb:} In high-pressure coding interviews, Approach A (the explicit lambda) is easier to reason through without fighting generic type inference.
+
+\subsection{The Bounded Top-$K$ Optimization Pattern}
+To find the $K$ largest elements across a stream of $N$ items:
+\begin{itemize}
+    \item \textbf{Mistake:} Store all $N$ items in a Max-Heap $\implies O(N \log N)$ time, $O(N)$ space.
+    \item \textbf{Optimal Pattern:} Maintain a \textbf{Min-Heap of size $K$} $\implies O(N \log K)$ time, $O(K)$ space!
+\end{itemize}
+
+\begin{verbatim}
+// Bounded Min-Heap of size K for K Largest Elements
+PriorityQueue<Integer> minHeap = new PriorityQueue<>(k);
+for (int num : nums) {
+    minHeap.offer(num);
+    if (minHeap.size() > k) {
+        minHeap.poll(); // Evicts the smallest; top K largest remain in the heap!
+    }
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{Array Sorting Pitfalls: Why \texttt{int[]} Fails with Comparators}
+\label{sec:arrays}
+
+A frequent source of compilation errors is attempting to pass a custom comparator to a 1D primitive array:
+\begin{verbatim}
+int[] arr = {5, 2, 8, 1};
+Arrays.sort(arr, (a, b) -> b - a); // COMPILATION ERROR!
+\end{verbatim}
+
+\subsection{Why Does This Happen?}
+Java generics do not support primitive types (\texttt{int}, \texttt{double}, \texttt{char}). The method signature is:
+\begin{verbatim}
+public static <T> void sort(T[] a, Comparator<? super T> c)
+\end{verbatim}
+Because \texttt{int} is a primitive, \texttt{int[]} is treated as a single object, not an array of objects \texttt{T[]}.
+
+\subsection{The Three Correct Workarounds}
+\begin{enumerate}
+    \item \textbf{Box to Integer[]:}
+\begin{verbatim}
+Integer[] boxed = Arrays.stream(arr).boxed().toArray(Integer[]::new);
+Arrays.sort(boxed, Collections.reverseOrder());
+\end{verbatim}
+    \item \textbf{Sort Ascending then Invert in-place (Fastest, zero allocation):}
+\begin{verbatim}
+Arrays.sort(arr);
+for (int i = 0, j = arr.length - 1; i < j; i++, j--) {
+    int temp = arr[i]; arr[i] = arr[j]; arr[j] = temp;
+}
+\end{verbatim}
+    \item \textbf{2D Array (Works naturally because \texttt{int[][]} is an array of \texttt{int[]} objects):}
+\begin{verbatim}
+int[][] intervals = {{1, 3}, {2, 6}, {8, 10}};
+Arrays.sort(intervals, Comparator.comparingInt(a -> a[0])); // COMPILES PERFECTLY!
+\end{verbatim}
+\end{enumerate}
+
+% -----------------------------------------------------------------------------
+\section{The Essential Modern Java Collections API Cheat-Sheet}
+\label{sec:cheat_sheet}
+
+Top-percentile engineers avoid messy \texttt{if (map.containsKey())} chains by leveraging modern collection utilities introduced in Java 8 and 11.
+
+\begin{table}[htbp]
+\caption{High-Frequency Built-In Methods for Algorithmic Interviews}
+\label{tab:builtin_methods}
+\centering
+\begin{tabular}{llp{6.8cm}}
+\toprule
+\textbf{Category} & \textbf{Method Signature} & \textbf{Algorithmic Behavior \& Clean-Code Purpose} \\
+\midrule
+Map Frequency & \texttt{map.getOrDefault(key, 0) + 1} & Safe retrieval with fallback default; eliminates null checks. \\
+Map Frequency & \texttt{map.merge(key, 1, Integer::sum)} & Atomically inserts 1 if absent, or adds 1 to existing value. \\
+Map Grouping & \texttt{map.computeIfAbsent(key, k -> new ArrayList<>())} & Retrieves existing list or initializes new list and stores it in map. \\
+Queue / Stack & \texttt{Deque<Integer> stack = new ArrayDeque<>()} & Modern replacement for \texttt{Stack}; use \texttt{push()}, \texttt{pop()}, \texttt{peek()}. \\
+Binary Search & \texttt{int idx = Arrays.binarySearch(arr, target)} & Returns index if found; returns \texttt{-(insertion\_point + 1)} if missing. \\
+PriorityQueue & \texttt{pq.offer(x)}, \texttt{pq.poll()}, \texttt{pq.peek()} & Preferred over \texttt{add()}/\texttt{remove()} because they return special values on error. \\
+Char Checks & \texttt{Character.isLetterOrDigit(c)} & Eliminates ASCII range checks in palindrome/string parsing. \\
+String Concatenation & \texttt{String.join(",", list)} & Assembles collections into delimited strings without trailing commas. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Deep Dive: The Binary Search Insertion-Point Formula}
+When \texttt{Arrays.binarySearch(arr, key)} returns a negative value $V$:
+\begin{equation}
+\text{insertion\_index} = -(V + 1)
+\end{equation}
+\textbf{Example:} Array = \texttt{[10, 20, 30]}. Search for \texttt{25}.
+\begin{itemize}
+    \item 25 should belong at index 2 (between 20 and 30).
+    \item \texttt{binarySearch} returns $-3$.
+    \item $\text{insertion\_index} = -(-3 + 1) = 2$.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{The Fatal \texttt{TreeSet} \& \texttt{TreeMap} Equality Trap}
+\label{sec:treeset_trap}
+
+Many candidates confuse \texttt{PriorityQueue} with \texttt{TreeSet}. Both accept custom comparators, but they behave completely differently when two elements are deemed equivalent:
+
+\begin{itemize}
+    \item \textbf{In \texttt{PriorityQueue}:} If $\text{compare}(a, b) == 0$, both elements remain in the heap. Duplicates are fully preserved.
+    \item \textbf{\textbf{CRITICAL TRAP} in \texttt{TreeSet} \& \texttt{TreeMap}:} A \texttt{TreeSet} does \textbf{NOT} use \texttt{equals()} to check for duplicates! It relies solely on your \texttt{Comparator}. If your comparator returns \texttt{0}, \textbf{\texttt{TreeSet} silently discards the incoming element as a duplicate!}
+\end{itemize}
+
+\subsection{The Bug and the Production Defense}
+\begin{verbatim}
+// DANGEROUS BUG: Any two intervals with the same start time will be DELETED!
+TreeSet<int[]> set = new TreeSet<>((a, b) -> Integer.compare(a[0], b[0]));
+set.add(new int[]{1, 5});
+set.add(new int[]{1, 9}); // SILENTLY DROPPED! set.size() is still 1!
+
+// BULLETPROOF DEFENSE: Always add a secondary unique tie-breaker (e.g., end time or ID):
+TreeSet<int[]> safeSet = new TreeSet<>((a, b) -> {
+    if (a[0] != b[0]) return Integer.compare(a[0], b[0]);
+    return Integer.compare(a[1], b[1]); // Tie-breaker preserves distinct intervals!
+});
+\end{verbatim}
+
+\subsection{TreeSet Navigation Superpowers}
+\begin{itemize}
+    \item \texttt{set.ceiling(x)}: Smallest element $\ge x$ (Null if none).
+    \item \texttt{set.floor(x)}: Largest element $\le x$ (Null if none).
+    \item \texttt{set.higher(x)}: Strictly greater $> x$.
+    \item \texttt{set.lower(x)}: Strictly smaller $< x$.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Rapid Type Conversions, Stream Idioms, and Bitwise Superpowers}
+\label{sec:conversions}
+
+In timed interviews, spending 5 minutes writing loops to convert data types is an immediate red flag. Master these essential one-liners:
+
+\subsection{1. Converting Between Arrays and Lists}
+\begin{verbatim}
+// 1. List<Integer> -> int[]
+int[] arr = list.stream().mapToInt(i -> i).toArray();
+
+// 2. int[] -> List<Integer>
+List<Integer> list = Arrays.stream(arr).boxed().collect(Collectors.toList());
+
+// 3. String[] -> List<String>
+List<String> strList = Arrays.asList(strArr);
+
+// 4. char[] -> String (NEVER call charArr.toString(), which prints memory hash "[C@...")
+String s = new String(charArr);
+
+// 5. String -> char[]
+char[] chars = s.toCharArray();
+\end{verbatim}
+
+\subsection{2. Matrix \& 2D Array Fast Initialization}
+Never write nested loops to initialize a DP memoization table:
+\begin{verbatim}
+int[][] memo = new int[m][n];
+for (int[] row : memo) Arrays.fill(row, -1); // Clean, idiomatic, and fast
+\end{verbatim}
+
+\subsection{3. Circular Array Indexing: Negative Modulo Defense}
+In circular arrays or string rotations, $(i - k) \pmod n$ in Java produces negative results if $i < k$!
+\begin{verbatim}
+// BAD: (-1 % 5) produces -1 (ArrayIndexOutOfBoundsException!)
+// GOOD: Math.floorMod handles negative numbers correctly in cyclic buffers:
+int safeIndex = Math.floorMod(i - k, n); // Math.floorMod(-1, 5) produces 4!
+\end{verbatim}
+
+\subsection{4. Bitwise Built-in Methods}
+\begin{itemize}
+    \item \texttt{Integer.bitCount(n)}: Returns the number of 1-bits (Hamming weight) in $O(1)$ CPU cycles.
+    \item \texttt{Integer.highestOneBit(n)}: Returns the largest power of 2 less than or equal to $n$.
+    \item \texttt{Integer.toBinaryString(n)}: Returns binary string representation for rapid debugging.
+\end{itemize}
+
+\subsection{5. StringBuilder Backtracking Protocol}
+When exploring paths in tree/graph backtracking:
+\begin{verbatim}
+StringBuilder sb = new StringBuilder();
+sb.append(ch);             // 1. Make choice
+backtrack(..., sb);        // 2. Recurse
+sb.deleteCharAt(sb.length() - 1); // 3. Undo choice (O(1) pop)
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{Canon Algorithmic Blueprints: Production Reference Implementations}
+\label{sec:blueprints}
+
+\subsection{Blueprint 1: Merge $K$ Sorted Lists (LeetCode 23)}
+\begin{verbatim}
+public class ListNode { int val; ListNode next; }
+
+public ListNode mergeKLists(ListNode[] lists) {
+    if (lists == null || lists.length == 0) return null;
+
+    // Min-Heap ordered by node value
+    PriorityQueue<ListNode> pq = new PriorityQueue<>(Comparator.comparingInt(node -> node.val));
+
+    // Seed the heap with head of each non-empty list
+    for (ListNode head : lists) {
+        if (head != null) pq.offer(head);
+    }
+
+    ListNode dummy = new ListNode();
+    ListNode tail = dummy;
+
+    while (!pq.isEmpty()) {
+        ListNode minNode = pq.poll();
+        tail.next = minNode;
+        tail = tail.next;
+
+        if (minNode.next != null) {
+            pq.offer(minNode.next);
+        }
+    }
+    return dummy.next;
+}
+\end{verbatim}
+
+\subsection{Blueprint 2: Meeting Rooms II / Overlapping Intervals (LeetCode 253)}
+\begin{verbatim}
+public int minMeetingRooms(int[][] intervals) {
+    if (intervals == null || intervals.length == 0) return 0;
+
+    // 1. Sort intervals by START time ascending
+    Arrays.sort(intervals, Comparator.comparingInt(a -> a[0]));
+
+    // 2. Min-Heap storing END times of currently occupied rooms
+    PriorityQueue<Integer> occupiedRooms = new PriorityQueue<>();
+
+    for (int[] meeting : intervals) {
+        // If earliest meeting has already ended before this meeting starts, reuse room
+        if (!occupiedRooms.isEmpty() && occupiedRooms.peek() <= meeting[0]) {
+            occupiedRooms.poll();
+        }
+        // Allocate room with new meeting's end time
+        occupiedRooms.offer(meeting[1]);
+    }
+
+    // Size of heap represents minimum rooms required
+    return occupiedRooms.size();
+}
+\end{verbatim}
+
+\subsection{Blueprint 3: K Closest Points to Origin (LeetCode 973)}
+\begin{verbatim}
+public int[][] kClosest(int[][] points, int k) {
+    // Max-Heap of size K: stores furthest point at the top so it can be evicted
+    PriorityQueue<int[]> maxHeap = new PriorityQueue<>(
+        (a, b) -> Integer.compare(b[0]*b[0] + b[1]*b[1], a[0]*a[0] + a[1]*a[1])
+    );
+
+    for (int[] p : points) {
+        maxHeap.offer(p);
+        if (maxHeap.size() > k) {
+            maxHeap.poll(); // Evict furthest point
+        }
+    }
+
+    int[][] result = new int[k][2];
+    for (int i = 0; i < k; i++) {
+        result[i] = maxHeap.poll();
+    }
+    return result;
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{The Catastrophic \texttt{HashSet<int[]>} Array Identity Trap}
+\label{sec:array_identity_trap}
+
+Perhaps the most insidious, silent bug in LeetCode graph traversals (e.g., tracking visited coordinates in a 2D grid) is storing primitive arrays in hash collections:
+
+\begin{verbatim}
+// CATASTROPHIC BUG: NEVER DO THIS!
+Set<int[]> visited = new HashSet<>();
+visited.add(new int[]{1, 2});
+
+System.out.println(visited.contains(new int[]{1, 2})); // PRINTS FALSE!
+\end{verbatim}
+
+\subsection{Why Does This Return \texttt{false}?}
+In Java, arrays do \textbf{not} override \texttt{equals()} or \texttt{hashCode()}. They inherit the default implementation from \texttt{java.lang.Object}, which performs **identity (memory address) comparison**. Two distinct array instances in memory with identical values have completely different hash codes and are never equal according to \texttt{equals()}.
+
+\subsection{The Three Production Solutions}
+\begin{enumerate}
+    \item \textbf{1D Flattened Index (Fastest, zero memory overhead):}
+    If the grid has dimensions $R \times C$:
+\begin{verbatim}
+int key = row * C + col; // Guaranteed unique integer
+Set<Integer> visited = new HashSet<>();
+visited.add(key);
+\end{verbatim}
+    \item \textbf{Modern Java Record (Cleanest, Java 14+):}
+    Java \texttt{record} components automatically generate deep, value-based \texttt{equals()} and \texttt{hashCode()} implementations:
+\begin{verbatim}
+record Point(int r, int c) {}
+
+Set<Point> visited = new HashSet<>();
+visited.add(new Point(1, 2));
+visited.contains(new Point(1, 2)); // PRINTS TRUE!
+\end{verbatim}
+    \item \textbf{Immutable List wrapper (Java 9+):}
+\begin{verbatim}
+Set<List<Integer>> visited = new HashSet<>();
+visited.add(List.of(1, 2));
+visited.contains(List.of(1, 2)); // PRINTS TRUE! (List implements value-based equality)
+\end{verbatim}
+\end{enumerate}
+
+% -----------------------------------------------------------------------------
+\section{The Monotonic Queue Pattern (\texttt{ArrayDeque})}
+\label{sec:monotonic_queue}
+
+To find sliding window maximums (LeetCode 239) in optimal $O(N)$ time, standard priority queues ($O(N \log K)$) are too slow. We maintain a \textbf{Monotonically Decreasing Deque} storing array indices:
+
+\begin{verbatim}
+public int[] maxSlidingWindow(int[] nums, int k) {
+    if (nums == null || k <= 0) return new int[0];
+    int n = nums.length;
+    int[] result = new int[n - k + 1];
+    int ri = 0;
+
+    // Deque stores INDICES. Values at indices are strictly descending!
+    Deque<Integer> deque = new ArrayDeque<>();
+
+    for (int i = 0; i < n; i++) {
+        // 1. Remove indices that have fallen outside the current window
+        while (!deque.isEmpty() && deque.peekFirst() < i - k + 1) {
+            deque.pollFirst();
+        }
+
+        // 2. Remove all elements smaller than current element (they can never be the max)
+        while (!deque.isEmpty() && nums[deque.peekLast()] < nums[i]) {
+            deque.pollLast();
+        }
+
+        // 3. Add current element's index to back of deque
+        deque.offerLast(i);
+
+        // 4. Record current window maximum (located at the front)
+        if (i >= k - 1) {
+            result[ri++] = nums[deque.peekFirst()];
+        }
+    }
+    return result;
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{The 10-Line Bulletproof Disjoint Set Union (DSU / Union-Find)}
+\label{sec:dsu}
+
+Union-Find is indispensable for graph cycle detection, connected components, and Kruskal's Minimum Spanning Tree. Memorize this clean, optimal template with **Path Compression** and **Union by Rank**:
+
+\begin{verbatim}
+public class DSU {
+    private final int[] parent;
+    private final int[] rank;
+
+    public DSU(int n) {
+        parent = new int[n];
+        rank = new int[n];
+        for (int i = 0; i < n; i++) parent[i] = i;
+    }
+
+    public int find(int i) {
+        if (parent[i] == i) return i;
+        return parent[i] = find(parent[i]); // Path compression: O(alpha(N)) amortized
+    }
+
+    public boolean union(int i, int j) {
+        int rootI = find(i);
+        int rootJ = find(j);
+        if (rootI == rootJ) return false; // Cycle detected!
+
+        // Union by rank
+        if (rank[rootI] < rank[rootJ]) parent[rootI] = rootJ;
+        else if (rank[rootI] > rank[rootJ]) parent[rootJ] = rootI;
+        else {
+            parent[rootJ] = rootI;
+            rank[rootI]++;
+        }
+        return true;
+    }
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{Radix Parsing, String Splitting, and Randomization Superpowers}
+\label{sec:radix_random}
+
+\begin{itemize}
+    \item \textbf{Binary \& Radix Parsing:}
+\begin{verbatim}
+int decimal = Integer.parseInt("1011", 2); // Converts binary String to 11
+String binaryStr = Integer.toBinaryString(11); // Converts 11 to "1011"
+String hexStr = Integer.toHexString(255);      // Converts 255 to "ff"
+\end{verbatim}
+    \item \textbf{Robust Whitespace String Splitting:}
+\begin{verbatim}
+// Bad: str.split(" ") breaks on multiple spaces and leading whitespace!
+// Good: Handles arbitrary consecutive whitespace safely:
+String[] words = str.trim().split("\\s+");
+\end{verbatim}
+    \item \textbf{High-Performance Random Number Generation:}
+\begin{verbatim}
+// Avoid creating new Random() instances; use ThreadLocalRandom:
+int randInt = ThreadLocalRandom.current().nextInt(min, max + 1); // [min, max] inclusive
+\end{verbatim}
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{The PriorityQueue In-Place Mutation Trap (Dijkstra \& Lazy Deletion)}
+\label{sec:pq_mutation}
+
+A lethal trap in graph algorithms (e.g., Dijkstra's or Prim's algorithms) is attempting to mutate an object that already resides inside a \texttt{PriorityQueue}:
+
+\begin{verbatim}
+// FATAL BUG: Mutating an element inside a heap DOES NOT trigger re-sifting!
+Node u = map.get(nodeId);
+u.distance = 5; // Heap array is now CORRUPTED! The root does NOT rebalance!
+\end{verbatim}
+
+Java's \texttt{PriorityQueue} does not track element state changes. Calling \texttt{pq.remove(u)} takes $O(N)$ linear scan time, destroying Dijkstra's $O((V + E) \log V)$ time complexity!
+
+\subsection{The Production Solution: The Lazy Deletion Pattern}
+Instead of updating existing objects, simply insert a **new entry** into the heap. When polling from the heap, discard stale outdated entries in $O(1)$:
+
+\begin{verbatim}
+// Dijkstra's Lazy Deletion Template in Java
+PriorityQueue<int[]> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a[1]));
+int[] dist = new int[V];
+Arrays.fill(dist, Integer.MAX_VALUE);
+dist[src] = 0;
+pq.offer(new int[]{src, 0});
+
+while (!pq.isEmpty()) {
+    int[] curr = pq.poll();
+    int u = curr[0];
+    int d = curr[1];
+
+    // LAZY DELETION: If we already found a shorter path to u, skip this stale entry!
+    if (d > dist[u]) continue;
+
+    for (int[] edge : adj.get(u)) {
+        int v = edge[0], weight = edge[1];
+        if (dist[u] + weight < dist[v]) {
+            dist[v] = dist[u] + weight;
+            pq.offer(new int[]{v, dist[v]}); // Push fresh entry; old entry lazily skipped later
+        }
+    }
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{The Index-Array Sorting Pattern (Zero-Allocation Parallel Sort)}
+\label{sec:index_sorting}
+
+Suppose you are given two separate arrays: \texttt{int[] startTimes} and \texttt{int[] endTimes}. You need to sort the intervals by \texttt{startTimes}, but creating a dedicated \texttt{class Interval} introduces memory allocation and garbage collection overhead.
+
+\textbf{The Competitive Programming Secret: Sort the Indices!}
+\begin{verbatim}
+int n = startTimes.length;
+Integer[] idx = new Integer[n];
+for (int i = 0; i < n; i++) idx[i] = i;
+
+// Sort indices based on startTimes; tie-break on endTimes:
+Arrays.sort(idx, (i, j) -> {
+    if (startTimes[i] != startTimes[j]) {
+        return Integer.compare(startTimes[i], startTimes[j]);
+    }
+    return Integer.compare(endTimes[i], endTimes[j]);
+});
+
+// Now iterate in sorted order without allocating a single object:
+for (int i : idx) {
+    int s = startTimes[i];
+    int e = endTimes[i];
+    // Process interval [s, e]
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{The Three Classic Numeric \& Overflow Traps in Java}
+\label{sec:numeric_traps}
+
+\begin{enumerate}
+    \item \textbf{Binary Search Midpoint Overflow:}
+    Writing \texttt{mid = (low + high) / 2} causes integer overflow if $\text{low} + \text{high} > 2^{31} - 1$, becoming a negative number!
+    \begin{verbatim}
+    // SAFE ALTERNATIVE 1:
+    int mid = low + (high - low) / 2;
+    // SAFE ALTERNATIVE 2 (Logical unsigned shift):
+    int mid = (low + high) >>> 1;
+    \end{verbatim}
+
+    \item \textbf{The \texttt{Math.abs(Integer.MIN\_VALUE)} Trap:}
+    Because 32-bit signed integers span $[-2^{31}, 2^{31} - 1]$, the positive equivalent of $-2{,}147{,}483{,}648$ does not fit in an \texttt{int}! \texttt{Math.abs(Integer.MIN\_VALUE)} **returns negative $-2{,}147{,}483{,}648$!**
+    \begin{verbatim}
+    // FIX: Cast to long BEFORE taking absolute value:
+    long safeAbs = Math.abs((long) val);
+    \end{verbatim}
+
+    \item \textbf{Large Modulo Multiplication Overflow:}
+    Writing \texttt{(a * b) \% MOD} when $a, b \approx 10^9$ causes $a \times b \approx 10^{18}$, which overflows 32-bit integer limits before the modulo is applied:
+    \begin{verbatim}
+    // FIX: Cast the first operand to long:
+    int ans = (int) (((long) a * b) % MOD);
+    \end{verbatim}
+\end{enumerate}
+
+% -----------------------------------------------------------------------------
+\section{Iconic String Comparator Tricks: LeetCode 179 "Largest Number"}
+\label{sec:string_comparator}
+
+When asked to assemble an array of non-negative integers into the largest possible number (e.g., \texttt{[3, 30, 34, 5, 9]} $\implies$ \texttt{"9534330"}):
+\begin{itemize}
+    \item Standard numeric comparison fails because \texttt{3} should appear before \texttt{30} ($330 > 303$).
+    \item \textbf{The Concatenation Comparator:} Compare $(b + a)$ against $(a + b)$:
+\end{itemize}
+
+\begin{verbatim}
+public String largestNumber(int[] nums) {
+    String[] strs = new String[nums.length];
+    for (int i = 0; i < nums.length; i++) strs[i] = String.valueOf(nums[i]);
+
+    // Transitive Concatenation Comparator:
+    Arrays.sort(strs, (a, b) -> (b + a).compareTo(a + b));
+
+    // Handle corner case where array contains only zeros: [0, 0] -> "0"
+    if (strs[0].equals("0")) return "0";
+
+    return String.join("", strs);
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{The PriorityQueue Iteration Trap (Why \texttt{for-each} is NOT Sorted)}
+\label{sec:pq_iteration_trap}
+
+A widespread misconception among intermediate Java developers is assuming that iterating over a \texttt{PriorityQueue} visits elements in sorted order:
+
+\begin{verbatim}
+PriorityQueue<Integer> pq = new PriorityQueue<>();
+pq.addAll(Arrays.asList(5, 1, 9, 3));
+
+// CATASTROPHIC BUG: Iteration DOES NOT print 1, 3, 5, 9!
+for (int num : pq) {
+    System.out.print(num + " "); // Prints internal array layout: e.g., 1 3 9 5 !
+}
+\end{verbatim}
+
+\textbf{Why Does This Happen?}
+A \texttt{PriorityQueue} is backed by a binary heap array satisfying only the \emph{Heap-Invariant} (parent $\le$ children), not the complete binary search tree invariant. The \texttt{iterator()} simply traverses the underlying raw array indices $0, 1, \dots, N-1$.
+
+\textbf{The Iron Rule:} To extract elements in strict sorted order, you \textbf{must drain the heap via \texttt{poll()}}:
+\begin{verbatim}
+while (!pq.isEmpty()) {
+    System.out.print(pq.poll() + " "); // Guaranteed strictly sorted: 1 3 5 9
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{The 3-Line Built-In LRU Cache (\texttt{LinkedHashMap})}
+\label{sec:builtin_lru}
+
+While interviewers sometimes ask you to code an LRU Cache from scratch using a Doubly Linked List and HashMap (covered in Volume 2), in algorithmic problems (or when allowed), Java has an LRU Cache **natively built into the standard library**:
+
+\begin{verbatim}
+import java.util.*;
+
+public class LRUCache<K, V> extends LinkedHashMap<K, V> {
+    private final int capacity;
+
+    // true sets 'access-order' (LRU) instead of default 'insertion-order'
+    public LRUCache(int capacity) {
+        super(capacity, 0.75f, true);
+        this.capacity = capacity;
+    }
+
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+        return size() > capacity; // Automatically evicts least-recently used entry!
+    }
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{The Immutability Trap: \texttt{List.of()} vs. \texttt{Arrays.asList()} vs. \texttt{new ArrayList<>()}}
+\label{sec:list_traps}
+
+Passing lists to graph and backtracking methods requires knowing their mutation capabilities:
+
+\begin{table}[htbp]
+\caption{Java List Instantiation Mutability Comparison}
+\label{tab:list_mutability}
+\centering
+\begin{tabular}{lp{3.5cm}p{4.0cm}p{3.5cm}}
+\toprule
+\textbf{Factory Method} & \textbf{Allow \texttt{add()} / \texttt{remove()}?} & \textbf{Allow \texttt{set(i, val)}?} & \textbf{Null Elements?} \\
+\midrule
+\texttt{List.of(1, 2)} & \textbf{No} (\texttt{UnsupportedOperation}) & \textbf{No} (\texttt{UnsupportedOperation}) & \textbf{Throws NPE} \\
+\texttt{Arrays.asList(arr)} & \textbf{No} (Fixed-size array wrapper) & \textbf{Yes} (Mutates underlying array) & Permitted \\
+\texttt{new ArrayList<>(...)} & \textbf{Yes} (Fully mutable) & \textbf{Yes} (Fully mutable) & Permitted \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interview Rule:} If you intend to add or remove elements later, always wrap with \texttt{new ArrayList<>()}:
+\begin{verbatim}
+List<Integer> mutable = new ArrayList<>(Arrays.asList(1, 2, 3));
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{Greatest Common Divisor (GCD), LCM, and Fast Modular Power}
+\label{sec:math_primitives}
+
+\subsection{1. Euclidean GCD and LCM in 3 Lines}
+\begin{verbatim}
+// Greatest Common Divisor (Euclidean Algorithm): O(log(min(a, b)))
+public static long gcd(long a, long b) {
+    return b == 0 ? a : gcd(b, a % b);
+}
+
+// Least Common Multiple
+public static long lcm(long a, long b) {
+    return (a / gcd(a, b)) * b; // Divide first to avoid arithmetic overflow!
+}
+
+// Or via built-in BigInteger:
+long builtInGcd = BigInteger.valueOf(a).gcd(BigInteger.valueOf(b)).longValue();
+\end{verbatim}
+
+\subsection{2. Fast Modular Exponentiation (Binary Power: $O(\log N)$)}
+Calculating $(x^n) \pmod{\text{MOD}}$ in $O(\log n)$ instead of $O(n)$:
+\begin{verbatim}
+public static long modPow(long base, long exp, long mod) {
+    long res = 1;
+    base %= mod;
+    while (exp > 0) {
+        if ((exp & 1) == 1) res = (res * base) % mod;
+        base = (base * base) % mod;
+        exp >>= 1;
+    }
+    return res;
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{The 8-Line Fenwick Tree (Binary Indexed Tree / BIT)}
+\label{sec:fenwick}
+
+For dynamic range sum queries with $O(\log N)$ point updates (LeetCode 307), a full Segment Tree is 50 lines of code. A **Fenwick Tree** achieves identical performance in 8 lines using the two's-complement low-bit trick (\texttt{i \& -i}):
+
+\begin{verbatim}
+public class FenwickTree {
+    private final int[] tree;
+    public FenwickTree(int n) { tree = new int[n + 1]; } // 1-indexed
+
+    public void update(int i, int delta) {
+        for (; i < tree.length; i += i & -i) tree[i] += delta;
+    }
+
+    public int query(int i) { // Prefix sum from 1 to i
+        int sum = 0;
+        for (; i > 0; i -= i & -i) sum += tree[i];
+        return sum;
+    }
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{The Array-Based Trie (Prefix Tree) Archetype}
+\label{sec:trie}
+
+In dictionary search, autocomplete, and Boggle/Word Search II (LeetCode 212), avoid heavy \texttt{HashMap} child nodes. Use an array of 26 pointers:
+
+\begin{verbatim}
+public class TrieNode {
+    public TrieNode[] children = new TrieNode[26];
+    public boolean isWord = false;
+    public String word = null; // Storing complete word at leaf eliminates backtrack string rebuilding!
+}
+
+public void insert(TrieNode root, String word) {
+    TrieNode curr = root;
+    for (char c : word.toCharArray()) {
+        int idx = c - 'a';
+        if (curr.children[idx] == null) curr.children[idx] = new TrieNode();
+        curr = curr.children[idx];
+    }
+    curr.isWord = true;
+    curr.word = word;
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{In-Place Matrix Transformations (Rotate 90 Degrees Clockwise)}
+\label{sec:matrix_rotate}
+
+To rotate an $N \times N$ matrix by 90 degrees clockwise in-place with $O(1)$ extra memory (LeetCode 48):
+\begin{enumerate}
+    \item \textbf{Transpose:} Swap \texttt{matrix[i][j]} with \texttt{matrix[j][i]} across the main diagonal.
+    \item \textbf{Reverse Rows:} Invert each row horizontally.
+\end{enumerate}
+
+\begin{verbatim}
+public void rotate(int[][] matrix) {
+    int n = matrix.length;
+    // 1. Transpose
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            int temp = matrix[i][j]; matrix[i][j] = matrix[j][i]; matrix[j][i] = temp;
+        }
+    }
+    // 2. Reverse each row
+    for (int i = 0; i < n; i++) {
+        for (int j = 0, k = n - 1; j < k; j++, k--) {
+            int temp = matrix[i][j]; matrix[i][j] = matrix[i][k]; matrix[i][k] = temp;
+        }
+    }
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{The Zero-Off-By-One Predicate Binary Search Archetype}
+\label{sec:binary_search_predicate}
+
+Candidates frequently introduce infinite loops with \texttt{while (low <= high)} by mismanaging $\pm 1$. The **Predicate Binary Search template** solves all ``Binary Search on Answer'' problems (e.g., Koko Eating Bananas, Capacity To Ship Packages) with zero edge-case bugs:
+
+\begin{verbatim}
+// Find the MINIMUM value that satisfies condition(mid) == true
+int low = minPossible, high = maxPossible;
+
+while (low < high) {
+    int mid = low + (high - low) / 2;
+    if (isValid(mid)) {
+        high = mid;     // Target is at mid or to the left (don't discard mid!)
+    } else {
+        low = mid + 1;  // mid is definitely invalid; look right
+    }
+}
+return low; // low == high is guaranteed to be the exact minimal valid answer!
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{Fast I/O in Java: Eliminating \texttt{Scanner} Time Limit Exceeded (TLE)}
+\label{sec:fast_io}
+
+In technical screens or competitive platforms reading $10^5+$ inputs, \texttt{Scanner} uses slow regex tokenization that causes TLE. Use \texttt{BufferedReader} and \texttt{StringTokenizer}:
+
+\begin{verbatim}
+import java.io.*;
+import java.util.*;
+
+public class FastIO {
+    public static void main(String[] args) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        PrintWriter out = new PrintWriter(new BufferedOutputStream(System.out));
+        StringTokenizer st = null;
+
+        String line = br.readLine();
+        if (line != null) st = new StringTokenizer(line);
+
+        int val = Integer.parseInt(st.nextToken());
+        out.println(val);
+        out.flush(); // Crucial: Flush buffer before exit!
+    }
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{Summary: The 5-Second Decision Checklist}
+\label{sec:checklist}
+
+Before writing any comparator in an interview or project, follow this 3-step mental rubric:
+\begin{enumerate}
+    \item \textbf{Are you sorting primitives or objects?}
+    \begin{itemize}
+        \item If 2D primitive array (\texttt{int[][]}): Use \texttt{Comparator.comparingInt(a -> a[idx])}.
+        \item If custom object: Use method reference \texttt{Comparator.comparingInt(Class::getVal)}.
+    \end{itemize}
+    \item \textbf{Do you need a Min-Heap or a Max-Heap?}
+    \begin{itemize}
+        \item Min-Heap: Compare $A$ to $B$ (\texttt{a -> a[0]}).
+        \item Max-Heap: Reverse it (\texttt{(a, b) -> Integer.compare(b[0], a[0])} or append \texttt{.reversed()}).
+    \end{itemize}
+    \item \textbf{Are there tie-breakers?}
+    \begin{itemize}
+        \item Write the explicit ternary lambda: \texttt{(a, b) -> a.val != b.val ? compareVal : compareTieBreaker}.
+    \end{itemize}
+\end{enumerate}
+
+\end{document}

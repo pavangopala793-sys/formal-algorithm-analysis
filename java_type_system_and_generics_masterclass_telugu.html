@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+<meta charset="UTF-8">
+<title>జావా టైప్ సిస్టమ్ మరియు జెనెరిక్ టైప్ క్రియేషన్ మాస్టర్‌క్లాస్</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 20mm 16mm;
+  }
+  body {
+    font-family: 'Noto Serif Telugu', 'Liberation Serif', serif;
+    font-size: 10.5pt;
+    line-height: 1.65;
+    color: #1a1a24;
+    background-color: #ffffff;
+    margin: 0;
+    padding: 0;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Noto Sans Telugu', 'Liberation Sans', sans-serif;
+    color: #0d233a;
+    page-break-after: avoid;
+  }
+  h1.doc-title {
+    font-size: 20pt;
+    text-align: center;
+    color: #0b2545;
+    margin-bottom: 6px;
+    line-height: 1.3;
+    padding-bottom: 8px;
+    border-bottom: 3px double #0b2545;
+  }
+  .doc-subtitle {
+    text-align: center;
+    font-size: 11pt;
+    color: #4a5568;
+    margin-bottom: 22px;
+    font-weight: 500;
+  }
+  .abstract-box {
+    background: #f4f6f9;
+    border-left: 4px solid #134074;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    border-radius: 4px;
+    font-size: 10pt;
+  }
+  .abstract-title {
+    font-weight: bold;
+    color: #134074;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    font-size: 9pt;
+    letter-spacing: 0.5px;
+  }
+  h2.section-title {
+    font-size: 13.5pt;
+    border-bottom: 1.5px solid #134074;
+    padding-bottom: 5px;
+    margin-top: 26px;
+    margin-bottom: 12px;
+    color: #134074;
+    display: flex;
+    align-items: center;
+  }
+  h3.sub-title {
+    font-size: 11.5pt;
+    color: #1d3557;
+    margin-top: 18px;
+    margin-bottom: 8px;
+  }
+  p {
+    margin: 0 0 10px 0;
+    text-align: justify;
+  }
+  ul, ol {
+    margin-top: 4px;
+    margin-bottom: 12px;
+    padding-left: 24px;
+  }
+  li {
+    margin-bottom: 4px;
+  }
+  .callout {
+    margin: 14px 0;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 9.8pt;
+    page-break-inside: avoid;
+  }
+  .callout-def {
+    background-color: #eef4f8;
+    border-left: 4px solid #1d70b8;
+  }
+  .callout-theorem {
+    background-color: #f3f0f7;
+    border-left: 4px solid #6f42c1;
+  }
+  .callout-proof {
+    background-color: #fafbfc;
+    border-left: 4px solid #8c959f;
+    font-style: normal;
+  }
+  .callout-warn {
+    background-color: #fff8e6;
+    border-left: 4px solid #e36209;
+  }
+  .callout-title {
+    font-weight: bold;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .callout-def .callout-title { color: #1d70b8; }
+  .callout-theorem .callout-title { color: #6f42c1; }
+  .callout-proof .callout-title { color: #57606a; }
+  .callout-warn .callout-title { color: #b04600; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  th, td {
+    border: 1px solid #d0d7de;
+    padding: 7px 10px;
+    text-align: left;
+  }
+  th {
+    background-color: #f6f8fa;
+    color: #24292f;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background-color: #fcfcfd;
+  }
+
+  .code-container {
+    font-family: 'DejaVu Sans Mono', 'Fira Code', monospace;
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 14px 0;
+    font-size: 9pt;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-all;
+    page-break-inside: avoid;
+  }
+  .code-title {
+    font-family: 'Noto Sans Telugu', sans-serif;
+    font-weight: bold;
+    font-size: 8.5pt;
+    color: #57606a;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .kw { color: #cf222e; font-weight: bold; }
+  .type { color: #8250df; font-weight: bold; }
+  .str { color: #0a3069; }
+  .com { color: #6e7781; font-style: italic; }
+  .fn { color: #0550ae; }
+  .anno { color: #953800; font-weight: bold; }
+
+  .formula-box {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 4px;
+    padding: 8px 14px;
+    margin: 12px 0;
+    text-align: center;
+    font-family: 'DejaVu Sans Mono', serif;
+    font-weight: bold;
+    color: #0f172a;
+    font-size: 10.5pt;
+    page-break-inside: avoid;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+<h1 class="doc-title">జావా టైప్ సిస్టమ్ మరియు జెనెరిక్ టైప్ క్రియేషన్ మాస్టర్‌క్లాస్</h1>
+<div class="doc-subtitle">సిద్ధాంతపరమైన ఫార్మలైజేషన్, JVM రన్‌టైమ్ మెకానిక్స్, బైట్‌కోడ్ ఎరేజర్ మరియు ఎంటర్‌ప్రైజ్ ఆర్కిటెక్చర్ గైడ్</div>
+
+<div class="abstract-box">
+  <div class="abstract-title">సారాంశం (Abstract)</div>
+  ఈ పరిశోధనా పత్రం ఆధునిక జావా (Java 5 నుండి LTS 17, 21 వరకు) టైప్ సిస్టమ్ మరియు జెనెరిక్స్ యొక్క సంపూర్ణ అంతర్గత నిర్మాణాన్ని అత్యంత లోతుగా విశదీకరిస్తుంది. (1) ప్రిమిటివ్ vs రిఫరెన్స్ టైప్స్ మరియు బాక్సింగ్ కాష్ మెకానిక్స్; (2) సబ్‌టైపింగ్ లాటిస్ మరియు ఎరే కోవేరియన్స్ యొక్క ఘోరమైన లోపం (ArrayStoreException); (3) జెనెరిక్ ఇన్వేరియన్స్ యొక్క గణిత నిరూపణ; (4) రికర్సివ్ F-Bounded పాలిమార్ఫిజం (CRTP Fluent Builders); (5) యూజ్-సైట్ వేరియన్స్ మరియు Josh Bloch PECS ప్రిన్సిపల్; (6) టైప్ ఎరేజర్ మరియు సింథటిక్ బ్రిడ్జ్ మెథడ్స్ (ACC_BRIDGE); (7) రీఫికేషన్ పరిమితులు, హీప్ పొల్యూషన్ మరియు @SafeVarargs కాంట్రాక్ట్; (8) సూపర్ టైప్ టోకెన్లు (Neal Gafter Hack) మరియు సీల్డ్ ADTలు; (9) సమగ్ర ప్రొడక్షన్ రిఫరెన్స్ ఆర్కిటెక్చర్లు ఇందులో పొందుపరచబడ్డాయి.
+</div>
+
+<!-- ========================================================================= -->
+<h2 class="section-title">విభాగం 1: జావా టైప్ సిస్టమ్ పునాదులు (Primitive vs Reference Duality)</h2>
+
+<p>జావా లాంగ్వేజ్ స్పెసిఫికేషన్ (JLS &sect;4) ప్రకారం జావాలోని అన్ని డేటా టైపులను రెండు విభాగాలుగా విభజించవచ్చు: <strong>Primitive Types</strong> (ప్రాథమిక విలువలు) మరియు <strong>Reference Types</strong> (రిఫరెన్స్ ఆబ్జెక్టులు). హార్డ్‌వేర్ స్థాయి మెమరీ మరియు రిజిస్టర్ ఆప్టిమైజేషన్ కోసం ప్రిమిటివ్స్, ఆబ్జెక్ట్ ఓరియెంటెడ్ పాలిమార్ఫిజం కోసం రిఫరెన్స్ టైప్స్ రూపొందించబడ్డాయి.</p>
+
+<h3 class="sub-title">1.1 ప్రిమిటివ్ టైప్స్: ఫిజికల్ మెమరీ మరియు బిట్ లేఅవుట్</h3>
+<p>ప్రిమిటివ్స్ నేరుగా థ్రెడ్ ఎగ్జిక్యూషన్ స్టాక్ (Stack Frame) లేదా ఆబ్జెక్ట్ ఇన్‌లైన్ మెమరీలో స్టోర్ అవుతాయి. వీటికి ప్యూర్ వ్యాల్యూ సెమాంటిక్స్ ఉంటాయి (అసైన్‌మెంట్ చేసినప్పుడు బిట్స్ కాపీ అవుతాయి, పాయింటర్లు కావు).</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>ప్రిమిటివ్ టైప్</th>
+      <th>వర్గం</th>
+      <th>బిట్ వెడల్పు</th>
+      <th>డిఫాల్ట్ విలువ</th>
+      <th>విలువల పరిధి (Range)</th>
+      <th>JVM బైట్‌కోడ్ రిప్రజెంటేషన్</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>byte</code></td>
+      <td>Signed Integer</td>
+      <td>8 bits</td>
+      <td><code>(byte) 0</code></td>
+      <td>-128 నుండి 127 వరకు</td>
+      <td>స్టాక్‌లో 32-bit <code>int</code> గా ఎవాల్యుయేట్ అవుతుంది (<code>iload</code>, <code>istore</code>)</td>
+    </tr>
+    <tr>
+      <td><code>short</code></td>
+      <td>Signed Integer</td>
+      <td>16 bits</td>
+      <td><code>(short) 0</code></td>
+      <td>-32,768 నుండి 32,767 వరకు</td>
+      <td>స్టాక్‌లో 32-bit <code>int</code> గా ఎవాల్యుయేట్ అవుతుంది</td>
+    </tr>
+    <tr>
+      <td><code>int</code></td>
+      <td>Signed Integer</td>
+      <td>32 bits</td>
+      <td><code>0</code></td>
+      <td>-2<sup>31</sup> నుండి 2<sup>31</sup>-1 (~2.14 బిలియన్లు)</td>
+      <td>నేటివ్ 32-bit ఇంటిజర్ (<code>iload</code>, <code>iadd</code>)</td>
+    </tr>
+    <tr>
+      <td><code>long</code></td>
+      <td>Signed Integer</td>
+      <td>64 bits</td>
+      <td><code>0L</code></td>
+      <td>-2<sup>63</sup> నుండి 2<sup>63</sup>-1</td>
+      <td>నేటివ్ 64-bit పూర్ణాంకం (స్టాక్‌లో 2 స్లాట్లు ఆక్రమిస్తుంది)</td>
+    </tr>
+    <tr>
+      <td><code>float</code></td>
+      <td>IEEE 754 Floating</td>
+      <td>32 bits</td>
+      <td><code>0.0f</code></td>
+      <td>1 sign, 8 exponent, 23 mantissa bits</td>
+      <td>నేటివ్ సింగిల్ ప్రెసిషన్ ఫ్లోట్ (<code>fload</code>, <code>fadd</code>)</td>
+    </tr>
+    <tr>
+      <td><code>double</code></td>
+      <td>IEEE 754 Floating</td>
+      <td>64 bits</td>
+      <td><code>0.0d</code></td>
+      <td>1 sign, 11 exponent, 52 mantissa bits</td>
+      <td>నేటివ్ డబుల్ ప్రెసిషన్ (స్టాక్‌లో 2 స్లాట్లు)</td>
+    </tr>
+    <tr>
+      <td><code>char</code></td>
+      <td>Unsigned Unicode</td>
+      <td>16 bits</td>
+      <td><code>'\u0000'</code></td>
+      <td>0 నుండి 65,535 వరకు (UTF-16 code units)</td>
+      <td>అన్‌సైన్డ్ 32-bit <code>int</code> గా స్టాక్‌లో నడుస్తుంది</td>
+    </tr>
+    <tr>
+      <td><code>boolean</code></td>
+      <td>Logical Truth</td>
+      <td>JVM-spec</td>
+      <td><code>false</code></td>
+      <td>{ <code>false</code>, <code>true</code> }</td>
+      <td>స్టాక్‌లో 0 లేదా 1 గా, హీప్ ఎరేస్‌లో బైట్‌లుగా నిల్వ అవుతుంది</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 class="sub-title">1.2 న్యూమరిక్ ప్రమోషన్ రూల్స్ (Binary Numeric Promotion)</h3>
+<p>జావాలో ఏదైనా బైనరీ అంకగణిత చర్య (+, -, *, /, %) జరిగినప్పుడు కింది రూల్స్ వర్తిస్తాయి:</p>
+<ul>
+  <li>ఒక ఆపరాండ్ <code>double</code> అయితే, రెండవది కూడా <code>double</code> గా మారుతుంది.</li>
+  <li>ఒకటి <code>float</code> అయితే, రెండవది <code>float</code> గా మారుతుంది.</li>
+  <li>ఒకటి <code>long</code> అయితే, రెండవది <code>long</code> గా మారుతుంది.</li>
+  <li><strong>లేకపోతే, రెండు ఆపరాండ్లు ఖచ్చితంగా <code>int</code> గా ప్రమోట్ అవుతాయి!</strong> (రెండు <code>byte</code> లను కూడినా ఫలితం <code>int</code> అవుతుంది).</li>
+</ul>
+
+<h3 class="sub-title">1.3 ది నల్ టైప్ (&bot;<sub>ref</sub>) మరియు రిఫరెన్స్ టైప్స్</h3>
+<p>రిఫరెన్స్ టైప్స్ హీప్ (Heap) లోని ఆబ్జెక్టులను సూచించే పాయింటర్లు. ప్రతి రిఫరెన్స్ ఆబ్జెక్ట్ హెడర్‌లో Mark Word (లాకింగ్, హాష్‌కోడ్, GC ఏజ్) మరియు Klass Word (మెటాస్పేస్ పాయింటర్) ఉంటాయి.</p>
+<div class="callout callout-def">
+  <span class="callout-title">నిర్వచనం: ది నల్ టైప్ సిద్ధాంతం</span>
+  <code>null</code> అనేది anonymous Null Type (&bot;<sub>ref</sub>) యొక్క ఏకైక విలువ. ఇది జావాలోని <strong>అన్ని రిఫరెన్స్ టైపులకు direct sub-type</strong> అవుతుంది:
+  <div class="formula-box">&forall; T &isin; ReferenceTypes &rArr; &bot;<sub>ref</sub> &le; T</div>
+  కానీ, <code>null</code> ఏ ప్రిమిటివ్ టైపుకూ సబ్‌టైప్ కాదు. అందుకే ప్రిమిటివ్‌కు అసైన్ చేస్తే కంపైల్ ఎర్రర్, అన్‌బాక్సింగ్ చేస్తే రన్‌టైమ్‌లో <code>NullPointerException</code> వస్తుంది.
+</div>
+
+<h3 class="sub-title">1.4 ఆటోబాక్సింగ్ మరియు రాపర్ కాష్ ట్రాప్ (Wrapper Cache Trap)</h3>
+<p>జావా 5 లో ప్రవేశపెట్టిన ఆటోబాక్సింగ్ ద్వారా ప్రిమిటివ్స్ వాటి రాపర్ క్లాస్‌లుగా (ఉదా: <code>int &rarr; Integer</code>) మారుతాయి. కంపైలర్ <code>Integer.valueOf(val)</code> ని సింథసైజ్ చేస్తుంది.</p>
+
+<div class="callout callout-warn">
+  <span class="callout-title">హెచ్చరిక: ఆబ్జెక్ట్ ఐడెంటిటీ (==) ప్రమాదం</span>
+  JVM పనితీరు కోసం కొన్ని నిర్దిష్ట పరిధులలో ఫ్లైవెయిట్ కాష్ పూల్స్ నిర్వహిస్తుంది:
+  <ul>
+    <li><code>Byte</code>, <code>Short</code>, <code>Integer</code>, <code>Long</code>: <strong>[-128 నుండి 127]</strong> వరకు కాష్ చేయబడతాయి.</li>
+    <li><code>Character</code>: [0 నుండి 127] వరకు.</li>
+    <li><code>Float</code>, <code>Double</code>: కాష్ ఉండదు.</li>
+  </ul>
+</div>
+
+<div class="code-container">
+<div class="code-title">జావా రాపర్ కాష్ ప్రమాదం</div>
+<span class="type">Integer</span> a = 127;
+<span class="type">Integer</span> b = 127;
+<span class="type">System</span>.out.println(a == b); <span class="com">// TRUE: కాష్ పూల్ నుండి ఒకే ఇన్‌స్టాన్స్!</span>
+
+<span class="type">Integer</span> c = 128;
+<span class="type">Integer</span> d = 128;
+<span class="type">System</span>.out.println(c == d); <span class="com">// FALSE: హీప్‌లో వేర్వేరు ఆబ్జెక్టులు!</span>
+<span class="type">System</span>.out.println(c.equals(d)); <span class="com">// TRUE: కంటెంట్ వ్యాల్యూ ఈక్వాలిటీ</span>
+</div>
+
+<!-- ========================================================================= -->
+<h2 class="section-title">విభాగం 2: సబ్‌టైపింగ్ సిద్ధాంతం & ఎరే కోవేరియన్స్ లోపం</h2>
+
+<p>జావా స్ట్రిక్ట్ నామినల్ సబ్‌టైపింగ్ (Nominal Subtyping) పై ఆధారపడి ఉంటుంది. <code>extends</code> లేదా <code>implements</code> ద్వారా స్పష్టంగా డిక్లేర్ చేస్తేనే సబ్‌టైపింగ్ రిలేషన్ ఏర్పడుతుంది. <code>java.lang.Object</code> అనేది అన్ని రిఫరెన్స్ టైపులకూ యూనివర్సల్ సూపర్-టైప్.</p>
+
+<h3 class="sub-title">2.1 ఎరే కోవేరియన్స్ (Array Covariance) మరియు రన్‌టైమ్ క్రాష్</h3>
+<p>జావా 1.0 లో జెనెరిక్స్ లేనందున, <code>Arrays.sort(Object[])</code> వంటి యుటిలిటీ మెథడ్స్ పనిచేయడానికి ఎరేస్‌ను కోవేరియంట్‌గా రూపొందించారు:</p>
+<div class="formula-box">S &le; T &rArr; S[] &le; T[]</div>
+<p>కానీ ఈ డిజైన్ స్టాటిక్ టైప్ సేఫ్టీకి తీవ్రమైన ముప్పు తెచ్చిపెట్టింది:</p>
+
+<div class="code-container">
+<div class="code-title">ArrayStoreException రన్‌టైమ్ వైఫల్యం</div>
+<span class="type">String</span>[] strArr = <span class="kw">new</span> <span class="type">String</span>[5];
+<span class="type">Object</span>[] objArr = strArr; <span class="com">// కోవేరియన్స్ వల్ల కంపైల్ అవుతుంది!</span>
+
+<span class="com">// కంపైలర్ దృష్టిలో objArr ఒక Object[]; Integer అనేది Object కి సబ్‌టైప్:</span>
+objArr[0] = <span class="type">Integer</span>.valueOf(42); 
+<span class="com">// FATAL ERROR: రన్‌టైమ్‌లో JVM "java.lang.ArrayStoreException" విసురుతుంది!</span>
+</div>
+
+<p><strong>JVM రక్షణ చర్య:</strong> ఎరేస్ <em>Reified</em> కావడం వల్ల ప్రతి ఎరే ఆబ్జెక్ట్ తన హెడర్‌లో కాంపోనెంట్ టైప్‌ను భద్రపరుస్తుంది. బైట్‌కోడ్‌లో ఎరే రైట్ (<code>aastore</code>) జరిగినప్పుడల్లా JVM ఇన్‌సర్ట్ అయ్యే విలువ ఆ కాంపోనెంట్ టైప్‌కు సరిపోతుందో లేదో రన్‌టైమ్ చెక్ చేస్తుంది. సరిపోకపోతే ప్రోగ్రామ్‌ను ఆపేస్తుంది.</p>
+
+<h3 class="sub-title">2.2 ప్రిమిటివ్ ఎరేస్: ఇన్వేరియన్స్ రూల్</h3>
+<p>ఎరే కోవేరియన్స్ కేవలం రిఫరెన్స్ ఎరేస్‌కు మాత్రమే వర్తిస్తుంది. ప్రిమిటివ్ ఎరేస్ ఎట్టి పరిస్థితుల్లోనూ కోవేరియంట్ కావు:</p>
+<div class="formula-box">int[] &nle; Object[] &emsp; మరియు &emsp; int[] &nle; Integer[]</div>
+<p><code>int[]</code> అనేది నేరుగా <code>java.lang.Object</code> కి సబ్‌టైప్ అవుతుంది, కానీ <code>Object[]</code> కి కాదు!</p>
+
+<!-- ========================================================================= -->
+<h2 class="section-title">విభాగం 3: జెనెరిక్ టైప్ పారామీటరైజేషన్ & ఇన్వేరియన్స్ నిరూపణ</h2>
+
+<p>జావా 5 లో రా టైప్స్ (Raw Types) మరియు మ్యాన్యువల్ కాస్టింగ్ వల్ల వచ్చే <code>ClassCastException</code> లను నిర్మూలించడానికి జెనెరిక్స్ ప్రవేశపెట్టబడ్డాయి. జెనెరిక్స్ యొక్క అత్యంత ముఖ్యమైన సూత్రం: <strong>Generic Types are Invariant</strong>.</p>
+
+<div class="callout callout-theorem">
+  <span class="callout-title">థీరమ్: జెనెరిక్ ఇన్వేరియన్స్ సిద్ధాంతం</span>
+  ఏవైనా రెండు విభిన్న టైపులు $S \neq T$ మరియు జెనెరిక్ క్లాస్ $C\langle \cdot \rangle$ లకు:
+  <div class="formula-box">S &le; T &#8655; C&lt;S&gt; &le; C&lt;T&gt;</div>
+  ఉదాహరణకు, <code>Integer &le; Number</code> అయినప్పటికీ, <code>List&lt;Integer&gt; &nle; List&lt;Number&gt;</code>.
+</div>
+
+<div class="callout callout-proof">
+  <span class="callout-title">గణిత నిరూపణ (Proof by Heap Contradiction)</span>
+  జెనెరిక్స్ కోవేరియంట్ అని విరుద్ధంగా భావిద్దాం:
+  <code>List&lt;Integer&gt; &le; List&lt;Number&gt;</code> అనుకుందాం.<br>
+  అప్పుడు కింది కోడ్ చట్టబద్ధం కావాలి:
+  <ol>
+    <li><code>List&lt;Integer&gt; intList = new ArrayList&lt;&gt;();</code></li>
+    <li><code>List&lt;Number&gt; numList = intList; // కోవేరియన్స్ వల్ల చెల్లుతుంది</code></li>
+    <li><code>numList.add(Double.valueOf(3.14)); // Double అనేది Number కాబట్టి యాడ్ చేయవచ్చు!</code></li>
+    <li><code>Integer val = intList.get(0); // intList నుండి చదివాం!</code></li>
+  </ol>
+  ఇప్పుడు <code>val</code> అనే <code>Integer</code> వేరియబుల్ మెమరీలో <code>Double</code> ఆబ్జెక్టును సూచిస్తుంది! దీనిపై ఇంటిజర్ ఆపరేషన్లు జరిపితే JVM మెమరీ భద్రత ధ్వంసమవుతుంది. కాబట్టి కంపైల్ సమయంలోనే సంపూర్ణ భద్రత కల్పించడానికి, జెనెరిక్ టైప్స్ ఖచ్చితంగా <strong>ఇన్వేరియంట్</strong>గా ఉండాలి.
+</div>
+
+<h3 class="sub-title">3.1 స్టాటిక్ ఐసోలేషన్ బౌండరీ (Static Isolation Boundary)</h3>
+<p>క్లాస్-లెవల్ టైప్ పారామీటర్ <code>T</code> ని స్టాటిక్ ఫీల్డ్స్ లేదా స్టాటిక్ మెథడ్లలో ఉపయోగించలేము. ఎందుకంటే JVM లో క్లాస్ లోడ్ అయినప్పుడు స్టాటిక్ మెంబర్స్ అన్ని ఇన్‌స్టాన్స్‌లకూ ఉమ్మడిగా ఉంటాయి; ఆ సమయంలో ఏ ప్రత్యేకమైన <code>T</code> ఉండదు.</p>
+
+<div class="code-container">
+<div class="code-title">జెనెరిక్ క్లాస్ మరియు స్టాటిక్ ఐసోలేషన్</div>
+<span class="kw">public class</span> <span class="type">Container</span>&lt;<span class="type">T</span>&gt; {
+    <span class="kw">private</span> <span class="type">T</span> value;
+    
+    <span class="com">// COMPILE ERROR: స్టాటిక్ ఫీల్డ్‌లో T ని వాడలేము!</span>
+    <span class="com">// public static T globalDefault;</span>
+
+    <span class="com">// చట్టబద్ధమైన స్టాటిక్ జెనెరిక్ మెథడ్: తన స్వంత టైప్ పారామీటర్ U ని డిక్లేర్ చేసుకుంటుంది</span>
+    <span class="kw">public static</span> &lt;<span class="type">U</span>&gt; <span class="type">Container</span>&lt;<span class="type">U</span>&gt; <span class="fn">of</span>(<span class="type">U</span> val) {
+        <span class="kw">return new</span> <span class="type">Container</span>&lt;&gt;(val);
+    }
+}
+</div>
+
+<!-- ========================================================================= -->
+<h2 class="section-title">విభాగం 4: టైప్ బౌండ్స్ & రికర్సివ్ F-Bounded పాలిమార్ఫిజం (CRTP)</h2>
+
+<p>టైప్ పారామీటర్‌పై పరిమితులు విధించడానికి అప్పర్ బౌండ్స్ (<code>&lt;T extends B&gt;</code>) ఉపయోగిస్తాము. దీనివల్ల ఆ బౌండ్ క్లాస్‌లోని మెథడ్స్‌ను నేరుగా కాల్ చేయవచ్చు.</p>
+
+<h3 class="sub-title">4.1 మల్టిపుల్ ఇంటర్‌సెక్షన్ బౌండ్స్ (Multiple Intersection Bounds)</h3>
+<p>జావా <code>&amp;</code> ఆపరేటర్ ద్వారా ఒకేసారి క్లాస్ మరియు పలు ఇంటర్‌ఫేస్‌లను బౌండ్‌గా అనుమతిస్తుంది. JLS &sect;4.4 ప్రకారం:</p>
+<ul>
+  <li>గరిష్టంగా <strong>ఒకే ఒక క్లాస్ బౌండ్</strong> మాత్రమే ఉండాలి.</li>
+  <li>క్లాస్ బౌండ్ ఉంటే, అది <strong>ఖచ్చితంగా మొదటి స్థానంలోనే</strong> ఉండాలి!</li>
+  <li>దాని తర్వాత ఎన్ని ఇంటర్‌ఫేస్ బౌండ్స్ అయినా ఉండవచ్చు.</li>
+</ul>
+
+<div class="code-container">
+<div class="code-title">ఇంటర్‌సెక్షన్ బౌండ్స్ రూల్స్</div>
+<span class="com">// LEGAL: క్లాస్ మొదట వచ్చింది, తర్వాత ఇంటర్‌ఫేస్‌లు వచ్చాయి</span>
+<span class="kw">public</span> &lt;<span class="type">T</span> <span class="kw">extends</span> <span class="type">Number</span> &amp; <span class="type">Comparable</span>&lt;<span class="type">T</span>&gt; &amp; <span class="type">Serializable</span>&gt; <span class="kw">void</span> <span class="fn">process</span>(<span class="type">T</span> val) { ... }
+
+<span class="com">// COMPILE ERROR: ఇంటర్‌ఫేస్ క్లాస్ కంటే ముందు రాకూడదు!</span>
+<span class="com">// public &lt;T extends Comparable&lt;T&gt; &amp; Number&gt; void invalid(T val) { ... }</span>
+</div>
+
+<h3 class="sub-title">4.2 రికర్సివ్ F-Bounded పాలిమార్ఫిజం (CRTP Fluent Builder)</h3>
+<p>ఒక ఇంటర్‌ఫేస్ లేదా క్లాస్ తనను ఇంప్లిమెంట్ చేసే కాంక్రీట్ సబ్‌టైప్‌నే పారామీటర్‌గా తీసుకోవడాన్ని F-Bounded పాలిమార్ఫిజం అంటారు (ఉదా: <code>Comparable&lt;T&gt;</code>). మల్టీ-లెవల్ బిల్డర్లలో చైనింగ్ బ్రేక్ కాకుండా ఉండటానికి ఇది అత్యద్భుతంగా ఉపయోగపడుతుంది.</p>
+
+<div class="code-container">
+<div class="code-title">CRTP సెల్ఫ్-టైప్డ్ హైరార్కికల్ బిల్డర్</div>
+<span class="com">// బేస్ బిల్డర్ తన కాంక్రీట్ సబ్‌టైప్ T పై డిపెండ్ అవుతుంది</span>
+<span class="kw">public abstract class</span> <span class="type">EntityBuilder</span>&lt;<span class="type">T</span> <span class="kw">extends</span> <span class="type">EntityBuilder</span>&lt;<span class="type">T</span>&gt;&gt; {
+    <span class="kw">protected</span> <span class="type">String</span> id;
+
+    <span class="anno">@SuppressWarnings</span>(<span class="str">"unchecked"</span>)
+    <span class="kw">protected</span> <span class="type">T</span> <span class="fn">self</span>() {
+        <span class="kw">return</span> (<span class="type">T</span>) <span class="kw">this</span>; <span class="com">// కాంక్రీట్ సబ్‌టైప్‌కి సురక్షితమైన కాస్ట్</span>
+    }
+
+    <span class="kw">public</span> <span class="type">T</span> <span class="fn">withId</span>(<span class="type">String</span> id) {
+        <span class="kw">this</span>.id = id;
+        <span class="kw">return</span> self(); <span class="com">// సబ్‌క్లాస్ రిటర్న్ అవుతుంది, చైనింగ్ బ్రేక్ అవ్వదు!</span>
+    }
+}
+
+<span class="kw">public class</span> <span class="type">UserBuilder</span> <span class="kw">extends</span> <span class="type">EntityBuilder</span>&lt;<span class="type">UserBuilder</span>&gt; {
+    <span class="kw">private</span> <span class="type">String</span> email;
+
+    <span class="kw">public</span> <span class="type">UserBuilder</span> <span class="fn">withEmail</span>(<span class="type">String</span> email) {
+        <span class="kw">this</span>.email = email;
+        <span class="kw">return</span> self();
+    }
+
+    <span class="kw">public</span> <span class="type">User</span> <span class="fn">build</span>() { <span class="kw">return new</span> <span class="type">User</span>(id, email); }
+}
+
+<span class="com">// క్లయింట్ కోడ్: ఎటువంటి మ్యాన్యువల్ కాస్టింగ్ లేకుండా చైన్ సాగుతుంది!</span>
+<span class="type">User</span> user = <span class="kw">new</span> <span class="type">UserBuilder</span>()
+    .withId(<span class="str">"USR_101"</span>)
+    .withEmail(<span class="str">"dev@enterprise.io"</span>)
+    .build();
+</div>
+
+<!-- ========================================================================= -->
+<h2 class="section-title">విభాగం 5: వైల్డ్‌కార్డ్స్ & Josh Bloch PECS ప్రిన్సిపల్</h2>
+
+<p>జెనెరిక్ ఇన్వేరియన్స్ వల్ల వచ్చే రిజిడిటీని తగ్గించడానికి జావా యూజ్-సైట్ వేరియన్స్ (Use-Site Variance) గా <strong>Wildcards</strong> ను ప్రవేశపెట్టింది.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>డిక్లరేషన్</th>
+      <th>వేరియన్స్ మోడల్</th>
+      <th>రీడ్ ఆపరేషన్ (<code>get()</code>)</th>
+      <th>రైట్ ఆపరేషన్ (<code>add()</code>)</th>
+      <th>పాత్ర (Role)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>List&lt;T&gt;</code></td>
+      <td>Invariant</td>
+      <td>ఖచ్చితంగా <code>T</code> రిటర్న్ అవుతుంది</td>
+      <td><code>T</code> మరియు దాని సబ్‌టైప్స్ అనుమతించబడతాయి</td>
+      <td>Read / Write Container</td>
+    </tr>
+    <tr>
+      <td><code>List&lt;? extends T&gt;</code></td>
+      <td><strong>Covariant</strong></td>
+      <td>ఖచ్చితంగా <code>T</code> రిటర్న్ అవుతుంది</td>
+      <td><strong>ఏదీ అనుమతించబడదు</strong> (కేవలం <code>null</code> తప్ప)</td>
+      <td><strong>Producer (Read-Only)</strong></td>
+    </tr>
+    <tr>
+      <td><code>List&lt;? super T&gt;</code></td>
+      <td><strong>Contravariant</strong></td>
+      <td>కేవలం <code>Object</code> మాత్రమే వస్తుంది</td>
+      <td><code>T</code> మరియు దాని సబ్‌టైప్స్ అనుమతించబడతాయి</td>
+      <td><strong>Consumer (Write-Only)</strong></td>
+    </tr>
+    <tr>
+      <td><code>List&lt;?&gt;</code></td>
+      <td>Bivariant</td>
+      <td>కేవలం <code>Object</code> వస్తుంది</td>
+      <td>ఏదీ అనుమతించబడదు (కేవలం <code>null</code> తప్ప)</td>
+      <td>Unknown Inspection</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout callout-def">
+  <span class="callout-title">ది PECS ప్రిన్సిపల్ (Producer Extends, Consumer Super)</span>
+  <ul>
+    <li>ఒక పారామీటర్ నుండి డేటాను <strong>చదవడానికి (Read)</strong> మాత్రమే ఉపయోగిస్తే, అది Producer &rArr; <code>? extends T</code> వాడాలి.</li>
+    <li>ఒక పారామీటర్‌లోకి డేటాను <strong>రాయడానికి (Write)</strong> మాత్రమే ఉపయోగిస్తే, అది Consumer &rArr; <code>? super T</code> వాడాలి.</li>
+    <li>రెండు పనులూ చేయాల్సి వస్తే వైల్డ్‌కార్డ్స్ వాడకూడదు; ఖచ్చితమైన ఇన్వేరియంట్ <code>T</code> వాడాలి.</li>
+  </ul>
+</div>
+
+<div class="code-container">
+<div class="code-title">Collections.copy లో PECS క్లాసిక్ ఉదాహరణ</div>
+<span class="kw">public static</span> &lt;<span class="type">T</span>&gt; <span class="kw">void</span> <span class="fn">copy</span>(<span class="type">List</span>&lt;? <span class="kw">super</span> <span class="type">T</span>&gt; dest, <span class="type">List</span>&lt;? <span class="kw">extends</span> <span class="type">T</span>&gt; src) {
+    <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; src.size(); i++) {
+        <span class="type">T</span> elem = src.get(i); <span class="com">// src Producer: చదివినప్పుడు T గ్యారెంటీ!</span>
+        dest.set(i, elem);   <span class="com">// dest Consumer: T ని భద్రంగా రైట్ చేయవచ్చు!</span>
+    }
+}
+</div>
+
+<!-- ========================================================================= -->
+<h2 class="section-title">విభాగం 6: టైప్ ఎరేజర్ & సింథటిక్ బ్రిడ్జ్ మెథడ్స్ (JVM బైట్‌కోడ్)</h2>
+
+<p>జావా జెనెరిక్స్ <strong>Compilation by Type Erasure</strong> ద్వారా పనిచేస్తాయి. అంటే కంపైల్ అయిన తర్వాత <code>.class</code> ఫైల్‌లో జెనెరిక్ టైప్స్ తొలగించబడతాయి (అన్‌బౌండెడ్ <code>Object</code> గా, బౌండెడ్ మొదటి బౌండ్‌గా మారుతాయి). దీనివల్ల పాత JVM వెర్షన్లతో పూర్తి బైనరీ బ్యాక్‌వర్డ్ అనుకూలత లభిస్తుంది.</p>
+
+<h3 class="sub-title">6.1 సింథటిక్ బ్రిడ్జ్ మెథడ్ ఎందుకు అవసరం? (ACC_BRIDGE)</h3>
+<p>సబ్‌క్లాస్ ఒక జెనెరిక్ ఇంటర్‌ఫేస్‌ను కాంక్రీట్ టైప్‌తో ఓవర్‌రైడ్ చేసినప్పుడు, బైట్‌కోడ్ లెవెల్‌లో సిగ్నేచర్ మిస్‌మ్యాచ్ ఏర్పడుతుంది:</p>
+
+<div class="code-container">
+<div class="code-title">బ్రిడ్జ్ మెథడ్ ఏర్పడే విధానం</div>
+<span class="kw">public interface</span> <span class="type">Processor</span>&lt;<span class="type">T</span>&gt; {
+    <span class="kw">void</span> <span class="fn">process</span>(<span class="type">T</span> data); <span class="com">// ఎరేజర్ తర్వాత: void process(Object data);</span>
+}
+
+<span class="kw">public class</span> <span class="type">StringProcessor</span> <span class="kw">implements</span> <span class="type">Processor</span>&lt;<span class="type">String</span>&gt; {
+    <span class="anno">@Override</span>
+    <span class="kw">public void</span> <span class="fn">process</span>(<span class="type">String</span> data) { ... } <span class="com">// బైట్‌కోడ్: (Ljava/lang/String;)V</span>
+}
+</div>
+
+<p>JVM దృష్టిలో <code>(Object)V</code> మరియు <code>(String)V</code> రెండు వేర్వేరు మెథడ్స్! కాబట్టి పాలిమార్ఫిజం పనిచేయడానికి కంపైలర్ ఆటోమేటిక్‌గా ఒక బ్రిడ్జ్ మెథడ్‌ను బైట్‌కోడ్‌లో ఇంజెక్ట్ చేస్తుంది:</p>
+
+<div class="code-container">
+<div class="code-title">కంపైలర్ జనరేట్ చేసే సింథటిక్ బ్రిడ్జ్ మెథడ్ (డికంపైల్డ్)</div>
+<span class="com">// Flags: ACC_BRIDGE, ACC_SYNTHETIC</span>
+<span class="kw">public void</span> <span class="fn">process</span>(<span class="type">Object</span> data) {
+    <span class="kw">this</span>.process((<span class="type">String</span>) data); <span class="com">// కాస్ట్ చేసి ఒరిజినల్ మెథడ్‌కు పంపుతుంది</span>
+}
+</div>
+
+<!-- ========================================================================= -->
+<h2 class="section-title">విభాగం 7: రీఫికేషన్ పరిమితులు, హీప్ పొల్యూషన్ & @SafeVarargs</h2>
+
+<h3 class="sub-title">7.1 జెనెరిక్ ఎరే క్రియేషన్ ఎందుకు నిషిద్ధం?</h3>
+<p>జావాలో <code>new List&lt;String&gt;[10]</code> లేదా <code>new T[10]</code> రాయడం కంపైలర్ నిషేధించింది. ఎందుకంటే ఎరేస్ కోవేరియంట్ మరియు రీఫైడ్; జెనెరిక్స్ ఇన్వేరియంట్ మరియు ఎరేజ్డ్. ఈ రెండూ కలిస్తే రన్‌టైమ్ టైప్ సేఫ్టీ పూర్తిగా కుప్పకూలుతుంది:</p>
+
+<div class="code-container">
+<div class="code-title">జెనెరిక్ ఎరే క్రియేషన్ అనుమతిస్తే జరిగే విపత్తు</div>
+<span class="com">// ఇమాజిన్ చేయండి ఇది లీగల్ అయితే:</span>
+<span class="type">List</span>&lt;<span class="type">String</span>&gt;[] stringLists = <span class="kw">new</span> <span class="type">List</span>&lt;<span class="type">String</span>&gt;[1];
+<span class="type">Object</span>[] objects = stringLists; <span class="com">// ఎరే కోవేరియన్స్ వల్ల లీగల్!</span>
+
+<span class="type">List</span>&lt;<span class="type">Integer</span>&gt; intList = <span class="type">List</span>.of(42);
+objects[0] = intList; <span class="com">// రన్‌టైమ్‌లో రెండూ ArrayList కాబట్టి ArrayStoreException రాదు!</span>
+
+<span class="type">String</span> s = stringLists[0].get(0); <span class="com">// FATAL ClassCastException!</span>
+</div>
+
+<h3 class="sub-title">7.2 హీప్ పొల్యూషన్ మరియు @SafeVarargs కాంట్రాక్ట్</h3>
+<p>జెనెరిక్ వర్గ్‌ఆర్గ్స్ (<code>T... items</code>) వాడినప్పుడు అంతర్గతంగా జెనెరిక్ ఎరే క్రియేట్ అవుతుంది, దీనివల్ల హీప్ పొల్యూషన్ వార్నింగ్ వస్తుంది. సదరు మెథడ్ ఆ ఎరేలో కొత్తవి రాయకుండా, ఆ ఎరే రిఫరెన్స్‌ను బయటకు లీక్ చేయకుండా ఉంటే, <code>@SafeVarargs</code> తో వార్నింగ్‌ను అణచివేయవచ్చు (ఇది కేవలం <code>static</code>, <code>final</code>, లేదా <code>private</code> మెథడ్స్‌కి మాత్రమే అనుమతించబడుతుంది).</p>
+
+<!-- ========================================================================= -->
+<h2 class="section-title">విభాగం 8: అడ్వాన్స్‌డ్ జెనెరిక్ డిజైన్ ప్యాటర్న్స్</h2>
+
+<h3 class="sub-title">8.1 సూపర్ టైప్ టోకెన్లు (Neal Gafter's Super Type Token)</h3>
+<p>ఎరేజర్ వల్ల సాధారణంగా రన్‌టైమ్‌లో <code>List&lt;String&gt;.class</code> సాధ్యం కాదు. కానీ అనామక ఇన్నర్ సబ్‌క్లాస్ డిక్లరేషన్లలో జెనెరిక్ మెటాడేటా క్లాస్ సిగ్నేచర్‌లో భద్రంగా ఉంటుందని నీల్ గాఫ్టర్ నిరూపించారు. Jackson, Gson, Guice, Spring ఈ టెక్నిక్‌నే వాడుతాయి.</p>
+
+<div class="code-container">
+<div class="code-title">సూపర్ టైప్ టోకెన్ ఆర్కిటెక్చర్</div>
+<span class="kw">public abstract class</span> <span class="type">TypeToken</span>&lt;<span class="type">T</span>&gt; {
+    <span class="kw">private final</span> <span class="type">java.lang.reflect.Type</span> runtimeType;
+
+    <span class="kw">protected</span> <span class="fn">TypeToken</span>() {
+        <span class="type">java.lang.reflect.Type</span> superclass = getClass().getGenericSuperclass();
+        <span class="kw">var</span> parameterized = (<span class="type">java.lang.reflect.ParameterizedType</span>) superclass;
+        <span class="kw">this</span>.runtimeType = parameterized.getActualTypeArguments()[0];
+    }
+
+    <span class="kw">public</span> <span class="type">java.lang.reflect.Type</span> <span class="fn">getType</span>() { <span class="kw">return</span> runtimeType; }
+}
+
+<span class="com">// క్లయింట్ వాడకం:</span>
+<span class="type">TypeToken</span>&lt;<span class="type">List</span>&lt;<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">Integer</span>&gt;&gt;&gt; token = <span class="kw">new</span> <span class="type">TypeToken</span>&lt;&gt;() {};
+<span class="type">System</span>.out.println(<span class="str">"పూర్తి రన్‌టైమ్ టైప్: "</span> + token.getType());
+<span class="com">// అవుట్‌పుట్: java.util.List&lt;java.util.Map&lt;java.lang.String, java.lang.Integer&gt;&gt;</span>
+</div>
+
+<h3 class="sub-title">8.2 హెటెరోజీనియస్ టైప్-సేఫ్ కంటైనర్ (Heterogeneous Container)</h3>
+<p>సాధారణ కలెక్షన్లలో కంటైనర్‌కు ఒకే టైప్ పారామీటర్ ఉంటుంది. కానీ ఇక్కడ 'కీ'లు స్వయంగా టైప్ టోకెన్లుగా మారి, వేర్వేరు డేటా టైపులను ఒకే మ్యాప్‌లో 100% టైప్-సేఫ్‌గా నిల్వ చేస్తాయి.</p>
+
+<div class="code-container">
+<div class="code-title">హెటెరోజీనియస్ రిజిస్ట్రీ ఇంప్లిమెంటేషన్</div>
+<span class="kw">public class</span> <span class="type">TypeSafeRegistry</span> {
+    <span class="kw">private final</span> <span class="type">Map</span>&lt;<span class="type">Class</span>&lt;?&gt;, <span class="type">Object</span>&gt; map = <span class="kw">new</span> <span class="type">HashMap</span>&lt;&gt;();
+
+    <span class="kw">public</span> &lt;<span class="type">T</span>&gt; <span class="kw">void</span> <span class="fn">register</span>(<span class="type">Class</span>&lt;<span class="type">T</span>&gt; type, <span class="type">T</span> instance) {
+        map.put(<span class="type">Objects</span>.requireNonNull(type), type.cast(instance));
+    }
+
+    <span class="kw">public</span> &lt;<span class="type">T</span>&gt; <span class="type">T</span> <span class="fn">get</span>(<span class="type">Class</span>&lt;<span class="type">T</span>&gt; type) {
+        <span class="kw">return</span> type.cast(map.get(type));
+    }
+}
+</div>
+
+<!-- ========================================================================= -->
+<h2 class="section-title">విభాగం 9: ఎంటర్‌ప్రైజ్ మాస్టర్ డెసిషన్ మ్యాట్రిక్స్</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>డిజైన్ అవసరం</th>
+      <th>సిఫార్సు చేయబడిన సింటాక్స్ / ప్యాటర్న్</th>
+      <th>ప్రధాన పరిమితి / నియమం</th>
+      <th>JDK ప్రామాణిక ఉదాహరణ</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>యూనిఫాం డేటా స్టోరేజ్</td>
+      <td>Generic Class <code>class Box&lt;T&gt;</code></td>
+      <td>స్టాటిక్ మెంబర్స్ <code>T</code> ని యాక్సెస్ చేయలేవు</td>
+      <td><code>ArrayList&lt;E&gt;</code></td>
+    </tr>
+    <tr>
+      <td>Read-Only డేటా ప్రొడ్యూసర్</td>
+      <td>Upper-Bounded Wildcard <code>? extends T</code></td>
+      <td>కొత్త విలువలను యాడ్ చేయలేము (కేవలం <code>null</code> తప్ప)</td>
+      <td><code>Stream.map()</code></td>
+    </tr>
+    <tr>
+      <td>Write-Only డేటా కన్స్యూమర్</td>
+      <td>Lower-Bounded Wildcard <code>? super T</code></td>
+      <td>బయటకు తీస్తే కేవలం <code>Object</code> మాత్రమే వస్తుంది</td>
+      <td><code>Collections.sort(list, comp)</code></td>
+    </tr>
+    <tr>
+      <td>ఫ్లూయెంట్ బిల్డర్ సబ్‌క్లాసింగ్</td>
+      <td>CRTP <code>&lt;B extends Builder&lt;B&gt;&gt;</code></td>
+      <td><code>self()</code> మెథడ్ ఇంప్లిమెంట్ చేయాలి</td>
+      <td><code>ProcessBuilder</code></td>
+    </tr>
+    <tr>
+      <td>రన్‌టైమ్ టైప్ ప్రెజర్వేషన్</td>
+      <td>Super Type Token <code>new TypeToken&lt;T&gt;(){}</code></td>
+      <td>అనామక ఇన్నర్ క్లాస్ ఇన్‌స్టాంటియేషన్ అవసరం</td>
+      <td>Jackson <code>TypeReference</code></td>
+    </tr>
+    <tr>
+      <td>మల్టీ-టైప్ డైనమిక్ రిజిస్ట్రీ</td>
+      <td>Heterogeneous Container <code>Map&lt;Class&lt;?&gt;, Object&gt;</code></td>
+      <td>పారామీటరైజ్డ్ టైప్స్‌ని నేరుగా స్టోర్ చేయలేదు</td>
+      <td>Spring <code>ApplicationContext.getBean()</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ========================================================================= -->
+<h2 class="section-title">ముగింపు (Conclusion)</h2>
+<p>జావా టైప్ సిస్టమ్ అనేది కేవలం సింటాక్స్ నియమాల సమాహారం కాదు; అది గణితపరమైన టైప్ లాటిస్ మరియు JVM రన్‌టైమ్ సామర్థ్యాల మధ్య సాధించిన సమతుల్యత. ప్రిమిటివ్స్ మరియు రిఫరెన్స్ టైప్స్ మధ్య వ్యత్యాసాన్ని అర్థం చేసుకోవడం, ఎరే కోవేరియన్స్ యొక్క లోపాలను నివారించడం, PECS ప్రిన్సిపల్‌ను సరిగ్గా అమలు చేయడం, మరియు సూపర్ టైప్ టోకెన్స్ వంటి అధునాతన ప్యాటర్న్స్‌ను ఉపయోగించడం ద్వారా ఎంటర్‌ప్రైజ్ స్థాయి సాఫ్ట్‌వేర్ ఆర్కిటెక్చర్‌ను అత్యంత పటిష్టంగా మరియు లోపరహితంగా నిర్మించవచ్చు.</p>
+
+</body>
+</html>

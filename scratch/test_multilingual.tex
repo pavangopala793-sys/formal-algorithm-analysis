@@ -1,0 +1,43 @@
+\documentclass[10pt,journal,compsoc,onecolumn]{IEEEtran}
+\usepackage{fontspec}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\setmainfont{Noto Serif Telugu}[
+  Script=Telugu,
+  BoldFont=Noto Serif Telugu Bold,
+  ItalicFont=Noto Serif Telugu,
+  BoldItalicFont=Noto Serif Telugu Bold
+]
+\newfontfamily\englishfont{DejaVu Serif}
+\newfontfamily\codefont{DejaVu Sans Mono}
+
+\lstset{
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{blue}\bfseries,
+  frame=single
+}
+
+\begin{document}
+\title{జావా టైప్ సిస్టమ్ మరియు జెనెరిక్స్ మాస్టర్‌క్లాస్: సమగ్ర విశ్లేషణ}
+\maketitle
+
+\section{పరిచయం (Introduction)}
+జావా లాంగ్వేజ్ స్పెసిఫికేషన్ (JLS) ప్రకారం డేటా టైపులను రెండు విభాగాలుగా విభజించవచ్చు: 
+\textbf{Primitive Types} మరియు \textbf{Reference Types}.
+
+గణిత సమీకరణం:
+\begin{equation}
+S \le T \implies S[] \le T[] \quad \text{కానీ} \quad S \le T \nRightarrow \text{List}\langle S \rangle \le \text{List}\langle T \rangle
+\end{equation}
+
+\begin{lstlisting}[language=Java]
+public class Box<T> {
+    private T value;
+    public Box(T value) { this.value = value; }
+    public T getValue() { return value; }
+}
+\end{lstlisting}
+
+\end{document}

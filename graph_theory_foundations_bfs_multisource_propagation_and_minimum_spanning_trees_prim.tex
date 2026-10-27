@@ -1,0 +1,520 @@
+\documentclass[10pt,journal,compsoc,onecolumn]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{textcomp}
+\usepackage{tikz}
+\usetikzlibrary{arrows,positioning,shapes.geometric}
+\usepackage{booktabs}
+\usepackage{url}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\begin{document}
+
+\title{Graph Algorithms Engineering Masterclass: Breadth-First Search, Multisource Wave Propagation, 2D Grid Dynamics, and Minimum Spanning Trees (Prim's Algorithm): A Practical Interview and Systems Guide}
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+A streamlined, practice-oriented, interview-ready engineering masterclass on Breadth-First Search (BFS), Multisource BFS, 2D Grid Inundation (Rotten Oranges), and Minimum Spanning Trees (Prim's Algorithm). Designed specifically for software engineers and technical interview candidates, this guide eliminates unnecessary academic mathematical equations and formal proofs, replacing them with clear physical mental models (water ripples and island bridges), line-by-line Java reference implementations, step-by-step priority queue dry-run tables, complexity derivations, common interview curveballs (negative edge weights and disconnected graphs), and a targeted LeetCode problem roadmap.
+\end{abstract}
+
+\begin{IEEEkeywords}
+binary trees, algorithms, data structures, computational complexity, tree traversal, recursive algorithms, formal analysis
+\end{IEEEkeywords}
+}
+
+\maketitle
+\IEEEdisplaynontitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+\section{Algorithmic Foundations: Breadth-First Search (BFS) and Shortest Paths}
+\label{sec:bfs_foundations}
+
+In technical interviews and production software engineering, graph traversal is not about memorizing abstract topology axioms; it is about choosing the right state-space exploration strategy. While Depth-First Search (DFS) dives deeply along a single path using a LIFO stack, Breadth-First Search (BFS) expands outward in concentric, uniform ripples using a FIFO queue.
+
+\subsection{The Mental Model: Expanding Water Ripples}
+
+The most effective way to understand BFS is the \textbf{Water Ripple Analogy}:
+\begin{itemize}
+    \item Dropping a pebble into water creates expanding concentric circles.
+    \item The first ripple reaches all points at distance $1$ simultaneously.
+    \item The second ripple reaches all points at distance $2$, and so forth.
+    \item \textbf{The Core Invariant:} The very first time a ripple touches a node, it has reached that node via the \textbf{minimum possible number of edges}.
+\end{itemize}
+
+Because all edge weights in an unweighted graph are uniformly $1$, exploring level-by-level guarantees that when a node $v$ is dequeued, no shorter path to $v$ can possibly exist.
+
+\subsection{Why the FIFO Queue Guarantees Shortest Path (No Math Needed)}
+
+A standard FIFO (First-In, First-Out) queue enforces a strict ordering rule:
+\begin{enumerate}
+    \item All nodes at distance $k$ are enqueued \emph{before} any node at distance $k+1$.
+    \item Consequently, all nodes at distance $k$ are dequeued and processed \emph{before} nodes at distance $k+1$.
+    \item At any given moment, the queue contains nodes of at most two adjacent distance levels: some with distance $k$ followed by some with distance $k+1$.
+\end{enumerate}
+This simple property guarantees that you will never accidentally discover a node via a longer path first.
+
+\subsection{Standard BFS Template (Interview Ready)}
+
+Every BFS problem in coding interviews follows the identical 5-step skeleton:
+\begin{enumerate}
+    \item \textbf{Initialize State:} Allocate a `visited[]` boolean array (or `HashSet`) and an integer `dist[]` array initialized to $-1$.
+    \item \textbf{Seed Queue:} Enqueue the starting node, mark it visited immediately, and set its distance to $0$.
+    \item \textbf{Process Loop:} While the queue is not empty, dequeue the current node.
+    \item \textbf{Neighbor Exploration:} Loop over all unvisited neighbors. For each neighbor:
+    \begin{itemize}
+        \item Mark it visited immediately (to avoid duplicate queue insertions).
+        \item Set `dist[neighbor] = dist[current] + 1`.
+        \item Push neighbor into the queue.
+    \end{itemize}
+    \item \textbf{Handle Disconnected Graphs:} Wrap in an outer loop from $1$ to $N$ if the graph contains disconnected components.
+\end{enumerate}
+
+\subsection{Adjacency Matrix BFS Trace (Lecture Diagnostic Walkthrough)}
+
+Consider a 4-node graph ($0, 1, 2, 3$) represented as an adjacency matrix:
+\begin{verbatim}
+    0  1  2  3
+0 [ 0, 1, 1, 0 ]
+1 [ 1, 0, 0, 0 ]
+2 [ 1, 0, 0, 1 ]
+3 [ 0, 0, 1, 0 ]
+\end{verbatim}
+Executing BFS starting at node $0$:
+\begin{itemize}
+    \item \textbf{Step 0:} Push $0$ to queue. Queue: $[0]$. Visited: $\{0\}$.
+    \item \textbf{Step 1:} Pop $0$. Check row $0$: neighbors are $1$ and $2$. Push $1$, then push $2$. Queue: $[1, 2]$. Visited: $\{0, 1, 2\}$.
+    \item \textbf{Step 2:} Pop $1$. Check row $1$: neighbor $0$ is already visited. Discard. Queue: $[2]$.
+    \item \textbf{Step 3:} Pop $2$. Check row $2$: neighbor $0$ visited, neighbor $3$ unvisited. Push $3$. Queue: $[3]$. Visited: $\{0, 1, 2, 3\}$.
+    \item \textbf{Step 4:} Pop $3$. Check row $3$: neighbor $2$ visited. Queue is now empty.
+\end{itemize}
+\textbf{Final Traversal Order:} $[0, 1, 2, 3]$.
+
+\subsection{Production Java Implementation: Canonical BFS}
+
+\begin{verbatim}
+import java.util.*;
+
+public class GraphBFS {
+    // Computes shortest path distance from startNode to all other nodes
+    public static int[] shortestPathUnweighted(int n, List<List<Integer>> adj, int startNode) {
+        int[] dist = new int[n + 1];
+        Arrays.fill(dist, -1);
+        boolean[] visited = new boolean[n + 1];
+
+        Queue<Integer> queue = new LinkedList<>();
+
+        visited[startNode] = true;
+        dist[startNode] = 0;
+        queue.offer(startNode);
+
+        while (!queue.isEmpty()) {
+            int curr = queue.poll();
+
+            for (int neighbor : adj.get(curr)) {
+                if (!visited[neighbor]) {
+                    visited[neighbor] = true;
+                    dist[neighbor] = dist[curr] + 1;
+                    queue.offer(neighbor);
+                }
+            }
+        }
+        return dist;
+    }
+}
+\end{verbatim}
+
+\textbf{Complexity Breakdown:}
+\begin{itemize}
+    \item \textbf{Time Complexity:} $O(V + E)$. Every vertex is enqueued and dequeued exactly once ($O(V)$). Every directed edge is traversed once ($O(E)$), or twice for undirected ($2E$).
+    \item \textbf{Space Complexity:} $O(V)$. Queue stores at most $V$ nodes; `visited` and `dist` arrays take $O(V)$.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Multisource BFS: Wavefront Inundation}
+\label{sec:multisource}
+
+In many interview problems, traversal does not start from a single source node. Instead, multiple sources become active simultaneously.
+
+\subsection{The Common Mistake vs. The Optimal Pattern}
+
+\begin{itemize}
+    \item \textbf{The Rookie Approach ($O(K \times (V + E))$):} Run single-source BFS once for each of the $K$ sources, taking the minimum distance per node. This will result in a Time Limit Exceeded (TLE) verdict on large graphs.
+    \item \textbf{The Senior Approach ($O(V + E)$):} \textbf{Multi-Seeded Queue.} Enqueue \emph{all} source nodes into the queue at minute $0$ before starting the `while` loop.
+\end{itemize}
+
+\subsection{Physical Intuition: Multiple Stones in Water}
+
+Imagine dropping three stones into a pond simultaneously at locations $S_1, S_2, S_3$:
+\begin{itemize}
+    \item Ripples start expanding from all three locations concurrently.
+    \item Any point in the pond is reached by whichever ripple is closest to it.
+    \item When two ripples collide, they stop expanding into already-wet territory. The `visited[]` array naturally blocks redundant work.
+    \item The total time to process the entire graph remains strictly $O(V + E)$!
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{2D Grid Traversal: The Rotten Oranges Masterclass}
+\label{sec:rotten_oranges}
+
+The Rotten Oranges problem (LeetCode 994) is the quintessential interview problem for Multisource BFS on a 2D grid.
+
+\subsection{Problem Statement \& Encoding}
+Given an $M \times N$ grid:
+\begin{itemize}
+    \item $0$: Empty cell
+    \item $1$: Fresh orange
+    \item $2$: Rotten orange
+\end{itemize}
+Every minute, any fresh orange that is 4-directionally adjacent (up, down, left, right) to a rotten orange rots. Find the minimum minutes needed until no fresh orange remains. If impossible, return $-1$.
+
+\subsection{Interview Strategy: 4-Direction Vectors}
+
+Never write four separate `if` blocks for up, down, left, and right. Use standard directional delta arrays:
+\begin{verbatim}
+int[] dr = {-1, 1, 0, 0}; // Row delta: Up, Down, Same, Same
+int[] dc = {0, 0, 1, -1}; // Col delta: Same, Same, Right, Left
+\end{verbatim}
+For any cell $(r, c)$, its 4 neighbors are simply $(r + dr[i], c + dc[i])$ for $i \in [0, 3]$.
+
+\subsection{Step-by-Step Simulation (Lecture Slide Example)}
+
+Consider an initial state with 3 rotten oranges at $(0, 3)$, $(2, 1)$, and $(4, 3)$, and 12 fresh oranges.
+
+\begin{table}[htbp]
+\caption{Rotten Oranges Multisource BFS Minute-by-Minute Progression}
+\label{tab:rotten_sim}
+\centering
+\begin{tabular}{clcc}
+\toprule
+\textbf{Minute ($t$)} & \textbf{Newly Infected Cells} & \textbf{Fresh Remaining} & \textbf{Queue Size} \\
+\midrule
+$t = 0$ & Seed initial rotten: $(0,3), (2,1), (4,3)$ & 12 & 3 \\
+$t = 1$ & Adjacent to $t=0$: $(0,2), (1,3), (0,4), (1,1), (3,1), (4,2), (3,3), (4,4)$ & 4 & 8 \\
+$t = 2$ & Adjacent to $t=1$: $(1,2), (2,3), (1,4), (1,0), (4,1), (3,2), (3,4)$ & 2 & 7 \\
+$t = 3$ & Adjacent to $t=2$: $(0,0), (4,0)$ & \textbf{0} & 2 \\
+$t = 4$ & Queue exhausted. All fresh infected. Return $t = \mathbf{3}$. & 0 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Production Java Implementation: Rotten Oranges}
+
+\begin{verbatim}
+import java.util.*;
+
+public class RottenOranges {
+    private static final int[] DR = {-1, 1, 0, 0};
+    private static final int[] DC = {0, 0, 1, -1};
+
+    public static int orangesRotting(int[][] grid) {
+        if (grid == null || grid.length == 0) return 0;
+
+        int m = grid.length;
+        int n = grid[0].length;
+        int freshCount = 0;
+
+        // Queue holds: {row, col, minute}
+        Queue<int[]> queue = new LinkedList<>();
+
+        // Step 1: Scan grid, count fresh, enqueue all initial rotten
+        for (int r = 0; r < m; r++) {
+            for (int c = 0; c < n; c++) {
+                if (grid[r][c] == 2) {
+                    queue.offer(new int[]{r, c, 0});
+                } else if (grid[r][c] == 1) {
+                    freshCount++;
+                }
+            }
+        }
+
+        // Edge case: If no fresh oranges exist initially, 0 minutes needed
+        if (freshCount == 0) return 0;
+
+        int totalMinutes = 0;
+
+        // Step 2: Multisource BFS
+        while (!queue.isEmpty()) {
+            int[] curr = queue.poll();
+            int r = curr[0];
+            int c = curr[1];
+            int time = curr[2];
+            totalMinutes = time;
+
+            for (int i = 0; i < 4; i++) {
+                int nr = r + DR[i];
+                int nc = c + DC[i];
+
+                // Boundary check and fresh orange check
+                if (nr >= 0 && nr < m && nc >= 0 && nc < n && grid[nr][nc] == 1) {
+                    grid[nr][nc] = 2; // Infect in-place (marks visited)
+                    freshCount--;
+                    queue.offer(new int[]{nr, nc, time + 1});
+                }
+            }
+        }
+
+        // If fresh oranges still remain, they were isolated -> return -1
+        return (freshCount == 0) ? totalMinutes : -1;
+    }
+}
+\end{verbatim}
+
+\textbf{Interview Edge Cases Covered:}
+\begin{enumerate}
+    \item \textbf{No fresh oranges initially:} Returns $0$ immediately.
+    \item \textbf{Isolated fresh orange:} Surrounded by empty cells ($0$). The queue empties while $freshCount > 0 \implies$ returns $-1$.
+    \item \textbf{Memory Optimization:} Mutating `grid[nr][nc] = 2` directly avoids allocating a separate $M \times N$ `visited[][]` matrix.
+\end{enumerate}
+
+% -----------------------------------------------------------------------------
+\section{Minimum Spanning Tree (MST): Flipkart Logistics \& Practical Rules}
+\label{sec:mst_practical}
+
+We now shift from unweighted shortest paths to connected network cost optimization.
+
+\subsection{The Practical Scenario: Flipkart Delivery Hubs}
+
+Suppose Flipkart has $N$ warehouse hubs across a city.
+\begin{itemize}
+    \item Road construction between hubs incurs a cost (edge weight).
+    \item \textbf{Business Goal:} Build roads such that any hub can send trucks to any other hub, while spending the \textbf{absolute minimum total budget}.
+\end{itemize}
+
+\subsection{What is a Spanning Tree?}
+
+To connect $N$ nodes at minimum cost:
+\begin{enumerate}
+    \item You need exactly \textbf{$N - 1$ edges}.
+    \item You must have \textbf{ZERO cycles}. Any cycle contains a redundant road that wastes money without improving connectivity.
+    \item A connected, acyclic subgraph spanning all $N$ vertices is a **Spanning Tree**.
+    \item The one with the lowest total sum of edge costs is the **Minimum Spanning Tree (MST)**.
+\end{enumerate}
+
+\subsection{The Two Golden Rules of MST (Forget the Formal Proofs)}
+
+In interviews, you don't need to write mathematical exchange proofs. You just need to remember two intuitive principles:
+
+\begin{enumerate}
+    \item \textbf{The Cut Rule (Cheapest Bridge Wins):}
+    Cut the graph into two sets of nodes: Visited nodes $S$, and Unvisited nodes $V \setminus S$. Among all candidate roads that cross between Visited and Unvisited, **the cheapest road is guaranteed to be safe and optimal to build**. (This is the engine behind Prim's Algorithm).
+    
+    \item \textbf{The Cycle Rule (Most Expensive Road Loses):}
+    If you ever see a cycle (a loop of roads), the single most expensive road in that loop is completely useless. You can delete it and never look back. (This is the engine behind Kruskal's Algorithm).
+\end{enumerate}
+
+\subsection{Uniqueness Rule}
+\begin{itemize}
+    \item If \textbf{all edge weights are distinct}, there is only \textbf{ONE unique MST}.
+    \item If \textbf{duplicate edge weights exist}, multiple different spanning trees might share the same minimum cost (like Tree A and Tree C in the lecture, both costing $12$).
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Prim's Algorithm: Priority Queue Implementation \& Trace}
+\label{sec:prims_practical}
+
+Prim's algorithm is a greedy algorithm that grows an MST one vertex at a time.
+
+\subsection{How Prim's Works (The Island Analogy)}
+
+\begin{enumerate}
+    \item Start on any arbitrary island (say node $1$). Mark it \emph{visited}.
+    \item Look at all bridges connecting your visited island to any unvisited island.
+    \item Put all these bridges into a **Min-Heap (Priority Queue)**.
+    \item Pop the **cheapest bridge** from the heap.
+    \item If the target island is already visited, discard it (stale bridge).
+    \item If the target island is unvisited, annex it! Add the bridge cost to your total, mark the island visited, and push all its outgoing bridges into the heap.
+    \item Repeat until all islands are connected.
+\end{enumerate}
+
+\subsection{Hand-Tracing the Lecture Graph (Starting at Node 5)}
+
+Graph: $V = \{1, 2, 3, 4, 5, 6\}$. Edges:
+\begin{verbatim}
+(1,2): 7    (1,4): 8    (2,4): 3    (2,3): 6    (4,3): 4
+(4,5): 3    (3,5): 2    (3,6): 5    (5,6): 5
+\end{verbatim}
+
+\begin{table}[htbp]
+\caption{Prim's Algorithm Step-by-Step Priority Queue Trace (Root = 5)}
+\label{tab:prims_trace_clean}
+\centering
+\begin{tabular}{ccclcl}
+\toprule
+\textbf{Step} & \textbf{Popped Edge} & \textbf{Weight} & \textbf{Status / Action} & \textbf{Total Cost} & \textbf{Tree Nodes ($S$)} \\
+\midrule
+0 & Start at Node 5 & 0 & Enqueue neighbors: $(3,2), (4,3), (6,5)$ & 0 & $\{5\}$ \\
+1 & Edge $\{5, 3\}$ & \textbf{2} & Valid. Add node 3. Push neighbors of 3. & $0 + 2 = 2$ & $\{5, 3\}$ \\
+2 & Edge $\{5, 4\}$ & \textbf{3} & Valid. Add node 4. Push neighbors of 4. & $2 + 3 = 5$ & $\{5, 3, 4\}$ \\
+3 & Edge $\{4, 2\}$ & \textbf{3} & Valid. Add node 2. Push neighbors of 2. & $5 + 3 = 8$ & $\{5, 3, 4, 2\}$ \\
+4 & Edge $\{4, 3\}$ & 4 & Stale! Node 3 already in tree $\to$ \textbf{Discard}. & 8 & $\{5, 3, 4, 2\}$ \\
+5 & Edge $\{3, 6\}$ & \textbf{5} & Valid. Add node 6. Push neighbors of 6. & $8 + 5 = 13$ & $\{5, 3, 4, 2, 6\}$ \\
+6 & Edge $\{5, 6\}$ & 5 & Stale! Node 6 already in tree $\to$ \textbf{Discard}. & 13 & $\{5, 3, 4, 2, 6\}$ \\
+7 & Edge $\{2, 3\}$ & 6 & Stale! Node 3 already in tree $\to$ \textbf{Discard}. & 13 & $\{5, 3, 4, 2, 6\}$ \\
+8 & Edge $\{2, 1\}$ & \textbf{7} & Valid. Add node 1. Push neighbors of 1. & $13 + 7 = \mathbf{20}$ & $\{5, 3, 4, 2, 6, 1\}$ \\
+9 & Edge $\{1, 4\}$ & 8 & Stale! Node 4 already in tree $\to$ \textbf{Discard}. & $\mathbf{20}$ & All 6 nodes visited! \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Final MST Cost = 20.} Selected edges: $\{ (5,3):2, (5,4):3, (4,2):3, (3,6):5, (2,1):7 \}$.
+
+\subsection{Why is Prim's Complexity $O(E \log V)$?}
+
+No long formulas needed:
+\begin{itemize}
+    \item Every edge is pushed into the heap at most twice (once from each end): $O(E)$ pushes.
+    \item Each push or pop in a binary heap takes $O(\log(\text{heap size})) = O(\log E)$ time.
+    \item Since $E \le V^2$, we have $\log E \le \log(V^2) = 2 \log V = O(\log V)$.
+    \item Total time = $\mathbf{O(E \log V)}$.
+    \item Total space = $\mathbf{O(V + E)}$ for the adjacency list and heap.
+\end{itemize}
+
+\subsection{Production Java Implementation: Complete Prim's Engine}
+
+\begin{verbatim}
+import java.util.*;
+
+public class PrimsMST {
+    public static class Edge {
+        int to;
+        int weight;
+
+        public Edge(int to, int weight) {
+            this.to = to;
+            this.weight = weight;
+        }
+    }
+
+    // Returns total minimum spanning tree weight
+    public static int findMSTWeight(int n, List<List<Edge>> adj) {
+        boolean[] visited = new boolean[n + 1];
+        int totalWeight = 0;
+        int nodesVisited = 0;
+
+        // Min-Heap ordered by edge weight: [node, weight]
+        PriorityQueue<int[]> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a[1]));
+
+        // Arbitrary root start at node 1 with weight 0
+        pq.offer(new int[]{1, 0});
+
+        while (!pq.isEmpty()) {
+            int[] curr = pq.poll();
+            int u = curr[0];
+            int w = curr[1];
+
+            // If node u is already in MST, this is a stale edge -> skip!
+            if (visited[u]) continue;
+
+            // Annex node u into MST
+            visited[u] = true;
+            totalWeight += w;
+            nodesVisited++;
+
+            // Push all incident edges to unvisited neighbors
+            for (Edge edge : adj.get(u)) {
+                if (!visited[edge.to]) {
+                    pq.offer(new int[]{edge.to, edge.weight});
+                }
+            }
+        }
+
+        // If we didn't connect all n nodes, graph was disconnected
+        if (nodesVisited < n) {
+            return -1; // Spanning tree impossible
+        }
+
+        return totalWeight;
+    }
+}
+\end{verbatim}
+
+% -----------------------------------------------------------------------------
+\section{Interview Cheat-Sheet: Diagnostic Comparison Matrix}
+\label{sec:cheat_sheet}
+
+Table~\ref{tab:comparison_matrix} summarizes everything you need to distinguish these algorithms during high-pressure interviews.
+
+\begin{table}[htbp]
+\caption{Interview Comparison Matrix: BFS vs. Multisource BFS vs. DFS vs. Prim's MST}
+\label{tab:comparison_matrix}
+\centering
+\begin{tabular}{p{2.6cm}p{2.0cm}p{2.4cm}p{1.8cm}p{1.8cm}p{3.2cm}}
+\toprule
+\textbf{Algorithm} & \textbf{Data Structure} & \textbf{Frontier Pattern} & \textbf{Time Bound} & \textbf{Space Bound} & \textbf{When To Use in Interviews} \\
+\midrule
+Standard BFS & FIFO Queue & Concentric Ripples & $O(V + E)$ & $O(V)$ & Shortest path in unweighted graphs; level-order traversal. \\
+\midrule
+Multisource BFS & Multi-Seeded FIFO Queue & Colliding Waves & $O(V + E)$ & $O(V)$ & Distance to nearest facility; epidemic / fire spread (Rotten Oranges). \\
+\midrule
+Standard DFS & LIFO Stack (Recursion) & Deep Linear Probes & $O(V + E)$ & $O(V)$ & Cycle detection; topological sorting; path existence; backtracking. \\
+\midrule
+Prim's MST & Min-Heap (PriorityQueue) & Greedy Cut Growth & $O(E \log V)$ & $O(V + E)$ & Connect all nodes with minimum total edge cost (road/cable construction). \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% -----------------------------------------------------------------------------
+\section{Interview Curveballs \& Trick Questions}
+\label{sec:curveballs}
+
+When interviewers want to test if you truly understand the concepts or just memorized syntax, they throw these exact curveballs:
+
+\begin{enumerate}
+    \item \textbf{Curveball 1: "What if edge weights are negative in Prim's Algorithm?"}
+    \begin{itemize}
+        \item \textbf{Dijkstra's Shortest Path:} \textbf{FAILS} with negative edges because greedy sub-path assumptions break.
+        \item \textbf{Prim's MST:} \textbf{WORKS COMPLETELY FINE} with negative edges on undirected graphs! The Cut Rule only requires picking the \emph{lightest} edge crossing the cut. It does not care if the weight is $+10$, $0$, or $-50$.
+    \end{itemize}
+
+    \item \textbf{Curveball 2: "What if the graph is disconnected?"}
+    \begin{itemize}
+        \item A single spanning tree is mathematically impossible.
+        \item Prim's algorithm will terminate with `nodesVisited < n`. In code, check `if (nodesVisited < n) return -1;`.
+    \end{itemize}
+
+    \item \textbf{Curveball 3: "Why did you mark visited on enqueue rather than dequeue in BFS?"}
+    \begin{itemize}
+        \item If you mark visited only on dequeue, the same node will be added to the queue multiple times by different neighbors, leading to $O(V^2)$ memory bloat and TLE!
+        \item Always mark visited the \textbf{exact moment you push into the queue}.
+    \end{itemize}
+
+    \item \textbf{Curveball 4: "Why does Prim's use `visited[u]` after popping from the heap?"}
+    \begin{itemize}
+        \item Because the min-heap can contain multiple edges leading to the same node $u$ (lazy deletion). If $u$ was already added to the MST via a cheaper edge earlier, subsequent entries for $u$ are stale and must be skipped with `if (visited[u]) continue;`.
+    \end{itemize}
+\end{enumerate}
+
+% -----------------------------------------------------------------------------
+\section{Targeted Practice Problem Roadmap}
+\label{sec:practice}
+
+To cement this knowledge with active coding practice, solve these standard LeetCode problems in order:
+
+\begin{enumerate}
+    \item \textbf{Level 1 (Standard BFS Warm-up):}
+    \begin{itemize}
+        \item LeetCode 102: Binary Tree Level Order Traversal
+        \item LeetCode 133: Clone Graph
+    \end{itemize}
+    \item \textbf{Level 2 (Multisource BFS \& Grid Traversal):}
+    \begin{itemize}
+        \item LeetCode 994: \textbf{Rotten Oranges} (Must-do!)
+        \item LeetCode 542: 01 Matrix
+        \item LeetCode 286: Walls and Gates
+    \end{itemize}
+    \item \textbf{Level 3 (Minimum Spanning Tree \& Greedy Cut):}
+    \begin{itemize}
+        \item LeetCode 1135: Connecting Cities With Minimum Cost
+        \item LeetCode 1584: \textbf{Min Cost to Connect All Points} (Classic Prim's application)
+    \end{itemize}
+\end{enumerate}
+
+
+\end{document}
