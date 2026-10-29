@@ -188,13 +188,13 @@ We trace a search query for target $K = 7$ on the BST illustrated in Figure~\ref
 \centering
 \caption{Step-by-Step Execution Trace of Search Operation ($K = 7$)}
 \label{tab:search_trace}
-\begin{tabular}{ccclp{4.2cm}}
+\begin{tabular}{ccclp{5.0cm}}
 \toprule
 \textbf{Step} & \textbf{Inspected Node} & \textbf{Node Value} & \textbf{Evaluation Predicate} & \textbf{State Action} \\
 \midrule
-1 & Root & 5 & $7 > 5$ & Discard left subtree; branch right $\to$ node 8 \\
-2 & Internal & 8 & $7 < 8$ & Discard right subtree; branch left $\to$ node 6 \\
-3 & Internal & 6 & $7 > 6$ & Discard left subtree; branch right $\to$ node 7 \\
+1 & Root & 5 & $7 > 5$ & Discard left subtree; branch right to node 8 \\
+2 & Internal & 8 & $7 < 8$ & Discard right subtree; branch left to node 6 \\
+3 & Internal & 6 & $7 > 6$ & Discard left subtree; branch right to node 7 \\
 4 & Target Node & 7 & $7 == 7$ & Match confirmed; return \textbf{True} \\
 \bottomrule
 \end{tabular}
