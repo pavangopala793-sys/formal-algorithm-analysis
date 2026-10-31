@@ -48,15 +48,15 @@
 
 \begin{document}
 
-\title{Comprehensive Formalization and Algorithmic Taxonomy of Contiguous Subarray Problems: Prefix State Hashing, Sliding Window Invariants, AtMost Duality, Kadane Dynamic Programming, Monotonic Stacks, and Bitwise Monotonicity}
+\title{Comprehensive Formalization and Algorithmic Taxonomy of Contiguous Subarray Problems: Prefix State Hashing, Sliding Window Invariants, AtMost Duality, Kadane Dynamic Programming, Monotonic Stacks, Bitwise Monotonicity, and 2D Submatrix Reductions}
 
 \IEEEtitleabstractindextext{%
 \begin{abstract}
-Contiguous subarray problems form a fundamental computational primitive across sequence optimization, dynamic programming, and technical coding platforms such as LeetCode. A central challenge in sequence processing is evaluating metrics---such as sum, product, parity, distinct element counts, minimums, maximums, or bitwise combinations---over bounded contiguous segments. Naive brute-force enumeration evaluates quadratic $\mathcal{O}(N^2)$ candidate windows, incurring $\mathcal{O}(N^3)$ time. This research paper presents an exhaustive, publication-grade taxonomy and algorithmic analysis of contiguous subarray problems. We establish eight foundational paradigms that systematically govern all optimal solutions: (1) Prefix-Sum Space and Hash-Map Equivalence Classes ($\mathcal{O}(N)$ exact sum, remainder, and zero-sum balance matching), (2) Two-Pointer Sliding Window Contractions ($\mathcal{O}(N)$ greedy optimization on monotonic non-negative domains), (3) The AtMost(K) Set-Theoretic Duality (Exact-$K$ count decomposition via inclusion-exclusion), (4) Dynamic Programming \& Kadane's Local State Optimization ($\mathcal{O}(N)$ maximum, minimum, and product subarray state transitions and circular topologies), (5) Monotonic Stack \& Element Contribution Mechanics ($\mathcal{O}(N)$ range boundaries, sum of subarray minimums, and min-products), (6) Sliding Window with Monotonic Extremum Queues ($\mathcal{O}(1)$ amortized window min/max bounds), (7) Non-Monotonic Prefix Spaces with Inequalities ($\mathcal{O}(N \log N)$ merge sort divide-and-conquer and $\mathcal{O}(N)$ monotonic deques on prefix sums), and (8) Bitwise Monotonicity \& Bounded State Transitions ($\mathcal{O}(30N)$ accumulation limits for OR and AND). For each paradigm, we present mathematical invariant proofs, complexity theorems, edge-case taxons, vector TikZ architectural diagrams, complete compilable Java reference implementations, and synthesize a 10-second diagnostic decision flowchart and master LeetCode taxonomy matrix.
+Contiguous subarray problems form a fundamental computational primitive across sequence optimization, dynamic programming, and technical coding platforms such as LeetCode. A central challenge in sequence processing is evaluating metrics---such as sum, product, parity, distinct element counts, minimums, maximums, or bitwise combinations---over bounded contiguous segments. Naive brute-force enumeration evaluates quadratic $\mathcal{O}(N^2)$ candidate windows, incurring $\mathcal{O}(N^3)$ time. This research paper presents an exhaustive, publication-grade taxonomy and algorithmic analysis of contiguous subarray problems. We establish nine foundational paradigms that systematically govern all optimal solutions: (1) Prefix-Sum Space and Hash-Map Equivalence Classes ($\mathcal{O}(N)$ exact sum, remainder, and zero-sum balance matching), (2) Two-Pointer Sliding Window Contractions ($\mathcal{O}(N)$ greedy optimization on monotonic non-negative domains), (3) The AtMost(K) Set-Theoretic Duality (Exact-$K$ count decomposition via inclusion-exclusion), (4) Dynamic Programming \& Kadane's Local State Optimization ($\mathcal{O}(N)$ maximum, minimum, and product subarray state transitions and circular topologies), (5) Monotonic Stack \& Element Contribution Mechanics ($\mathcal{O}(N)$ range boundaries, sum of subarray minimums, and min-products), (6) Sliding Window with Monotonic Extremum Queues ($\mathcal{O}(1)$ amortized window min/max bounds), (7) Non-Monotonic Prefix Spaces with Inequalities ($\mathcal{O}(N \log N)$ merge sort divide-and-conquer and $\mathcal{O}(N)$ monotonic deques on prefix sums), (8) Bitwise Monotonicity \& Bounded State Transitions ($\mathcal{O}(30N)$ accumulation limits for OR and AND), and (9) Two-Dimensional Submatrix Extensions ($\mathcal{O}(R^2 C)$ row-pair projection and 1D reduction). For each paradigm, we present mathematical invariant proofs, complexity theorems, edge-case taxons, granular execution trace tables, vector TikZ architectural diagrams, complete compilable Java reference implementations, and synthesize a 10-second diagnostic decision flowchart and master LeetCode taxonomy matrix.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Contiguous Subarrays, LeetCode Patterns, Prefix Sum Hashing, Sliding Window, AtMost Duality, Kadane Algorithm, Monotonic Stack, Element Contribution Principle, Monotonic Deque, Bitwise Monotonicity, Divide and Conquer
+Contiguous Subarrays, LeetCode Master Patterns, Prefix Sum Hashing, Sliding Window, AtMost Duality, Kadane Algorithm, Monotonic Stack, Element Contribution Principle, Monotonic Deque, Bitwise Monotonicity, Divide and Conquer, 2D Submatrix Reduction
 \end{IEEEkeywords}
 }
 
@@ -64,14 +64,14 @@ Contiguous Subarrays, LeetCode Patterns, Prefix Sum Hashing, Sliding Window, AtM
 \IEEEdisplaynontitleabstractindextext
 \IEEEpeerreviewmaketitle
 
-\section{Introduction and Mathematical Foundations}
+\section{Introduction, Mathematical Foundations, and Combinatorics}
 \label{sec:intro}
 
-Contiguous subarray problems represent a foundational computational primitive in algorithm design, data structures, dynamic programming, and competitive programming platforms such as LeetCode. A central challenge in sequence processing is evaluating metrics---such as sum, product, parity, distinct element counts, minimums, maximums, or bitwise combinations---over bounded contiguous segments of an array.
+Contiguous subarray problems represent one of the most intellectually rich, practically critical, and frequently tested algorithmic domains across theoretical computer science, quantitative finance, and elite technical interviews at Tier-1 technology companies (Google, Meta, Amazon, Apple, Netflix). At its core, sequence processing requires evaluating quantitative metrics---such as contiguous summation, cumulative product, parity distributions, discrete frequencies, structural bounds, minimums, maximums, and bitwise combinations---over contiguous index ranges of an input array.
 
-While brute-force enumeration of all candidate subarrays requires quadratic $\mathcal{O}(N^2)$ candidate evaluations and $\mathcal{O}(N^3)$ naive computation time, optimal algorithms achieve linear $\mathcal{O}(N)$ or linearithmic $\mathcal{O}(N \log N)$ execution time by exploiting structural invariants, algebraic equivalences, monotonic state transitions, and memory-efficient data structures.
+While naive brute-force examination of all possible contiguous windows requires evaluating quadratic $\mathcal{O}(N^2)$ candidate subarrays and incurring catastrophic $\mathcal{O}(N^3)$ computational time, optimal algorithms achieve linear $\mathcal{O}(N)$ or linearithmic $\mathcal{O}(N \log N)$ execution time by exploiting structural invariants, algebraic equivalences, monotonic state transitions, and memory-efficient data structures.
 
-This research paper presents an exhaustive, publication-grade taxonomy and algorithmic analysis of contiguous subarray problems. We establish eight fundamental paradigms that completely govern the design of optimal subarray algorithms for LeetCode:
+This research paper presents an encyclopedic, publication-grade algorithmic compendium and formal taxonomy of contiguous subarray problems. We establish nine foundational computational paradigms that completely govern the design of optimal subarray algorithms:
 \begin{enumerate}
     \item \textbf{Prefix-Sum Space and Hash-Map Equivalence Classes (\S\ref{sec:prefix-hash}):} Decomposing contiguous subarray metrics into prefix state differences, enabling exact sum matching, divisibility classes, zero-sum optimizations, and domain transformations in $\mathcal{O}(N)$ time.
     \item \textbf{Sliding Window and Two-Pointer Search Space Pruning (\S\ref{sec:sliding-window}):} Exploiting monotonic contraction properties across non-negative domains to prune candidate states from $\mathcal{O}(N^2)$ to $\mathcal{O}(N)$, including fixed-window and variable-window metrics.
@@ -81,9 +81,8 @@ This research paper presents an exhaustive, publication-grade taxonomy and algor
     \item \textbf{Sliding Window with Monotonic Extremum Queues (\S\ref{sec:monotonic-queues}):} Tracking running window minimums and maximums in $\mathcal{O}(1)$ amortized time via monotonic double-ended queues.
     \item \textbf{Divide-and-Conquer, Range Trees, and Monotonic Deques on Negative Prefixes (\S\ref{sec:divide-conquer}):} Resolving non-monotonic prefix spaces for range sum bounds ($\mathcal{O}(N \log N)$ merge-sort divide and conquer) and shortest target sums with negative numbers ($\mathcal{O}(N)$ monotonic deque on prefix sums).
     \item \textbf{Bitwise Monotonicity and Bounded State Transitions (\S\ref{sec:bitwise}):} Exploiting the 32-bit accumulation boundary of bitwise OR and AND operations to constrain distinct subarray bitwise states to $\mathcal{O}(30 N)$.
+    \item \textbf{Two-Dimensional Submatrix Extensions (\S\ref{sec:2d-submatrices}):} Generalizing 1D contiguous subarray principles to 2D matrices via row-pair projections and column reductions.
 \end{enumerate}
-
-Furthermore, we provide complete, compilable Java reference implementations for every canonical problem class, formal mathematical proofs of invariant correctness, high-resolution vector TikZ architectural diagrams, and synthesize a diagnostic decision tree and taxonomy matrix (\S\ref{sec:taxonomy}) for immediate classification of any LeetCode subarray problem.
 
 \subsection{Formal Definitions and Notation}
 
@@ -94,40 +93,67 @@ A contiguous subarray $A[i \dots j]$ defined by start boundary $i$ and end bound
 \begin{equation}
 A[i \dots j] = (a_i, a_{i+1}, \dots, a_j)
 \end{equation}
-A subarray is strictly contiguous: no elements within $[i, j]$ may be omitted, preserving spatial locality.
+A subarray preserves strict contiguous spatial locality: no intermediate elements within $[i, j]$ may be omitted.
 \end{definition}
 
 \begin{theorem}[Cardinality of Subarray Space]
 The total number of non-empty contiguous subarrays in an array of size $N$ is exactly $\frac{N(N+1)}{2} = \mathcal{O}(N^2)$.
 \end{theorem}
 \begin{proof}
-A contiguous subarray is uniquely identified by choosing a pair of indices $(i, j)$ such that $0 \le i \le j < N$. Summing the number of valid ending indices $j$ for each starting index $i$:
-\begin{equation}
-\sum_{i=0}^{N-1} (N - i) = N + (N-1) + \dots + 1 = \frac{N(N+1)}{2} = \frac{N^2 + N}{2} = \mathcal{O}(N^2)
-\end{equation}
+We establish this fundamental result through two distinct combinatorial proofs:
+\begin{enumerate}
+    \item \textbf{Method 1: Partition by Subarray Length}: 
+    Let $L$ denote the length of a subarray, where $1 \le L \le N$. For a fixed length $L$, the valid starting index $i$ satisfies $0 \le i \le N - L$. Thus, there are exactly $N - L + 1$ distinct contiguous subarrays of length $L$. Summing over all possible lengths $L \in [1, N]$:
+    \begin{equation}
+    \sum_{L=1}^{N} (N - L + 1) = N + (N-1) + (N-2) + \dots + 1 = \frac{N(N+1)}{2}
+    \end{equation}
+    \item \textbf{Method 2: Combinatorial Boundary Selection}:
+    An array of length $N$ contains $N+1$ discrete boundary partition points: $0, 1, 2, \dots, N$. Any non-empty contiguous subarray is uniquely defined by choosing an unordered pair of distinct partition points $(u, v)$ such that $0 \le u < v \le N$, where $u$ represents the left boundary index and $v$ represents the right boundary index. The number of ways to choose 2 distinct points from $N+1$ points is:
+    \begin{equation}
+    \binom{N+1}{2} = \frac{(N+1)!}{2! (N-1)!} = \frac{N(N+1)}{2}
+    \end{equation}
+\end{enumerate}
+Both methods confirm that the candidate search space has exact cardinality $\frac{N(N+1)}{2} = \mathcal{O}(N^2)$.
 \end{proof}
 
-\begin{definition}[Subarray vs. Subsequence vs. Subset]
-It is critical to distinguish these three structural concepts:
-\begin{itemize}
-    \item \textbf{Subarray}: Elements must be contiguous and in original order ($2^{\mathcal{O}(\log N)}$ cardinality, $\frac{N(N+1)}{2}$ candidates).
-    \item \textbf{Subsequence}: Elements maintain relative order but can have arbitrary gaps ($2^N$ candidates).
-    \item \textbf{Subset}: Elements can be chosen in arbitrary order without sequence preservation ($2^N$ candidates).
-\end{itemize}
-\end{definition}
+\begin{table*}[t]
+\caption{Formal Comparison of Subarray, Subsequence, and Subset Spaces}
+\label{tab:sequence_comparison}
+\centering
+\begin{tabular}{p{3.0cm}p{3.2cm}p{3.0cm}p{2.2cm}p{4.0cm}}
+\toprule
+\textbf{Structure Type} & \textbf{Contiguity Invariant} & \textbf{Relative Order} & \textbf{Cardinality} & \textbf{Production Example} \\
+\midrule
+\textbf{Subarray} & Strictly contiguous (no gaps) & Strictly preserved & $\frac{N(N+1)}{2} = \mathcal{O}(N^2)$ & $A = [1, 2, 3] \implies [1], [2], [3], [1, 2], [2, 3], [1, 2, 3]$ \\
+\midrule
+\textbf{Subsequence} & Gaps permitted between elements & Strictly preserved & $2^N - 1 = \mathcal{O}(2^N)$ & $A = [1, 2, 3] \implies [1, 3]$ is valid subsequence, but not subarray \\
+\midrule
+\textbf{Subset} & Arbitrary selection & Irrelevant & $2^N = \mathcal{O}(2^N)$ & $A = [1, 2, 3] \implies \{3, 1\}$ is valid subset \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \begin{theorem}[The Element Contribution Principle]
-In the sum of all $\frac{N(N+1)}{2}$ contiguous subarrays, element $a_i$ (at index $i$, $0 \le i < N$) appears in exactly $(i + 1)(N - i)$ subarrays. Consequently:
+In the sum of all $\frac{N(N+1)}{2}$ contiguous subarrays, element $a_i$ (at index $i$, where $0 \le i < N$) appears in exactly $(i + 1)(N - i)$ subarrays. Consequently:
 \begin{equation}
 \sum_{0 \le i \le j < N} \sum_{k=i}^{j} a_k = \sum_{i=0}^{N-1} (i + 1)(N - i) \cdot a_i
 \end{equation}
 \end{theorem}
 \begin{proof}
-A subarray $A[L \dots R]$ contains $a_i$ if and only if $L \le i$ and $R \ge i$. The number of valid left boundary choices is $i - 0 + 1 = i + 1$. The number of valid right boundary choices is $(N - 1) - i + 1 = N - i$. By the product rule of combinatorics, $a_i$ participates in exactly $(i + 1)(N - i)$ contiguous subarrays.
+A contiguous subarray $A[L \dots R]$ contains the element $a_i$ if and only if the left boundary $L$ satisfies $0 \le L \le i$ and the right boundary $R$ satisfies $i \le R < N$. 
+\begin{itemize}
+    \item The number of valid left boundary choices is $i - 0 + 1 = i + 1$.
+    \item The number of valid right boundary choices is $(N - 1) - i + 1 = N - i$.
+\end{itemize}
+By the fundamental counting principle of combinatorics, the choices of left and right boundaries are completely independent. Therefore, the total number of subarrays containing $a_i$ is precisely the product of choices:
+\begin{equation}
+\text{Frequency}(a_i) = (i + 1)(N - i)
+\end{equation}
+Multiplying each element $a_i$ by its frequency and summing over all $i \in [0, N-1]$ yields the grand sum across all $\mathcal{O}(N^2)$ subarrays in optimal $\mathcal{O}(N)$ time and $\mathcal{O}(1)$ space.
 \end{proof}
 
-\begin{definition}[Prefix Sum Array]
-The prefix sum array $P$ of sequence $A$ is defined for $r \in [0, N-1]$ as:
+\begin{definition}[Prefix Sum Sequence]
+The prefix sum sequence $P$ of an array $A$ is defined for $r \in [0, N-1]$ as:
 \begin{equation}
 P[r] = \sum_{k=0}^{r} a_k \quad \text{with base definition } P[-1] = 0
 \end{equation}
@@ -147,7 +173,7 @@ S(i, j) = \sum_{k=i}^{j} a_k = P[j] - P[i-1] \quad \text{for } 0 \le i \le j < N
 The algebraic identity $S(i, j) = P[j] - P[i-1]$ allows us to recast the search for contiguous subarrays into an equivalent two-sum lookup on prefix sums: finding $i$ such that $P[i-1] = P[j] - K$.
 
 \subsection{Why Sliding Window Fails on Negative Numbers}
-A classic interview pitfall is attempting to solve subarray sum problems involving negative integers using two-pointer sliding windows. A two-pointer sliding window strictly requires \textbf{monotonicity}: advancing the right pointer must monotonically increase (or decrease) the window metric, and advancing the left pointer must monotonically invert that change. When negative numbers are present, adding an element can either increase or decrease the sum, destroying monotonicity and invalidating greedy window contractions. Prefix sum hashing is the exact remedy.
+A classic interview pitfall is attempting to solve subarray sum problems involving negative integers using two-pointer sliding windows. A two-pointer sliding window strictly requires \textbf{monotonicity}: advancing the right pointer must monotonically increase (or decrease) the window metric, and advancing the left pointer must monotonically invert that change. When negative numbers are present, adding an element can either increase or decrease the sum, destroying monotonicity and invalidating greedy window contractions. Prefix sum hashing is the exact mathematical remedy.
 
 \subsection{Target Sum Matching ($P[j] - P[i-1] = K$)}
 
@@ -156,6 +182,27 @@ We iterate $j$ from $0$ to $N-1$, maintaining cumulative running prefix $P[j]$ a
 \begin{itemize}
     \item \textbf{Mandatory Base Case Guard}: $M[0] = 1$. This accounts for subarrays starting at index $0$ ($A[0 \dots j]$), where $P[j] = K \implies P[j] - K = 0 = P[-1]$. Omitting this base case silently drops all valid prefix subarrays starting at index 0.
 \end{itemize}
+
+\begin{table*}[htbp]
+\caption{Detailed Step-by-Step Execution Trace for Subarray Sum Equals K (LeetCode 560)}
+\label{tab:trace_lc560}
+\centering
+\begin{tabular}{ccccccc}
+\toprule
+\textbf{Index $j$} & \textbf{Element $a_j$} & \textbf{Prefix Sum $P[j]$} & \textbf{Target Needed $P[j] - K$} & \textbf{Freq in Map} & \textbf{Total Count} & \textbf{Hash Map State} \\
+\midrule
+\textbf{Base} & --- & $0$ & --- & --- & $0$ & $\{0: 1\}$ \\
+$0$ & $3$ & $3$ & $3 - 7 = -4$ & $0$ & $0$ & $\{0: 1, 3: 1\}$ \\
+$1$ & $4$ & $7$ & $7 - 7 = 0$ & $1 \implies A[0 \dots 1]$ & $1$ & $\{0: 1, 3: 1, 7: 1\}$ \\
+$2$ & $7$ & $14$ & $14 - 7 = 7$ & $1 \implies A[2 \dots 2]$ & $2$ & $\{0: 1, 3: 1, 7: 1, 14: 1\}$ \\
+$3$ & $2$ & $16$ & $16 - 7 = 9$ & $0$ & $2$ & $\{..., 16: 1\}$ \\
+$4$ & $-3$ & $13$ & $13 - 7 = 6$ & $0$ & $2$ & $\{..., 13: 1\}$ \\
+$5$ & $1$ & $14$ & $14 - 7 = 7$ & $1 \implies A[3 \dots 5]$ & $3$ & $\{..., 7: 1, 14: 2\}$ \\
+$6$ & $4$ & $18$ & $18 - 7 = 11$ & $0$ & $3$ & $\{..., 18: 1\}$ \\
+$7$ & $2$ & $20$ & $20 - 7 = 13$ & $1 \implies A[5 \dots 7]$ & $4$ & $\{..., 20: 1\}$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \subsubsection{Maximum Size Subarray Sum Equals K (LeetCode 325)}
 When seeking the \emph{maximum length} of a subarray with sum $K$, the hash map stores the \textbf{earliest occurrence index} of each prefix sum: $M[P[i-1]] = i - 1$. Upon encountering $P[j]$, if $(P[j] - K) \in M$, candidate length is $j - M[P[j] - K]$. To maximize length, existing keys are never overwritten.
@@ -181,20 +228,23 @@ Requires $S(i, j) = m \cdot K$ and length $(j - i + 1) \ge 2$. We store the earl
 Transform the binary array into balance space by mapping $0 \to -1$ and $1 \to +1$. A subarray has equal 0s and 1s if and only if its transformed sum equals $0$. The problem reduces directly to finding the longest subarray with sum $0$ ($P[j] = P[i-1]$).
 
 \subsubsection{Number of Subarrays with Odd Sum (LeetCode 1524)}
-A sum is odd if and only if the parity of $P[j]$ differs from $P[i-1]$. We simply maintain running counts of even and odd prefix sums seen so far.
+A sum is odd if and only if the parity of $P[j]$ differs from $P[i-1]$. We maintain running counts of even and odd prefix sums seen so far. At each step, if $P[j]$ is odd, it forms odd subarrays with all previous even prefixes; if $P[j]$ is even, it forms odd subarrays with all previous odd prefixes.
 
-\subsection{Compilable Java Reference Implementations}
+\subsubsection{Count Subarrays With Median K (LeetCode 2488)}
+Transform elements: map elements $> K$ to $+1$, elements $< K$ to $-1$, and element $= K$ to $0$. A subarray centered at $K$ has median $K$ if its balance sum is either $0$ (odd length) or $+1$ (even length).
+
+\subsection{Compilable Java Reference Implementation: Paradigm 1}
 
 \begin{lstlisting}[language=Java]
 import java.util.HashMap;
 import java.util.Map;
 
-public class PrefixHashSubarraySolutions {
+public class PrefixHashSubarraySuite {
 
     // 1. Subarray Sum Equals K (LeetCode 560) - O(N) Time, O(N) Space
     public static int subarraySumEqualsK(int[] nums, int k) {
         Map<Long, Integer> freq = new HashMap<>();
-        freq.put(0L, 1); // Base case: P[-1] = 0
+        freq.put(0L, 1); // Mandatory Base Case: P[-1] = 0
         long pref = 0;
         int count = 0;
         
@@ -211,13 +261,13 @@ public class PrefixHashSubarraySolutions {
     // 2. Subarray Sums Divisible by K (LeetCode 974) - O(N) Time, O(K) Space
     public static int subarraysDivByK(int[] nums, int k) {
         int[] remFreq = new int[k];
-        remFreq[0] = 1; // Base case: remainder 0 seen once at start
+        remFreq[0] = 1; // Base case: remainder 0 seen once initially
         long pref = 0;
         int count = 0;
         
         for (int x : nums) {
             pref += x;
-            int rem = (int) ((pref % k + k) % k); // Positive normalized modulo
+            int rem = (int) ((pref % k + k) % k); // Normalized positive remainder
             count += remFreq[rem];
             remFreq[rem]++;
         }
@@ -227,16 +277,15 @@ public class PrefixHashSubarraySolutions {
     // 3. Contiguous Array - Equal 0s and 1s (LeetCode 525) - O(N) Time, O(N) Space
     public static int findMaxLengthEqual01(int[] nums) {
         Map<Integer, Integer> firstSeen = new HashMap<>();
-        firstSeen.put(0, -1); // Base case: balance 0 at index -1
-        int pref = 0;
-        int maxLen = 0;
+        firstSeen.put(0, -1); // Base case: balance 0 at virtual index -1
+        int balance = 0, maxLen = 0;
         
         for (int j = 0; j < nums.length; j++) {
-            pref += (nums[j] == 1) ? 1 : -1;
-            if (firstSeen.containsKey(pref)) {
-                maxLen = Math.max(maxLen, j - firstSeen.get(pref));
+            balance += (nums[j] == 1) ? 1 : -1;
+            if (firstSeen.containsKey(balance)) {
+                maxLen = Math.max(maxLen, j - firstSeen.get(balance));
             } else {
-                firstSeen.put(pref, j); // Retain earliest index
+                firstSeen.put(balance, j); // Retain earliest occurrence index
             }
         }
         return maxLen;
@@ -254,7 +303,8 @@ When sequence elements are strictly non-negative ($a_k \ge 0$), the prefix sum s
 When subarray length is constrained to an exact constant $K$, the window $[i, i + K - 1]$ maintains state by sliding: adding incoming element $a_{i+K-1}$ and dropping outgoing element $a_{i-1}$ in $\mathcal{O}(1)$ time.
 \begin{itemize}
     \item \textbf{Maximum Average Subarray I (LeetCode 643)}: Running sum of length $K$.
-    \item \textbf{Maximum Sum of Distinct Subarrays with Length K (LeetCode 2461)}: Frequency map/set alongside running sum, verifying $|set| == K$.
+    \item \textbf{Maximum Sum of Distinct Subarrays with Length K (LeetCode 2461)}: Frequency map or hash set alongside running sum, verifying $|set| == K$.
+    \item \textbf{Find All Anagrams in a String (LeetCode 438)}: Fixed window matching character frequency arrays of length equal to pattern $P$.
 \end{itemize}
 
 \subsection{Variable Window Contraction Mechanics}
@@ -269,6 +319,29 @@ The two-pointer sliding window algorithm executes in $\mathcal{O}(N)$ total time
 The right pointer $R$ increments from $0$ to $N-1$ exactly $N$ times. The left pointer $L$ increments monotonically from $0$ to $N-1$ and never decrements. Across the entire execution, $L$ is incremented at most $N$ times. Total pointer movements are bounded by $2N = \mathcal{O}(N)$.
 \end{proof}
 
+\begin{table*}[htbp]
+\caption{Step-by-Step Execution Trace for Minimum Size Subarray Sum (LeetCode 209)}
+\label{tab:trace_lc209}
+\centering
+\begin{tabular}{ccccccc}
+\toprule
+\textbf{Step} & \textbf{Right $R$} & \textbf{Incoming $a_R$} & \textbf{Window $[L \dots R]$} & \textbf{Window Sum} & \textbf{Condition $\ge 7$} & \textbf{Min Length Recorded} \\
+\midrule
+$1$ & $0$ & $2$ & $[2]$ & $2$ & False & $\infty$ \\
+$2$ & $1$ & $3$ & $[2, 3]$ & $5$ & False & $\infty$ \\
+$3$ & $2$ & $1$ & $[2, 3, 1]$ & $6$ & False & $\infty$ \\
+$4$ & $3$ & $2$ & $[2, 3, 1, 2]$ & $8$ & True $\implies$ Shrink $L=0$ & $\min(\infty, 4) = 4$ \\
+$4b$ & $3$ & --- & $[3, 1, 2]$ & $6$ & False $\implies L=1$ & $4$ \\
+$5$ & $4$ & $4$ & $[3, 1, 2, 4]$ & $10$ & True $\implies$ Shrink $L=1$ & $\min(4, 4) = 4$ \\
+$5b$ & $4$ & --- & $[1, 2, 4]$ & $7$ & True $\implies$ Shrink $L=2$ & $\min(4, 3) = 3$ \\
+$5c$ & $4$ & --- & $[2, 4]$ & $6$ & False $\implies L=3$ & $3$ \\
+$6$ & $5$ & $3$ & $[2, 4, 3]$ & $9$ & True $\implies$ Shrink $L=3$ & $\min(3, 3) = 3$ \\
+$6b$ & $5$ & --- & $[4, 3]$ & $7$ & True $\implies$ Shrink $L=4$ & $\mathbf{\min(3, 2) = 2}$ \\
+$6c$ & $5$ & --- & $[3]$ & $3$ & False $\implies L=5$ & $2$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
 \subsubsection{Subarray Product Less Than K (LeetCode 713)}
 For positive integer arrays, expanding $R$ multiplies $prod$ by $A[R]$. While $prod \ge K$, we divide $prod$ by $A[L]$ and advance $L$.
 \begin{lemma}[Ending-At Count Invariant]
@@ -278,10 +351,10 @@ For a valid window $[L, R]$ where all sub-windows ending at $R$ satisfy the cond
 The valid subarrays ending at $R$ are $A[R \dots R], A[R-1 \dots R], \dots, A[L \dots R]$. The starting indices range from $L$ to $R$, giving $(R - L + 1)$ distinct choices.
 \end{proof}
 
-\subsection{Compilable Java Reference Implementations}
+\subsection{Compilable Java Reference Implementation: Paradigm 2}
 
 \begin{lstlisting}[language=Java]
-public class SlidingWindowSubarraySolutions {
+public class SlidingWindowSubarraySuite {
 
     // 1. Minimum Size Subarray Sum >= S (LeetCode 209) - O(N) Time, O(1) Space
     public static int minSubArrayLen(int target, int[] nums) {
@@ -308,6 +381,20 @@ public class SlidingWindowSubarraySolutions {
             count += (R - L + 1); // Ending-At Count Invariant
         }
         return count;
+    }
+
+    // 3. Max Consecutive Ones III (LeetCode 1004) - O(N) Time, O(1) Space
+    public static int longestOnes(int[] nums, int k) {
+        int L = 0, zeroCount = 0, maxLen = 0;
+        for (int R = 0; R < nums.length; R++) {
+            if (nums[R] == 0) zeroCount++;
+            while (zeroCount > k) {
+                if (nums[L] == 0) zeroCount--;
+                L++;
+            }
+            maxLen = Math.max(maxLen, R - L + 1);
+        }
+        return maxLen;
     }
 }
 \end{lstlisting}
@@ -354,17 +441,33 @@ By basic set theory, the set of subarrays satisfying an exact metric $K$ equals 
 \label{fig:atmost_venn}
 \end{figure}
 
-The condition $\text{AtMost}(K)$ is \textbf{strictly monotonic}: as $R$ expands, distinct count or sum increases; as $L$ contracts, it decreases. Thus, $\text{AtMost}(K)$ can be evaluated in pure $\mathcal{O}(N)$ time. Evaluating it twice ($\text{AtMost}(K)$ and $\text{AtMost}(K-1)$) yields the exact answer in $\mathcal{O}(N)$ time and $\mathcal{O}(1)$ space!
+The condition $\text{AtMost}(K)$ is \textbf{strictly monotonic}: as $R$ expands, distinct count or sum increases; as $L$ contracts, it decreases. Thus, $\text{AtMost}(K)$ can be evaluated in pure $\mathcal{O}(N)$ time. Evaluating it twice ($\text{AtMost}(K)$ and $\text{AtMost}(K-1)$) yields the exact answer in $\mathcal{O}(N)$ time and $\mathcal{O}(K)$ space.
 
-\subsection{Compilable Java Reference Implementation}
+\begin{table*}[htbp]
+\caption{Step-by-Step Execution Trace for Subarrays with K Different Integers (LeetCode 992)}
+\label{tab:trace_lc992}
+\centering
+\begin{tabular}{cccccc}
+\toprule
+\textbf{Array Input} & \textbf{Target $K$} & \textbf{Evaluation Component} & \textbf{Window Expansion Dynamics} & \textbf{Subarrays Counted} & \textbf{Net Difference} \\
+\midrule
+$[1, 2, 1, 2, 3]$ & $K = 2$ & $\text{AtMost}(2)$ & $R=0..4$, contracts when distinct $> 2$ & $1+2+3+4+2 = 12$ & --- \\
+$[1, 2, 1, 2, 3]$ & $K = 1$ & $\text{AtMost}(1)$ & $R=0..4$, contracts when distinct $> 1$ & $1+1+1+1+1 = 5$ & --- \\
+\midrule
+\textbf{Exact Count} & $\mathbf{K = 2}$ & $\mathbf{\text{Exact}(2)}$ & $\mathbf{\text{AtMost}(2) - \text{AtMost}(1)}$ & $\mathbf{12 - 5 = 7}$ & $\mathbf{7 \text{ Subarrays}}$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Compilable Java Reference Implementation: Paradigm 3}
 
 \begin{lstlisting}[language=Java]
 import java.util.HashMap;
 import java.util.Map;
 
-public class AtMostDualitySolutions {
+public class AtMostDualitySuite {
 
-    // Subarrays with K Different Integers (LeetCode 992) - O(N) Time, O(K) Space
+    // 1. Subarrays with K Different Integers (LeetCode 992) - O(N) Time, O(K) Space
     public static int subarraysWithKDistinct(int[] nums, int k) {
         return atMostKDistinct(nums, k) - atMostKDistinct(nums, k - 1);
     }
@@ -382,6 +485,25 @@ public class AtMostDualitySolutions {
                 L++;
             }
             count += (R - L + 1); // Subarrays ending at R with <= K distinct
+        }
+        return count;
+    }
+
+    // 2. Count Number of Nice Subarrays (LeetCode 1248) - O(N) Time, O(1) Space
+    public static int numberOfSubarrays(int[] nums, int k) {
+        return atMostKOdd(nums, k) - atMostKOdd(nums, k - 1);
+    }
+
+    private static int atMostKOdd(int[] nums, int k) {
+        if (k < 0) return 0;
+        int L = 0, oddCount = 0, count = 0;
+        for (int R = 0; R < nums.length; R++) {
+            if ((nums[R] & 1) == 1) oddCount++;
+            while (oddCount > k) {
+                if ((nums[L] & 1) == 1) oddCount--;
+                L++;
+            }
+            count += (R - L + 1);
         }
         return count;
     }
@@ -406,36 +528,58 @@ dp[i] = \max(a_i, dp[i-1] + a_i)
 The global maximum is $\max_{0 \le i < N} dp[i]$. Since $dp[i]$ depends only on $dp[i-1]$, space collapses to $\mathcal{O}(1)$.
 
 \subsubsection{Boundary Index Reconstruction}
-To recover the start and end indices $[bestStart, bestEnd]$ of the maximum subarray:
-\begin{lstlisting}[language=Java]
-long currentSum = nums[0], maxSum = nums[0];
-int bestStart = 0, bestEnd = 0, tempStart = 0;
+In technical interviews, candidates are frequently required to reconstruct the exact start and end boundaries $[bestStart, bestEnd]$ of the maximum subarray:
 
-for (int i = 1; i < nums.length; i++) {
-    if (nums[i] > currentSum + nums[i]) {
-        currentSum = nums[i]; // Start fresh
-        tempStart = i;
-    } else {
-        currentSum += nums[i]; // Extend
-    }
-    if (currentSum > maxSum) {
-        maxSum = currentSum;
-        bestStart = tempStart;
-        bestEnd = i;
-    }
-}
-\end{lstlisting}
+\begin{table*}[htbp]
+\caption{Step-by-Step Execution Trace for Kadane's Algorithm with Boundary Reconstruction (LeetCode 53)}
+\label{tab:trace_lc53}
+\centering
+\begin{tabular}{cccccccc}
+\toprule
+\textbf{Index $i$} & \textbf{Element $a_i$} & \textbf{Decision: $\max(a_i, curr + a_i)$} & \textbf{Current Sum} & \textbf{tempStart} & \textbf{Max Sum} & \textbf{bestStart} & \textbf{bestEnd} \\
+\midrule
+$0$ & $-2$ & Base Case & $-2$ & $0$ & $-2$ & $0$ & $0$ \\
+$1$ & $1$ & $\max(1, -2 + 1) = 1$ (Start Fresh) & $1$ & $1$ & $1$ & $1$ & $1$ \\
+$2$ & $-3$ & $\max(-3, 1 - 3) = -2$ (Extend) & $-2$ & $1$ & $1$ & $1$ & $1$ \\
+$3$ & $4$ & $\max(4, -2 + 4) = 4$ (Start Fresh) & $4$ & $3$ & $4$ & $3$ & $3$ \\
+$4$ & $-1$ & $\max(-1, 4 - 1) = 3$ (Extend) & $3$ & $3$ & $4$ & $3$ & $3$ \\
+$5$ & $2$ & $\max(2, 3 + 2) = 5$ (Extend) & $5$ & $3$ & $5$ & $3$ & $5$ \\
+$6$ & $1$ & $\max(1, 5 + 1) = 6$ (Extend) & $6$ & $3$ & $\mathbf{6}$ & $\mathbf{3}$ & $\mathbf{6}$ \\
+$7$ & $-5$ & $\max(-5, 6 - 5) = 1$ (Extend) & $1$ & $3$ & $6$ & $3$ & $6$ \\
+$8$ & $4$ & $\max(4, 1 + 4) = 5$ (Extend) & $5$ & $3$ & $6$ & $3$ & $6$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The maximum sum is $6$, bounded in index range $[3 \dots 6]$, corresponding to subarray $[4, -1, 2, 1]$.
 
 \subsection{Dual-State Propagation: Maximum Product Subarray (LeetCode 152)}
 Multiplication by negative numbers inverts order ($\text{Negative} \times \text{Negative} = \text{Positive}$). A large negative product can instantly transform into the maximum positive product upon encountering another negative value.
 \begin{itemize}
     \item \textbf{Dual State Recurrence}: Maintain both $currMax$ and $currMin$.
-    \item \textbf{Negative Swap Invariant}: When $a_i < 0$, swap $currMax$ and $currMin$ before updating!
+    \item \textbf{Negative Swap Invariant}: When $a_i < 0$, swap $currMax$ and $currMin$ before updating:
     \begin{align}
     currMax &= \max(a_i, currMax \cdot a_i) \\
     currMin &= \min(a_i, currMin \cdot a_i)
     \end{align}
 \end{itemize}
+
+\begin{table*}[htbp]
+\caption{Step-by-Step Execution Trace for Maximum Product Subarray (LeetCode 152)}
+\label{tab:trace_lc152}
+\centering
+\begin{tabular}{ccccccc}
+\toprule
+\textbf{Index $i$} & \textbf{Element $a_i$} & \textbf{Negative Swap Triggered?} & \textbf{currMax Calculation} & \textbf{currMin Calculation} & \textbf{Global Max} \\
+\midrule
+$0$ & $2$ & Base Case & $2$ & $2$ & $2$ \\
+$1$ & $3$ & No ($a_1 > 0$) & $\max(3, 2 \times 3) = 6$ & $\min(3, 2 \times 3) = 3$ & $6$ \\
+$2$ & $-2$ & \textbf{Yes} (Swap: $currMax \leftrightarrow currMin$) & $\max(-2, 3 \times -2) = -2$ & $\min(-2, 6 \times -2) = -12$ & $6$ \\
+$3$ & $4$ & No ($a_3 > 0$) & $\max(4, -2 \times 4) = 4$ & $\min(4, -12 \times 4) = -48$ & $6$ \\
+$4$ & $-1$ & \textbf{Yes} (Swap: $currMax \leftrightarrow currMin$) & $\mathbf{\max(-1, -48 \times -1) = 48}$ & $\min(-1, 4 \times -1) = -4$ & $\mathbf{48}$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \subsection{Circular Topology Transformations (LeetCode 918)}
 In a circular array, a maximum subarray can either be:
@@ -447,28 +591,49 @@ In a circular array, a maximum subarray can either be:
     \end{equation}
 \end{enumerate}
 \begin{itemize}
-    \item \textbf{The All-Negative Trap Guard}: If all numbers are negative, $TotalSum == KadaneMin$, causing $WrappingMax = 0$ (an empty subarray, which is disallowed). In this case, we must return $KadaneMax$.
+    \item \textbf{The All-Negative Trap Guard}: If all numbers in the array are negative (e.g., $[-3, -2, -3]$), $TotalSum == KadaneMin$, causing $WrappingMax = 0$ (an empty subarray, which is disallowed). In this case, we must return $KadaneMax$ (which is $-2$).
 \end{itemize}
 
 \subsection{Subarray DP with Modifications (LeetCode 1186 \& 1749)}
 \begin{itemize}
     \item \textbf{Maximum Subarray Sum with One Deletion (LeetCode 1186)}: Maintain $noDelete[i] = \max(a_i, noDelete[i-1] + a_i)$ and $oneDelete[i] = \max(noDelete[i-1], oneDelete[i-1] + a_i)$.
-    \item \textbf{Maximum Absolute Sum of Any Subarray (LeetCode 1749)}: $\max(|S(i, j)|) = \max(P[j] - P[i-1]) = \max(P) - \min(P)$, computable in one single pass.
+    \item \textbf{Maximum Absolute Sum of Any Subarray (LeetCode 1749)}: $\max(|S(i, j)|) = \max(P[j] - P[i-1]) = \max(P) - \min(P)$, computable in one single linear pass.
 \end{itemize}
 
-\subsection{Compilable Java Reference Implementations}
+\subsection{Compilable Java Reference Implementation: Paradigm 4}
 
 \begin{lstlisting}[language=Java]
-public class KadaneSubarraySolutions {
+public class KadaneSubarraySuite {
 
-    // 1. Maximum Product Subarray (LeetCode 152) - O(N) Time, O(1) Space
+    // 1. Classic Kadane with Start/End Bounds (LeetCode 53) - O(N) Time, O(1) Space
+    public static int[] maxSubArrayWithIndices(int[] nums) {
+        long currentSum = nums[0], maxSum = nums[0];
+        int bestStart = 0, bestEnd = 0, tempStart = 0;
+
+        for (int i = 1; i < nums.length; i++) {
+            if (nums[i] > currentSum + nums[i]) {
+                currentSum = nums[i]; // Start fresh
+                tempStart = i;
+            } else {
+                currentSum += nums[i]; // Extend
+            }
+            if (currentSum > maxSum) {
+                maxSum = currentSum;
+                bestStart = tempStart;
+                bestEnd = i;
+            }
+        }
+        return new int[] {(int) maxSum, bestStart, bestEnd};
+    }
+
+    // 2. Maximum Product Subarray (LeetCode 152) - O(N) Time, O(1) Space
     public static int maxProduct(int[] nums) {
         long currMax = nums[0], currMin = nums[0], globalMax = nums[0];
         for (int i = 1; i < nums.length; i++) {
             if (nums[i] < 0) {
                 long temp = currMax;
                 currMax = currMin;
-                currMin = temp; // Swap on negative
+                currMin = temp; // Negative swap invariant
             }
             currMax = Math.max((long)nums[i], currMax * nums[i]);
             currMin = Math.min((long)nums[i], currMin * nums[i]);
@@ -477,7 +642,7 @@ public class KadaneSubarraySolutions {
         return (int) globalMax;
     }
 
-    // 2. Maximum Sum Circular Subarray (LeetCode 918) - O(N) Time, O(1) Space
+    // 3. Maximum Sum Circular Subarray (LeetCode 918) - O(N) Time, O(1) Space
     public static int maxSubarraySumCircular(int[] nums) {
         int totalSum = 0;
         int currMax = 0, maxSum = nums[0];
@@ -509,6 +674,7 @@ A major class of LeetCode hard problems requires summing metrics over \emph{all 
     \item Sum of Subarray Minimums (LeetCode 907)
     \item Sum of Subarray Ranges (LeetCode 2104)
     \item Maximum Subarray Min-Product (LeetCode 1856)
+    \item Sum of Total Strength of Wizards (LeetCode 2281)
 \end{itemize}
 
 Iterating all $\mathcal{O}(N^2)$ subarrays and finding minimums naively costs $\mathcal{O}(N^3)$ or $\mathcal{O}(N^2)$. The breakthrough algorithmic paradigm is \textbf{Element Contribution}: Inverting the question from ``What is the minimum of subarray $A[i \dots j]$?'' to:
@@ -563,15 +729,47 @@ When duplicate elements exist (e.g., $[2, 4, 2]$), both $2$s could claim the sub
     \item This partitions the subarray space into mutually exclusive and completely exhaustive sets, guaranteeing zero double-counting and zero missed subarrays.
 \end{itemize}
 
-\subsection{Compilable Java Reference Implementation}
+\begin{table*}[htbp]
+\caption{Step-by-Step Execution Trace for Sum of Subarray Minimums (LeetCode 907) on $A = [3, 1, 2, 4]$}
+\label{tab:trace_lc907}
+\centering
+\begin{tabular}{cccccccc}
+\toprule
+\textbf{Index $i$} & \textbf{Element $a_i$} & \textbf{PSE Index ($<$)} & \textbf{NSE Index ($\le$)} & \textbf{Left Span $(i - PSE)$} & \textbf{Right Span $(NSE - i)$} & \textbf{Subarrays Counted} & \textbf{Net Contribution} \\
+\midrule
+$0$ & $3$ & $-1$ & $1$ & $0 - (-1) = 1$ & $1 - 0 = 1$ & $1 \times 1 = 1$ & $3 \times 1 = \mathbf{3}$ \\
+$1$ & $1$ & $-1$ & $4$ & $1 - (-1) = 2$ & $4 - 1 = 3$ & $2 \times 3 = 6$ & $1 \times 6 = \mathbf{6}$ \\
+$2$ & $2$ & $1$ & $4$ & $2 - 1 = 1$ & $4 - 2 = 2$ & $1 \times 2 = 2$ & $2 \times 2 = \mathbf{4}$ \\
+$3$ & $4$ & $2$ & $4$ & $3 - 2 = 1$ & $4 - 3 = 1$ & $1 \times 1 = 1$ & $4 \times 1 = \mathbf{4}$ \\
+\midrule
+\multicolumn{7}{r}{\textbf{Sum of Subarray Minimums = $3 + 6 + 4 + 4 = $}} & $\mathbf{17}$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Sum of Subarray Ranges (LeetCode 2104)}
+The problem asks for $\sum_{i \le j} (\max(A[i \dots j]) - \min(A[i \dots j]))$.
+By linearity of summation:
+\begin{equation}
+\sum (\max - \min) = \sum \max - \sum \min
+\end{equation}
+We evaluate $\sum \max$ using Previous Greater Element ($PGE$) and Next Greater Element ($NGE$), evaluate $\sum \min$ using $PSE$ and $NSE$, and compute their difference in linear $\mathcal{O}(N)$ time.
+
+\subsection{Maximum Subarray Min-Product (LeetCode 1856)}
+Defined as $\max(A[i] \times \sum_{k=L}^R A[k])$ where $A[i]$ is the minimum in $A[L \dots R]$.
+The maximal range where $A[i]$ is minimum is bounded by $L = PSE[i] + 1$ and $R = NSE[i] - 1$.
+The range sum is obtained in $\mathcal{O}(1)$ via Prefix Sum array: $P[R + 1] - P[L]$.
+The total time complexity across all elements is optimal $\mathcal{O}(N)$.
+
+\subsection{Compilable Java Reference Implementation: Paradigm 5}
 
 \begin{lstlisting}[language=Java]
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-public class MonotonicStackSubarraySolutions {
+public class MonotonicStackSubarraySuite {
 
-    // Sum of Subarray Minimums (LeetCode 907) - O(N) Time, O(N) Space
+    // 1. Sum of Subarray Minimums (LeetCode 907) - O(N) Time, O(N) Space
     public static int sumSubarrayMins(int[] arr) {
         int N = arr.length;
         int MOD = 1_000_000_007;
@@ -610,7 +808,7 @@ public class MonotonicStackSubarraySolutions {
         return (int) totalSum;
     }
 
-    // Maximum Subarray Min-Product (LeetCode 1856) - O(N) Time, O(N) Space
+    // 2. Maximum Subarray Min-Product (LeetCode 1856) - O(N) Time, O(N) Space
     public static int maxSumMinProduct(int[] nums) {
         int N = nums.length;
         long[] pref = new long[N + 1];
@@ -648,18 +846,54 @@ public class MonotonicStackSubarraySolutions {
 \section{Paradigm 6: Sliding Window with Monotonic Extremum Queues}
 \label{sec:monotonic-queues}
 
-When maintaining running maximums or minimums inside a sliding window, standard priority queues incur $\mathcal{O}(N \log K)$ overhead. A Monotonic Double-Ended Queue (Deque) maintains indices whose values are strictly monotonic, enabling $\mathcal{O}(1)$ amortized queries.
+When tracking running window maximums or minimums inside a sliding window, standard priority queues incur $\mathcal{O}(N \log K)$ overhead due to heap rebalancing. A Monotonic Double-Ended Queue (Deque) maintains indices whose values are strictly monotonic, enabling $\mathcal{O}(1)$ amortized queries.
 
 \subsection{Sliding Window Maximum (LeetCode 239)}
 We maintain a monotonic decreasing deque of indices. For incoming index $R$:
 \begin{enumerate}
-    \item Remove indices out of window bound: $dq.peek() \le R - K$.
-    \item Maintain monotonicity: While $A[dq.peekLast()] \le A[R]$, pop back.
-    \item Add $R$ to back. The maximum is always at $dq.peekFirst()$.
+    \item \textbf{Expire Stale Indices}: Remove indices outside window bound: $dq.peekFirst() \le R - K$.
+    \item \textbf{Maintain Decreasing Monotonicity}: While $A[dq.peekLast()] \le A[R]$, pop back (the incoming element dominates earlier smaller elements).
+    \item \textbf{Record Extremum}: Push $R$ to back. The window maximum is always at $dq.peekFirst()$.
 \end{enumerate}
 
 \subsection{Continuous Subarray Absolute Difference Limit (LeetCode 1438)}
-Maintain dual monotonic deques: one decreasing for window maximum, one increasing for window minimum. While $maxDq.first - minDq.first > Limit$, contract $L$.
+Maintain dual monotonic deques: one decreasing for window maximum, one increasing for window minimum. While $maxDq.peekFirst() - minDq.peekFirst() > Limit$, contract $L$ and remove matching indices.
+
+\subsection{Compilable Java Reference Implementation: Paradigm 6}
+
+\begin{lstlisting}[language=Java]
+import java.util.ArrayDeque;
+import java.util.Deque;
+
+public class MonotonicDequeSubarraySuite {
+
+    // 1. Sliding Window Maximum (LeetCode 239) - O(N) Time, O(K) Space
+    public static int[] maxSlidingWindow(int[] nums, int k) {
+        if (nums == null || nums.length == 0) return new int[0];
+        int N = nums.length;
+        int[] result = new int[N - k + 1];
+        Deque<Integer> dq = new ArrayDeque<>();
+
+        for (int i = 0; i < N; i++) {
+            // 1. Expire indices out of current window [i - k + 1, i]
+            if (!dq.isEmpty() && dq.peekFirst() < i - k + 1) {
+                dq.pollFirst();
+            }
+            // 2. Remove smaller elements from tail
+            while (!dq.isEmpty() && nums[dq.peekLast()] <= nums[i]) {
+                dq.pollLast();
+            }
+            dq.addLast(i);
+
+            // 3. Record window maximum once first window is formed
+            if (i >= k - 1) {
+                result[i - k + 1] = nums[dq.peekFirst()];
+            }
+        }
+        return result;
+    }
+}
+\end{lstlisting}
 
 %% ============================================================
 \section{Paradigm 7: Non-Monotonic Prefix Spaces (Negative Numbers + Inequalities)}
@@ -674,11 +908,66 @@ We maintain an increasing deque of prefix indices:
     \item \textbf{Check Target Invariant}: While $P[j] - P[dq.peekFirst()] \ge K$, record candidate length $j - dq.pollFirst()$. (Since $j$ increases, this $i$ can never yield a shorter subarray for any future $j' > j$).
     \item \textbf{Maintain Monotonicity}: While $P[j] \le P[dq.peekLast()]$, pop last (an index with higher prefix sum appearing earlier is strictly dominated by $j$).
 \end{enumerate}
-Complexity is amortized $\mathcal{O}(N)$ time and $\mathcal{O}(N)$ space!
+
+\begin{table*}[htbp]
+\caption{Step-by-Step Execution Trace for Shortest Subarray Sum at Least K (LeetCode 862) on $A = [2, -1, 2]$ with $K = 3$}
+\label{tab:trace_lc862}
+\centering
+\begin{tabular}{cccccc}
+\toprule
+\textbf{Index $j$} & \textbf{Prefix Sum $P[j]$} & \textbf{Front Condition $P[j] - P[first] \ge 3$} & \textbf{Length Recorded} & \textbf{Monotonic Tail Clean} & \textbf{Deque State} \\
+\midrule
+$0$ & $P[0] = 0$ & Base Initialization & --- & None & $[0]$ \\
+$1$ & $P[1] = 2$ & $2 - 0 = 2 < 3$ & --- & None & $[0, 1]$ \\
+$2$ & $P[2] = 1$ & $1 - 0 = 1 < 3$ & --- & $P[2] \le P[1] (1 \le 2) \implies$ Pop 1 & $[0, 2]$ \\
+$3$ & $P[3] = 3$ & $3 - 0 = 3 \ge 3 \implies$ Pop 0 & $\mathbf{\min(\infty, 3 - 0) = 3}$ & None & $[2, 3]$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{theorem}[Linear Complexity of Prefix Monotonic Deque]
+LeetCode 862 executes in amortized $\mathcal{O}(N)$ time and $\mathcal{O}(N)$ auxiliary space.
+\end{theorem}
+\begin{proof}
+Every index $j \in [0, N]$ is pushed into the deque at most once and popped at most once (either from the front or back). Total operations across all loop iterations are strictly bounded by $2(N + 1) = \mathcal{O}(N)$.
+\end{proof}
 
 \subsection{Count of Range Sums (LeetCode 327)}
 Find the count of subarrays where $Lower \le S(i, j) \le Upper \iff Lower \le P[j] - P[i-1] \le Upper$.
 This is solved in $\mathcal{O}(N \log N)$ time using Merge-Sort Divide-and-Conquer on prefix sums. During the merge step of sorted sub-arrays $[start, mid)$ and $[mid, end)$, for each $j \in [mid, end)$, we maintain two sliding pointers $[k_1, k_2)$ in the left half such that $P[j] - P[k] \in [Lower, Upper]$.
+
+\subsection{Compilable Java Reference Implementation: Paradigm 7}
+
+\begin{lstlisting}[language=Java]
+import java.util.ArrayDeque;
+import java.util.Deque;
+
+public class AdvancedPrefixSubarraySuite {
+
+    // 1. Shortest Subarray with Sum at Least K (LeetCode 862) - O(N) Time, O(N) Space
+    public static int shortestSubarray(int[] nums, int k) {
+        int N = nums.length;
+        long[] P = new long[N + 1];
+        for (int i = 0; i < N; i++) P[i + 1] = P[i] + nums[i];
+
+        int minLen = N + 1;
+        Deque<Integer> dq = new ArrayDeque<>();
+
+        for (int j = 0; j <= N; j++) {
+            // Front check: Can we satisfy sum >= K?
+            while (!dq.isEmpty() && P[j] - P[dq.peekFirst()] >= k) {
+                minLen = Math.min(minLen, j - dq.pollFirst());
+            }
+            // Tail check: Maintain monotonically increasing prefix sums
+            while (!dq.isEmpty() && P[j] <= P[dq.peekLast()]) {
+                dq.pollLast();
+            }
+            dq.addLast(j);
+        }
+        return minLen <= N ? minLen : -1;
+    }
+}
+\end{lstlisting}
 
 %% ============================================================
 \section{Paradigm 8: Bitwise Monotonicity and Bounded State Transitions}
@@ -696,9 +985,6 @@ In a 32-bit integer sequence, as left index $i$ moves from $j$ down to $0$, the 
 An integer has at most 30 value-bearing bits. Starting with $a_j$, extending leftwards can only set previously unset bit positions. Since set bits never clear, new distinct values occur only when at least one new bit is set to $1$. There are at most 30 available bits to set, bounding distinct OR values ending at $j$ to $\le 30$.
 \end{proof}
 
-\subsubsection{Algorithm and Complexity}
-At step $j$, maintain set $Cur$ of distinct OR values of subarrays ending at $j-1$. Compute $Next = \{ a_j \} \cup \{ x \text{ OR } a_j \mid x \in Cur \}$. Since $|Next| \le 30$, overall time complexity is $\mathcal{O}(30 N)$ and space complexity is $\mathcal{O}(30 N)$.
-
 \subsection{Subarray XOR Queries (LeetCode 1310)}
 XOR satisfies self-inverse property ($x \oplus x = 0$). Subarray XOR is evaluated via prefix XOR array:
 \begin{equation}
@@ -706,8 +992,95 @@ XOR satisfies self-inverse property ($x \oplus x = 0$). Subarray XOR is evaluate
 \end{equation}
 enabling $\mathcal{O}(1)$ query response after $\mathcal{O}(N)$ preprocessing.
 
+\subsection{Compilable Java Reference Implementation: Paradigm 8}
+
+\begin{lstlisting}[language=Java]
+import java.util.HashSet;
+import java.util.Set;
+
+public class BitwiseSubarraySuite {
+
+    // 1. Bitwise ORs of Subarrays (LeetCode 898) - O(30 N) Time, O(30 N) Space
+    public static int subarrayBitwiseORs(int[] arr) {
+        Set<Integer> ans = new HashSet<>();
+        Set<Integer> cur = new HashSet<>();
+        
+        for (int x : arr) {
+            Set<Integer> next = new HashSet<>();
+            next.add(x);
+            for (int y : cur) {
+                next.add(y | x);
+            }
+            ans.addAll(next);
+            cur = next;
+        }
+        return ans.size();
+    }
+}
+\end{lstlisting}
+
 %% ============================================================
-\section{Unified Decision Framework and Master Problem Taxonomy Matrix}
+\section{Paradigm 9: Two-Dimensional Subarray Extensions (Submatrices)}
+\label{sec:2d-submatrices}
+
+The principles governing 1D contiguous subarrays directly generalize to 2D submatrices. A 2D submatrix is bounded by two row indices $[r_1, r_2]$ and two column indices $[c_1, c_2]$. 
+
+\subsection{Row Projection and 1D Reduction}
+By fixing the upper row $r_1$ and lower row $r_2$ (which yields $\mathcal{O}(R^2)$ pairs), we collapse the values across each column $c$ into a 1D column-sum array:
+\begin{equation}
+ColSum[c] = \sum_{r=r_1}^{r_2} Matrix[r][c]
+\end{equation}
+Once reduced to a 1D array of length $C$, any 1D subarray algorithm applies directly:
+\begin{itemize}
+    \item \textbf{Maximum Sum Submatrix (2D Kadane)}: Apply 1D Kadane's algorithm to $ColSum$, achieving $\mathcal{O}(R^2 \cdot C)$ time instead of naive $\mathcal{O}(R^2 C^2)$.
+    \item \textbf{Number of Submatrices That Sum to Target (LeetCode 1074)}: Apply 1D Prefix Sum Hash Map (LeetCode 560) to $ColSum$, achieving optimal $\mathcal{O}(R^2 \cdot C)$ time.
+    \item \textbf{Max Sum of Rectangle No Larger Than K (LeetCode 363)}: Apply 1D Prefix Sum with a \texttt{TreeSet} for binary search lookup ($P[j] - K \le P[i-1]$), achieving $\mathcal{O}(R^2 \cdot C \log C)$ time.
+    \item \textbf{Maximal Rectangle in Binary Matrix (LeetCode 85)}: Maintain running heights of consecutive 1s per column and apply 1D Largest Rectangle in Histogram (LeetCode 84) via Monotonic Stack, achieving optimal $\mathcal{O}(R \cdot C)$ time.
+\end{itemize}
+
+\subsection{Compilable Java Reference Implementation: Paradigm 9}
+
+\begin{lstlisting}[language=Java]
+import java.util.HashMap;
+import java.util.Map;
+
+public class Submatrix2DSuite {
+
+    // Number of Submatrices That Sum to Target (LeetCode 1074) - O(R^2 * C) Time
+    public static int numSubmatrixSumTarget(int[][] matrix, int target) {
+        int R = matrix.length;
+        int C = matrix[0].length;
+        int count = 0;
+
+        for (int r1 = 0; r1 < R; r1++) {
+            int[] colSums = new int[C];
+            for (int r2 = r1; r2 < R; r2++) {
+                for (int c = 0; c < C; c++) {
+                    colSums[c] += matrix[r2][c];
+                }
+                // Apply 1D Subarray Sum Equals Target (LC 560)
+                count += subarraySumEqualsK(colSums, target);
+            }
+        }
+        return count;
+    }
+
+    private static int subarraySumEqualsK(int[] nums, int k) {
+        Map<Integer, Integer> map = new HashMap<>();
+        map.put(0, 1);
+        int pref = 0, count = 0;
+        for (int x : nums) {
+            pref += x;
+            count += map.getOrDefault(pref - k, 0);
+            map.put(pref, map.getOrDefault(pref, 0) + 1);
+        }
+        return count;
+    }
+}
+\end{lstlisting}
+
+%% ============================================================
+\section{Unified 10-Second Problem Classification Framework and Grand Taxonomy Matrix}
 \label{sec:taxonomy}
 
 \begin{figure*}[htbp]
@@ -752,25 +1125,27 @@ enabling $\mathcal{O}(1)$ query response after $\mathcal{O}(N)$ preprocessing.
 \end{figure*}
 
 \begin{table*}[htbp]
-\caption{Comprehensive Master LeetCode Subarray Problem Taxonomy Matrix}
-\label{tab:taxonomy_matrix}
+\caption{Comprehensive Grand LeetCode Subarray Problem Taxonomy Matrix}
+\label{tab:grand_taxonomy}
 \centering
-\begin{tabular}{p{2.8cm}p{3.2cm}p{3.5cm}p{1.6cm}p{1.4cm}p{3.2cm}}
+\begin{tabular}{p{2.6cm}p{3.0cm}p{3.4cm}p{1.5cm}p{1.4cm}p{3.5cm}}
 \toprule
-\textbf{Paradigm} & \textbf{Core Input Condition} & \textbf{Target Metric / Constraint} & \textbf{Time} & \textbf{Space} & \textbf{Canonical LeetCode} \\
+\textbf{Paradigm} & \textbf{Core Input Condition} & \textbf{Target Metric / Constraint} & \textbf{Time} & \textbf{Space} & \textbf{Canonical LeetCode Problems} \\
 \midrule
-\textbf{Prefix Hash Map} & Arbitrary Integers & Sum $= K$, Longest Zero Sum & $\mathcal{O}(N)$ & $\mathcal{O}(N)$ & LC 560, LC 525, LC 325 \\
+\textbf{Prefix Hash Map} & Arbitrary Integers & Sum $= K$, Longest Zero Sum & $\mathcal{O}(N)$ & $\mathcal{O}(N)$ & LC 560, LC 525, LC 325, LC 437 \\
 \textbf{Prefix Remainder} & Modulo $K$ Division & Sum $\pmod K = 0$, Len $\ge 2$ & $\mathcal{O}(N)$ & $\mathcal{O}(K)$ & LC 974, LC 523, LC 1524 \\
-\textbf{Sliding Window} & Non-negative $a_i \ge 0$ & Min Len Sum $\ge K$, Prod $< K$ & $\mathcal{O}(N)$ & $\mathcal{O}(1)$ & LC 209, LC 713, LC 1004 \\
-\textbf{AtMost(K) Duality} & Monotonic Cardinality & Exactly $K$ Distinct Elements & $\mathcal{O}(N)$ & $\mathcal{O}(K)$ & LC 992, LC 930, LC 1248 \\
-\textbf{Monotonic Deque} & Sliding Bounds & Max $-$ Min $\le$ Limit & $\mathcal{O}(N)$ & $\mathcal{O}(N)$ & LC 1438, LC 239 \\
+\textbf{Fixed Sliding Window} & Exact Window Length $K$ & Max Average, Distinct Elements & $\mathcal{O}(N)$ & $\mathcal{O}(K)$ & LC 643, LC 2461, LC 438 \\
+\textbf{Variable Sliding Window} & Non-negative $a_i \ge 0$ & Min Len Sum $\ge K$, Prod $< K$ & $\mathcal{O}(N)$ & $\mathcal{O}(1)$ & LC 209, LC 713, LC 1004, LC 1493 \\
+\textbf{AtMost(K) Duality} & Monotonic Cardinality & Exactly $K$ Distinct Elements & $\mathcal{O}(N)$ & $\mathcal{O}(K)$ & LC 992, LC 930, LC 1248, LC 340 \\
+\textbf{Monotonic Deque} & Sliding Bounds & Max $-$ Min $\le$ Limit & $\mathcal{O}(N)$ & $\mathcal{O}(N)$ & LC 1438, LC 239, LC 1425 \\
 \textbf{Kadane DP} & Mixed Real Numbers & Maximum / Minimum Subarray Sum & $\mathcal{O}(N)$ & $\mathcal{O}(1)$ & LC 53, LC 918 \\
 \textbf{Dual Product DP} & Negative Factors & Maximum Subarray Product & $\mathcal{O}(N)$ & $\mathcal{O}(1)$ & LC 152 \\
-\textbf{Subarray Modifications} & One Element Deletion & Maximum Subarray with 1 Delete & $\mathcal{O}(N)$ & $\mathcal{O}(1)$ & LC 1186, LC 1749 \\
-\textbf{Monotonic Stack} & Element Contribution & Sum of Subarray Mins / Ranges & $\mathcal{O}(N)$ & $\mathcal{O}(N)$ & LC 907, LC 2104, LC 1856 \\
+\textbf{Subarray Modifications} & One Element Deletion & Maximum Subarray with 1 Delete & $\mathcal{O}(N)$ & $\mathcal{O}(1)$ & LC 1186, LC 1191, LC 1749 \\
+\textbf{Monotonic Stack} & Element Contribution & Sum of Subarray Mins / Ranges & $\mathcal{O}(N)$ & $\mathcal{O}(N)$ & LC 907, LC 2104, LC 1856, LC 84 \\
 \textbf{Prefix Merge Sort} & Non-monotonic Ranges & Lower $\le \text{Sum} \le$ Upper & $\mathcal{O}(N \log N)$ & $\mathcal{O}(N)$ & LC 327 \\
 \textbf{Prefix Deque} & Mixed Values & Shortest Subarray Sum $\ge K$ & $\mathcal{O}(N)$ & $\mathcal{O}(N)$ & LC 862 \\
-\textbf{Bitwise Monotonic} & 32-bit Integers & Distinct Bitwise OR / XOR & $\mathcal{O}(30 N)$ & $\mathcal{O}(30 N)$ & LC 898, LC 1310, LC 2411 \\
+\textbf{Bitwise Monotonic} & 32-bit Integers & Distinct Bitwise OR / XOR & $\mathcal{O}(30 N)$ & $\mathcal{O}(30 N)$ & LC 898, LC 1310, LC 2411, LC 1521 \\
+\textbf{2D Submatrices} & 2D Matrix of Numbers & Submatrices Sum to Target & $\mathcal{O}(R^2 C)$ & $\mathcal{O}(C)$ & LC 1074, LC 85, LC 363 \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -804,15 +1179,32 @@ When analyzing any new contiguous subarray problem in a technical interview:
     \begin{itemize}
         \item If evaluating bitwise OR or AND $\implies$ \textbf{30-Bit Monotonic Accumulation} (\S\ref{sec:bitwise}).
     \end{itemize}
+    \item \textbf{Check 2D Matrices}:
+    \begin{itemize}
+        \item If searching submatrix regions $\implies$ \textbf{Row Pair Projection + 1D Reduction} (\S\ref{sec:2d-submatrices}).
+    \end{itemize}
+\end{enumerate}
+
+%% ============================================================
+\section{Production Engineering Takeaways and Common Interview Traps Checklist}
+\label{sec:best_practices}
+
+To guarantee 100\% pass rates on LeetCode test suites and technical coding interviews, adhere to this essential checklist:
+\begin{enumerate}
+    \item \textbf{Mandatory Base Case Guard}: Always initialize prefix frequency maps with \texttt{map.put(0L, 1)} (and earliest index maps with \texttt{firstSeen.put(0, -1)}). Omitting this silently misses valid subarrays that begin at index $0$.
+    \item \textbf{Normalized Java Modulo Guard}: Never execute \texttt{pref \% K} directly on negative numbers in Java. Always normalize via \texttt{((pref \% K) + K) \% K}.
+    \item \textbf{Circular All-Negative Guard}: In circular Kadane (LeetCode 918), verify whether \texttt{totalSum == minSum}. If true, return \texttt{maxSum} to avoid returning an invalid empty subarray with sum $0$.
+    \item \textbf{Integer Overflow Protections}: Always maintain running sums and prefix arrays in 64-bit \texttt{long} primitives before casting to modulo $10^9+7$. In product problems, beware of intermediate overflow.
+    \item \textbf{Duplicate Guards in Monotonic Stack}: When calculating contribution spans for $PSE$ and $NSE$, enforce strict inequality ($<$) on one boundary and non-strict ($\le$) on the other to prevent double counting duplicate elements.
 \end{enumerate}
 
 %% ============================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
-Contiguous subarray sequence optimization is one of the richest and most rigorously tested domains in algorithmic computer science. By shifting away from ad-hoc trial-and-error toward systematic paradigm classification, software engineers and researchers can immediately deduce optimal algorithms for any sequence bound. 
+Contiguous subarray sequence optimization is one of the richest and most rigorously tested domains in algorithmic computer science. By shifting away from ad-hoc trial-and-error toward systematic paradigm classification, software engineers and competitive programmers can immediately deduce optimal algorithms for any sequence bound. 
 
-This paper has formalized the eight foundational subarray paradigms: from algebraic prefix hash transformations and monotonic two-pointer contractions, to set-theoretic AtMost dualities, Kadane dynamic programming, monotonic stack element contribution, and bitwise accumulation limits. Adherence to this unified theoretical framework guarantees optimal space-time asymptotic bounds and error-free implementation across competitive programming and mission-critical production systems.
+This paper has formalized the nine foundational subarray paradigms: from algebraic prefix hash transformations and monotonic two-pointer contractions, to set-theoretic AtMost dualities, Kadane dynamic programming, monotonic stack element contribution, prefix deques, bitwise accumulation limits, and 2D submatrix reductions. Adherence to this unified theoretical framework guarantees optimal space-time asymptotic bounds and error-free implementation across competitive programming and mission-critical production systems.
 
 \begin{thebibliography}{10}
 
