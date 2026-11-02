@@ -1,23 +1,74 @@
-\documentclass[10pt,journal,compsoc,onecolumn]{IEEEtran}
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+% --- Page Geometry matching ICML / Top-Tier ML & Systems Conferences ---
+\usepackage[
+  letterpaper,
+  top=1.0in,
+  bottom=1.0in,
+  left=0.875in,
+  right=0.875in,
+  columnsep=0.25in
+]{geometry}
+
+% --- Typography: Times Roman + Microtypography ---
+\usepackage{times}
+\usepackage{mathptmx}
+\usepackage{microtype}
 \usepackage[utf8]{inputenc}
-\usepackage{amsmath,amsfonts,amssymb}
-\usepackage{amsthm}
+\usepackage[T1]{fontenc}
+
+% --- Mathematics & Theorems ---
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+% --- Professional Graphics & Tables ---
 \usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{url}
 \usepackage{cite}
 \usepackage{textcomp}
 \usepackage{tikz}
-\usetikzlibrary{arrows,positioning,shapes.geometric}
-\usepackage{booktabs}
-\usepackage{url}
+\usetikzlibrary{arrows,arrows.meta,positioning,shapes.geometric,calc,fit}
+
+% --- Running Headers & Footers (ICML style) ---
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{\small\itshape Architectural Foundations of Relational Joins and Multi-Table Query Optimization: Cross Products, Equi-Joins, Execution Algorithms, and Indexing Strategies in SQL Systems}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Suppress header on first page
+\fancypagestyle{firstpage}{
+  \fancyhf{}
+  \fancyfoot[L]{\footnotesize\itshape Proceedings of Industrial \& Systems Database Architecture, 2026.}
+  \fancyfoot[C]{\small\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+% --- Compact Section Titles (ICML style: 1. Introduction, 1.1. Subheading) ---
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\small\bfseries}{\thesubsubsection.}{0.5em}{}
+\titlespacing*{\section}{0pt}{1.5ex plus 0.5ex minus 0.2ex}{1.0ex plus 0.2ex}
+\titlespacing*{\subsection}{0pt}{1.2ex plus 0.4ex minus 0.2ex}{0.8ex plus 0.2ex}
+\titlespacing*{\subsubsection}{0pt}{1.0ex plus 0.3ex minus 0.2ex}{0.6ex plus 0.2ex}
+
+% --- Listings Formatting for SQL & Code ---
 \usepackage{listings}
 \usepackage{xcolor}
-\usetikzlibrary{arrows,arrows.meta,positioning,shapes.geometric,calc,fit}
 
 \definecolor{codeblue}{rgb}{0.0,0.2,0.7}
 \definecolor{codegreen}{rgb}{0,0.5,0}
 \definecolor{codegray}{rgb}{0.4,0.4,0.4}
 \definecolor{codepurple}{rgb}{0.5,0,0.7}
-\definecolor{backcolour}{rgb}{0.97,0.97,0.97}
+\definecolor{backcolour}{rgb}{0.98,0.98,0.98}
 
 \lstdefinestyle{sqlStyle}{
     backgroundcolor=\color{backcolour},   
@@ -25,13 +76,12 @@
     keywordstyle=\color{codeblue}\bfseries,
     numberstyle=\tiny\color{codegray},
     stringstyle=\color{codepurple},
-    basicstyle=\ttfamily\footnotesize,
+    basicstyle=\ttfamily\scriptsize,
     breakatwhitespace=false,         
     breaklines=true,                 
     captionpos=b,                    
     keepspaces=true,                 
-    numbers=left,                    
-    numbersep=5pt,                  
+    numbers=none,
     showspaces=false,                
     showstringspaces=false,
     showtabs=false,                  
@@ -41,30 +91,35 @@
 }
 \lstset{style=sqlStyle}
 
-\newtheorem{theorem}{Theorem}
-\newtheorem{lemma}[theorem]{Lemma}
-\newtheorem{definition}[theorem]{Definition}
-\newtheorem{corollary}[theorem]{Corollary}
-
 \begin{document}
 
-\title{Architectural Foundations of Relational Joins and Multi-Table Query Optimization: Cross Products, Equi-Joins, Execution Algorithms, and Indexing Strategies in SQL Systems}
+\twocolumn[
+  \begin{@twocolumnfalse}
+    \begin{center}
+      {\LARGE\bfseries {{TITLE}} \par}
+      \vspace{1.0em}
+      {\large\bfseries Pavan Gopala \par}
+      \vspace{0.3em}
+      {\small Database Systems and Relational Architecture Group \par}
+      {\small\texttt{pavan@enterprise-sql.org} \par}
+      \vspace{1.5em}
+    \end{center}
+  \end{@twocolumnfalse}
+]
 
-\IEEEtitleabstractindextext{%
-\begin{abstract}
-In enterprise software architectures, relational database management systems (RDBMS) depend on multi-table joins and data query language (DQL) optimization to reconstruct normalized entity relationships with sub-millisecond latency. This paper presents an exhaustive systems engineering investigation of relational query execution, Cartesian cross products, equi-joins, asymmetric outer joins, and associative entity traversals derived from industrial database engines such as MySQL InnoDB and the canonical Sakila schema. We formalize the Boolean Precedence Hierarchy (the BODMAS of SQL) and dissect ANSI SQL Three-Valued Logic (3VL), tracing the epistemic semantics of NULL and the catastrophic failure modes of NOT IN subqueries and non-SARGable type coercions. We evaluate the performance collapse of deep LIMIT/OFFSET pagination, contrasting it against indexed Keyset cursors. We dissect the critical semantic boundary between join ON predicates and post-join WHERE filters, proving how improper predicate placement silently collapses Left Outer Joins into Inner Joins. We conduct a rigorous comparative analysis of physical join execution algorithms---Simple Nested Loop, Block Nested Loop (BNL), Index Nested Loop (INLJ), Hash Join, and Sort-Merge Join---tracing memory buffer dynamics and disk page I/O. Furthermore, we examine the Cost-Based Optimizer's (CBO) join ordering search space, driving table selection heuristics, and composite covering B+ Tree index design. Finally, we establish production safeguards against unconstrained table mutations via the \texttt{sql\_safe\_updates} directive. All discussions are accompanied by vector TikZ architectural diagrams, exact truth matrices, and production-grade SQL code listings.
-\end{abstract}
+\thispagestyle{firstpage}
 
-\begin{IEEEkeywords}
-Relational Databases, SQL Joins, Multi-Table Query Optimization, Cartesian Cross Product, Inner Join, Outer Joins, Join Predicates vs WHERE Filters, Nested Loop Join, Hash Join, Sort-Merge Join, Query Optimizer, Driving Table, B+ Tree Indexing, SARGability, Three-Valued Logic, MySQL InnoDB, Sakila Database
-\end{IEEEkeywords}
-}
+\begin{center}
+  {\bfseries\large Abstract}
+\end{center}
+\vspace{-0.5em}
+{\small In enterprise software architectures, relational database management systems (RDBMS) depend on multi-table joins and data query language (DQL) optimization to reconstruct normalized entity relationships with sub-millisecond latency. This paper presents an exhaustive systems engineering investigation of relational query execution, Cartesian cross products, equi-joins, asymmetric outer joins, and associative entity traversals derived from industrial database engines such as MySQL InnoDB and the canonical Sakila schema. We formalize the Boolean Precedence Hierarchy (the BODMAS of SQL) and dissect ANSI SQL Three-Valued Logic (3VL), tracing the epistemic semantics of NULL and the catastrophic failure modes of NOT IN subqueries and non-SARGable type coercions. We evaluate the performance collapse of deep LIMIT/OFFSET pagination, contrasting it against indexed Keyset cursors. We dissect the critical semantic boundary between join ON predicates and post-join WHERE filters, proving how improper predicate placement silently collapses Left Outer Joins into Inner Joins. We conduct a rigorous comparative analysis of physical join execution algorithms---Simple Nested Loop, Block Nested Loop (BNL), Index Nested Loop (INLJ), Hash Join, and Sort-Merge Join---tracing memory buffer dynamics and disk page I/O. Furthermore, we examine the Cost-Based Optimizer's (CBO) join ordering search space, driving table selection heuristics, and composite covering B+ Tree index design. Finally, we establish production safeguards against unconstrained table mutations via the \texttt{sql\_safe\_updates} directive. All discussions are accompanied by vector TikZ architectural diagrams, exact truth matrices, and production-grade SQL code listings.}
 
-\maketitle
-\IEEEdisplaynontitleabstractindextext
-\IEEEpeerreviewmaketitle
+\vspace{1.0em}
+\noindent\textbf{Keywords:} Relational Databases, SQL Joins, Query Optimization, Predicate Pushdown, Three-Valued Logic, Hash Join, Index Nested Loop, InnoDB Storage Engine.
+\vspace{1.2em}
 
-\section{Introduction and The Relational Join Imperative}
+\section{Introduction}
 \label{sec:intro}
 
 Modern enterprise computing infrastructures depend fundamentally on Relational Database Management Systems (RDBMS) such as MySQL (InnoDB), PostgreSQL, and Oracle to process high-concurrency transactional queries with ACID guarantees and deterministic consistency. At the foundation of the relational model, formalized by Edgar F.~Codd in 1970 \cite{codd1970}, is the principle of relational normalization. Normalization decomposes application entities across multiple discrete relations to eliminate structural anomalies:
@@ -77,10 +132,10 @@ Modern enterprise computing infrastructures depend fundamentally on Relational D
 \begin{figure*}[htbp]
 \centering
 \begin{tikzpicture}[
-    node distance=1.0cm and 1.1cm,
-    box/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=blue!8, minimum width=2.4cm, minimum height=1.0cm, font=\footnotesize},
-    hlbox/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=orange!20, minimum width=2.7cm, minimum height=1.0cm, font=\footnotesize\bfseries},
-    storage/.style={draw, cylinder, shape border rotate=90, aspect=0.25, thick, align=center, fill=green!15, minimum width=2.2cm, minimum height=1.2cm, font=\footnotesize},
+    node distance=0.8cm and 0.9cm,
+    box/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=blue!8, minimum width=2.4cm, minimum height=0.9cm, font=\scriptsize},
+    hlbox/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=orange!20, minimum width=2.6cm, minimum height=0.9cm, font=\scriptsize\bfseries},
+    storage/.style={draw, cylinder, shape border rotate=90, aspect=0.25, thick, align=center, fill=green!15, minimum width=2.2cm, minimum height=1.1cm, font=\scriptsize},
     arr/.style={->, >=stealth, very thick, color=blue!70!black}
 ]
     \node[box] (sql) {Declarative SQL\\Query String};
@@ -102,31 +157,31 @@ However, while normalization decomposes data for storage integrity, business wor
 
 Unlike imperative application-level joins---where an application queries a parent table, iterates over rows in application memory, and fires secondary queries in an imperative loop (the catastrophic $N+1$ query problem)---SQL joins are declarative. The application specifies the target relational schema and matching predicates, delegating physical execution to the database query planner. The database engine executes multi-table joins within the server's buffer pool, leveraging clustered B+ Tree index traversals, in-memory hash tables, and vector pipelining with sub-millisecond latency.
 
-Based on production query traces and foundational database engineering principles using the canonical Sakila schema \cite{sakila2024}, this research paper presents an exhaustive architectural analysis of Data Query Language (DQL) predicate evaluation, Boolean precedence hierarchies, three-valued logic, and multi-table join mechanics. By avoiding gratuitous abstract formalism and introducing mathematical notation only where directly relevant to relational algebra and algorithmic complexity, we trace the complete physical journey of multi-relation query execution.
+Based on production query traces and foundational database engineering principles using the canonical Sakila schema \cite{sakila2024}, this research paper presents an exhaustive architectural analysis of Data Query Language (DQL) predicate evaluation, Boolean precedence hierarchies, three-valued logic, and multi-table join mechanics. Following the empirical and mathematical rigor of classical systems literature, we formalize relational join calculus, derive algorithmic execution complexities, and trace physical memory buffer behaviors.
 
 % -----------------------------------------------------------------------------
-\section{Single-Relation DQL Foundations: Scalar Evaluation and Tuple Distinctness}
+\section{Single-Relation Selection and Projection Foundations}
 \label{sec:projection}
 
-Before analyzing cross-relation join operators, we establish the fundamental mechanics of the projection and selection operators within single-table execution.
+Before analyzing cross-relation join operators, we establish the fundamental mechanics of the projection ($\pi$) and selection ($\sigma$) operators within single-table execution.
 
-\subsection{Scalar Expressions and Constant Evaluations}
+\subsection{Scalar Evaluations and Constant Expressions}
 In SQL, the \texttt{SELECT} clause is not restricted to projecting stored table attributes; it serves as a general expression evaluation engine:
 \begin{lstlisting}[language=SQL]
--- 1. Literal integer evaluation (functions analogously to a print statement):
+-- 1. Literal integer evaluation (print equivalent):
 SELECT 55 AS num;
 
 -- 2. Non-deterministic temporal system evaluation:
 SELECT NOW() AS curr_ts;
 
--- 3. Boolean primitive evaluation (returns 1 for TRUE in MySQL):
+-- 3. Boolean primitive evaluation (returns 1 for TRUE):
 SELECT 3 = 3 AS res;
 
 -- 4. Deterministic mathematical function invocation:
-SELECT ROUND(12.356, 2) AS num; -- Evaluates to 12.36
+SELECT ROUND(12.356, 2) AS num; -- Returns 12.36
 \end{lstlisting}
 
-When scalar expressions are evaluated against a relation (e.g., \texttt{SELECT title FROM film;}), the execution engine evaluates the projection expression once for every qualifying tuple emitted by the upstream filtering pipeline.
+When scalar expressions are evaluated against a relation (e.g., \texttt{SELECT title FROM film;}), the execution engine evaluates the projection expression once for every qualifying tuple emitted by upstream filtering stages.
 
 \subsection{Tuple-Level Distinctness via the DISTINCT Operator}
 A frequent architectural misunderstanding in relational database design concerns the operational scope of the \texttt{DISTINCT} modifier. The \texttt{DISTINCT} keyword does not apply to an individual column; it enforces uniqueness across the \textbf{entire projected attribute set} (tuple):
@@ -138,12 +193,15 @@ SELECT DISTINCT rating FROM film;
 SELECT DISTINCT rental_rate, rental_duration FROM film;
 \end{lstlisting}
 
-In the multi-attribute query, the database engine returns the unique mathematical set of compound attribute pairs:
-\begin{equation*}
-S = \{ (r, d) \mid \exists t \in \text{film} \text{ such that } t.\text{rental\_rate} = r \land t.\text{rental\_duration} = d \}
-\end{equation*}
+\begin{definition}[Tuple Projection Distinctness]
+Given a relation $R$ with schema $\mathcal{R}$ and attribute subset $A \subseteq \mathcal{R}$, the distinct projection $\pi^*_{A}(R)$ is the set of unique tuples:
+\begin{equation}
+\pi^*_{A}(R) = \{ t[A] \mid t \in R \}
+\end{equation}
+Duplicate suppression occurs if and only if two tuples $t_1, t_2 \in R$ satisfy $t_1[A] = t_2[A]$ identically across all attributes in $A$.
+\end{definition}
 
-If two rows share an identical \texttt{rental\_rate} of 4.99 but possess different \texttt{rental\_duration} values (e.g., 3 days versus 5 days), both tuples are retained in the output set. Deduplication occurs if and only if two rows match identically across \textbf{all} projected columns simultaneously.
+If two rows share an identical \texttt{rental\_rate} of 4.99 but possess different \texttt{rental\_duration} values (e.g., 3 days versus 5 days), both tuples are retained in the output set.
 
 \subsection{Physical Execution Mechanics of DISTINCT}
 The query execution engine implements distinctness through two primary physical strategies:
@@ -153,7 +211,7 @@ The query execution engine implements distinctness through two primary physical 
 \end{enumerate}
 
 % -----------------------------------------------------------------------------
-\section{Predicate Evaluation Architecture and The Boolean Precedence Hierarchy}
+\section{Predicate Evaluation Architecture and Boolean Precedence}
 \label{sec:filtering}
 
 The \texttt{WHERE} clause enforces relational selection ($\sigma$), filtering candidate rows from the physical storage scan.
@@ -163,7 +221,7 @@ By default, modern MySQL installations operate under case-insensitive collations
 \begin{lstlisting}[language=SQL]
 SELECT title, rating FROM film WHERE rating = 'PG-13';
 \end{lstlisting}
-Under case-insensitive collation, string comparisons ignore character casing: \texttt{'PG-13'} matches \texttt{'pg-13'} and \texttt{'Pg-13'}. When byte-exact lexicographical matching is required (e.g., authentication hashes, case-sensitive external keys), the \texttt{BINARY} cast forces byte-level evaluation:
+Under case-insensitive collation, string comparisons ignore character casing: \texttt{'PG-13'} matches \texttt{'pg-13'} and \texttt{'Pg-13'}. When byte-exact lexicographical matching is required, the \texttt{BINARY} cast forces byte-level evaluation:
 \begin{lstlisting}[language=SQL]
 SELECT title, rating FROM film
 WHERE BINARY rating = 'PG-13' OR BINARY rating = 'G';
@@ -215,17 +273,17 @@ Table~\ref{tab:precedence} details the operational precedence hierarchy in relat
 \caption{SQL Operator Precedence Hierarchy (Highest to Lowest)}
 \label{tab:precedence}
 \centering
-\small
+\scriptsize
 \begin{tabular}{lll}
 \toprule
 \textbf{Rank} & \textbf{Operator Class} & \textbf{SQL Operators} \\
 \midrule
 1 (Highest) & Grouping \& Scope & Parentheses \texttt{()} \\
-2 & Member \& Array Access & JSON extraction operators \texttt{->}, \texttt{->>} \\
+2 & Member Access & JSON extraction \texttt{->}, \texttt{->>} \\
 3 & Unary Operators & Unary minus \texttt{-}, Bitwise inversion \texttt{\~{}} \\
 4 & Multiplicative & Multiplication \texttt{*}, Division \texttt{/}, Modulo \texttt{\%} \\
 5 & Additive & Addition \texttt{+}, Subtraction \texttt{-} \\
-6 & Relational Comparisons & \texttt{=}, \texttt{!=}, \texttt{<>}, \texttt{<}, \texttt{<=}, \texttt{>}, \texttt{>=}, \texttt{LIKE}, \texttt{IN}, \texttt{IS NULL} \\
+6 & Relational Comparisons & \texttt{=}, \texttt{!=}, \texttt{<>}, \texttt{<}, \texttt{<=}, \texttt{>}, \texttt{>=}, \texttt{LIKE}, \texttt{IN} \\
 7 & Logical Negation & \texttt{NOT} \\
 \textbf{8} & \textbf{Logical Conjunction} & \textbf{\texttt{AND}} \\
 \textbf{9 (Lowest)} & \textbf{Logical Disjunction} & \textbf{\texttt{OR}} \\
@@ -268,7 +326,7 @@ In pattern matching via \texttt{LIKE}, wildcards dictate B+ Tree index utilizati
 \end{itemize}
 
 % -----------------------------------------------------------------------------
-\section{Three-Valued Logic (3VL), Epistemic NULL Semantics, and SARGability}
+\section{Three-Valued Logic (3VL) and Epistemic NULL Semantics}
 \label{sec:three_valued_logic}
 
 The handling of \texttt{NULL} values represents one of the most prolific sources of logic bugs in relational database systems.
@@ -276,10 +334,10 @@ The handling of \texttt{NULL} values represents one of the most prolific sources
 \subsection{The Epistemic Nature of NULL}
 In relational database systems, \texttt{NULL} does \textbf{not} represent zero ($0$), nor does it represent an empty string (\texttt{""}). \texttt{NULL} signifies an \textbf{epistemic state of unknown, missing, or unassigned data}.
 
-Because \texttt{NULL} represents an unknown quantity, it breaks classical two-valued Boolean logic. In classical logic, every proposition $P$ is either True or False ($P \lor \neg P = \text{TRUE}$). In SQL, proposition evaluation is governed by **Three-Valued Logic (3VL)** over the truth space:
-\begin{equation*}
+Because \texttt{NULL} represents an unknown quantity, it breaks classical two-valued Boolean logic. In classical logic, every proposition $P$ is either True or False ($P \lor \neg P = \text{TRUE}$). In SQL, proposition evaluation is governed by Three-Valued Logic (3VL) over the truth space:
+\begin{equation}
 \mathbb{T}_{\text{SQL}} = \{ \text{TRUE}, \text{FALSE}, \text{UNKNOWN} \}
-\end{equation*}
+\end{equation}
 
 \subsection{Identity Comparison Failures}
 Because \texttt{NULL} denotes missing information, identity comparisons yield \texttt{UNKNOWN}:
@@ -289,27 +347,27 @@ SELECT NULL = NULL;  -- Evaluates to NULL (UNKNOWN), NOT True!
 \end{lstlisting}
 The engine reasons: ``Is an unknown quantity equal to 3? The answer is unknown.'' Similarly: ``Are two independently unknown quantities identical? The answer is unknown.''
 
-\begin{figure}[htbp]
+\begin{figure*}[htbp]
 \centering
 \begin{tikzpicture}[
-    box/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=blue!10, minimum width=3.2cm, minimum height=0.9cm, font=\footnotesize},
-    hlbox/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=orange!25, minimum width=3.2cm, minimum height=0.9cm, font=\footnotesize\bfseries},
-    resbox/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=green!15, minimum width=3.2cm, minimum height=0.9cm, font=\footnotesize},
-    dropbox/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=red!15, minimum width=3.2cm, minimum height=0.9cm, font=\footnotesize},
+    box/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=blue!10, minimum width=3.2cm, minimum height=0.9cm, font=\scriptsize},
+    hlbox/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=orange!25, minimum width=3.2cm, minimum height=0.9cm, font=\scriptsize\bfseries},
+    resbox/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=green!15, minimum width=3.2cm, minimum height=0.9cm, font=\scriptsize},
+    dropbox/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=red!15, minimum width=3.2cm, minimum height=0.9cm, font=\scriptsize},
     arr/.style={->, >=stealth, very thick, color=blue!70!black}
 ]
     \node[box] (expr) {Predicate in\\ \texttt{WHERE} Clause};
-    \node[resbox, below left=1.2cm and 1.2cm of expr] (true) {\textbf{TRUE}\\Row Retained};
-    \node[dropbox, below=1.2cm of expr] (false) {\textbf{FALSE}\\Row Discarded};
-    \node[hlbox, below right=1.2cm and 1.2cm of expr] (unk) {\textbf{UNKNOWN (NULL)}\\Row Discarded!};
+    \node[resbox, right=1.5cm of expr] (true) {\textbf{TRUE}\\Row Retained in Stream};
+    \node[dropbox, below=0.8cm of true] (false) {\textbf{FALSE}\\Row Discarded};
+    \node[hlbox, below=0.8cm of false] (unk) {\textbf{UNKNOWN (NULL)}\\Row Discarded!};
     
     \draw[arr] (expr) -- (true);
-    \draw[arr] (expr) -- (false);
-    \draw[arr] (expr) -- (unk);
+    \draw[arr] (expr) |- (false);
+    \draw[arr] (expr) |- (unk);
 \end{tikzpicture}
 \caption{Three-Valued Logic in Relational Filtering. Candidate tuples are retained in the result stream if and only if the \texttt{WHERE} condition evaluates strictly to \texttt{TRUE}. Expressions evaluating to \texttt{UNKNOWN} are discarded alongside \texttt{FALSE}.}
 \label{fig:3vl}
-\end{figure}
+\end{figure*}
 
 \subsection{Truth Matrices and The Fatal NOT IN Null Trap}
 Table~\ref{tab:3vl_truth} formalizes the complete operational behavior of SQL boolean operators when interacting with unknown states.
@@ -318,7 +376,7 @@ Table~\ref{tab:3vl_truth} formalizes the complete operational behavior of SQL bo
 \caption{ANSI SQL Three-Valued Logic (3VL) Truth Matrix}
 \label{tab:3vl_truth}
 \centering
-\small
+\scriptsize
 \begin{tabular}{ccccc}
 \toprule
 \textbf{Operand A} & \textbf{Operand B} & \textbf{A AND B} & \textbf{A OR B} & \textbf{NOT A} \\
@@ -350,10 +408,10 @@ A notorious production failure occurs when evaluating a \texttt{NOT IN} predicat
 SELECT * FROM film WHERE rental_duration NOT IN (3, 4, NULL);
 \end{lstlisting}
 Under De Morgan's expansion, this statement evaluates to:
-\begin{equation*}
-(\text{rental\_duration} \neq 3) \land (\text{rental\_duration} \neq 4) \land (\text{rental\_duration} \neq \text{NULL})
-\end{equation*}
-Because $(\text{rental\_duration} \neq \text{NULL})$ evaluates to \textbf{\texttt{UNKNOWN}}, the entire compound conjunction evaluates to \textbf{\texttt{UNKNOWN}} for every single row in the database. The query returns \textbf{zero rows}, silently dropping all records! Production systems must use \texttt{NOT EXISTS} or explicitly filter nulls from candidate sets.
+\begin{equation}
+(\text{dur} \neq 3) \land (\text{dur} \neq 4) \land (\text{dur} \neq \text{NULL})
+\end{equation}
+Because $(\text{dur} \neq \text{NULL})$ evaluates to \textbf{\texttt{UNKNOWN}}, the entire compound conjunction evaluates to \textbf{\texttt{UNKNOWN}} for every single row in the database. The query returns \textbf{zero rows}, silently dropping all records! Production systems must use \texttt{NOT EXISTS} or explicitly filter nulls from candidate sets.
 
 \subsection{Implicit Type Coercion and Index SARGability}
 When expressions of differing types are compared, MySQL executes implicit type coercion:
@@ -375,7 +433,7 @@ SELECT * FROM customer WHERE CAST(phone_number AS DOUBLE) = 9876543210;
 Wrapping an indexed column in a function destroys B+ Tree traversal, forcing an exhaustive full table scan across millions of disk pages. Passing literals matching the column's data type (\texttt{'9876543210'}) restores instant sub-millisecond B+ Tree index seeks.
 
 % -----------------------------------------------------------------------------
-\section{Physical Execution Ordering: Predicate Pushdown and Multi-Column Sorting}
+\section{Physical Execution Ordering and Pagination Dynamics}
 \label{sec:sort_pushdown}
 
 A foundational optimization in relational systems is determining the sequence of physical execution steps when a query specifies both a filtering predicate (\texttt{WHERE}) and a sorting directive (\texttt{ORDER BY}):
@@ -389,31 +447,37 @@ ORDER BY title DESC;
 \subsection{Algorithmic Analysis of Execution Options}
 Let $N$ denote the total number of rows in the table, and $X$ denote the number of rows satisfying \texttt{rating = 'PG-13'} (where $X \ll N$):
 \begin{itemize}
-    \item \textbf{Option A (Sort-First, Filter-Second)}: The engine loads all $N$ rows into a memory sort buffer, executes a full sort in $\mathcal{O}(N \log_2 N)$ comparisons, and subsequently filters the sorted stream, incurring a total operational cost of $\mathcal{O}(N \log_2 N + N)$.
-    \item \textbf{Option B (Filter-First, Sort-Second / Predicate Pushdown)}: The engine scans the table (or uses an index on \texttt{rating}), discards non-matching rows immediately, and loads only the surviving $X$ rows into the filesort buffer. The sort executes in $\mathcal{O}(X \log_2 X)$ comparisons, incurring a total operational cost of $\mathcal{O}(N + X \log_2 X)$.
+    \item \textbf{Option A (Sort-First, Filter-Second)}: The engine loads all $N$ rows into a memory sort buffer, executes a full sort in $\mathcal{O}(N \log_2 N)$ comparisons, and subsequently filters the sorted stream, incurring a total operational cost of:
+    \begin{equation}
+    C_{\text{sort-first}} = \mathcal{O}(N \log_2 N + N)
+    \end{equation}
+    \item \textbf{Option B (Filter-First, Sort-Second / Predicate Pushdown)}: The engine scans the table (or uses an index on \texttt{rating}), discards non-matching rows immediately, and loads only the surviving $X$ rows into the filesort buffer. The sort executes in $\mathcal{O}(X \log_2 X)$ comparisons, incurring a total operational cost of:
+    \begin{equation}
+    C_{\text{pushdown}} = \mathcal{O}(N + X \log_2 X)
+    \end{equation}
 \end{itemize}
+
+Because $X \ll N$ in selective queries, Option B dramatically reduces CPU cache thrashing and memory consumption. All production relational optimizers enforce Predicate Pushdown as a core execution invariant.
 
 \begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[
-    box/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=blue!10, minimum width=3.4cm, minimum height=0.9cm, font=\footnotesize},
-    discard/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=red!15, minimum width=3.4cm, minimum height=0.9cm, font=\footnotesize},
+    box/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=blue!10, minimum width=3.0cm, minimum height=0.8cm, font=\scriptsize},
+    discard/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=red!15, minimum width=3.0cm, minimum height=0.8cm, font=\scriptsize},
     arr/.style={->, >=stealth, very thick, color=blue!70!black}
 ]
-    \node[box] (scan) {\textbf{Full Scan / Index Seek}\\All $N$ Candidate Rows};
-    \node[box, below=1.0cm of scan] (filter) {\textbf{Predicate Pushdown Filter}\\Filter: \texttt{rating = 'PG-13'}};
-    \node[discard, right=1.0cm of filter] (drop) {\textbf{Discard Non-Matching}\\$(N - X)$ Rows Dropped};
-    \node[box, below=1.0cm of filter] (sort) {\textbf{Filesort Buffer}\\Sort Only Surviving $X$ Rows};
+    \node[box] (scan) {\textbf{Table Scan / Index Seek}\\All $N$ Candidate Rows};
+    \node[box, below=0.8cm of scan] (filter) {\textbf{Predicate Pushdown Filter}\\Filter: \texttt{rating = 'PG-13'}};
+    \node[discard, below=0.8cm of filter] (drop) {\textbf{Discard Non-Matching}\\$(N - X)$ Rows Dropped};
+    \node[box, below=0.8cm of drop] (sort) {\textbf{Filesort Buffer}\\Sort Only Surviving $X$ Rows};
     
     \draw[arr] (scan) -- (filter);
     \draw[arr] (filter) -- (drop);
-    \draw[arr] (filter) -- node[left, font=\scriptsize] {Cardinality: $X \ll N$} (sort);
+    \draw[arr] (drop) -- node[right, font=\tiny] {Cardinality: $X \ll N$} (sort);
 \end{tikzpicture}
 \caption{Predicate Pushdown Mechanics. Filtering rows prior to sort buffer allocation minimizes memory consumption and prevents temporary disk spills.}
 \label{fig:pushdown}
 \end{figure}
-
-Because $X \ll N$ in selective queries, Option B dramatically reduces CPU cache thrashing and memory consumption. All production relational optimizers enforce Predicate Pushdown as a core execution invariant.
 
 \subsection{Multi-Column Hierarchical Sorting and Deterministic Tie-Breakers}
 When sorting by multiple attributes:
@@ -444,10 +508,7 @@ SELECT DISTINCT title, rental_duration FROM film ORDER BY rating;
 \end{lstlisting}
 If multiple rows share identical \texttt{title} and \texttt{rental\_duration} values but possess divergent \texttt{rating} values, the engine collates them into a single output tuple. If that collapsed tuple were sorted by \texttt{rating}, the engine faces an insoluble paradox: which rating determines its position? To eliminate non-determinism, SQL standards require sorted attributes to exist in the projected tuple.
 
-% -----------------------------------------------------------------------------
-\section{Pagination Architecture: LIMIT/OFFSET Degradation vs. Keyset Cursors}
-\label{sec:pagination}
-
+\subsection{Pagination Architecture: LIMIT/OFFSET Degradation vs. Keyset Cursors}
 Result set windowing is commonly implemented via \texttt{LIMIT} and \texttt{OFFSET}:
 \begin{lstlisting}[language=SQL]
 -- Retrieve page 2 (rows 11 through 30):
@@ -457,14 +518,14 @@ ORDER BY film_id ASC
 LIMIT 20 OFFSET 10;
 \end{lstlisting}
 
-\subsection{The Offset Performance Cliff}
+\subsubsection{The Offset Performance Cliff}
 While \texttt{OFFSET} is intuitive for small page offsets, it collapses under deep pagination:
 \begin{lstlisting}[language=SQL]
 SELECT * FROM transactions ORDER BY id ASC LIMIT 20 OFFSET 10000000;
 \end{lstlisting}
 Because variable-length rows prevent jumping directly to row 10,000,000, the engine must physically read all 10,000,020 rows from disk or index buffers, only to discard the first 10,000,000 rows. Response latency degrades from milliseconds to tens of seconds.
 
-\subsection{Keyset (Cursor-Based) Pagination}
+\subsubsection{Keyset (Cursor-Based) Pagination}
 Enterprise systems eliminate this degradation using Keyset (Cursor-Based) pagination:
 \begin{lstlisting}[language=SQL]
 -- High-performance Keyset Pagination:
@@ -475,7 +536,7 @@ LIMIT 20;
 \end{lstlisting}
 By seeking on the indexed primary key \texttt{id}, the storage engine traverses the B+ Tree index in $\mathcal{O}(\log N)$ time, scanning exactly 20 physical records regardless of offset depth.
 
-\subsection{The N-th Highest Salary Pattern}
+\subsubsection{The N-th Highest Salary Pattern}
 Retrieving the second-highest salary while handling duplicate compensation tiers is formulated using \texttt{DISTINCT} and \texttt{OFFSET}:
 \begin{lstlisting}[language=SQL]
 SELECT DISTINCT salary 
@@ -483,24 +544,25 @@ FROM employees
 ORDER BY salary DESC 
 LIMIT 1 OFFSET 1;
 \end{lstlisting}
-The \texttt{DISTINCT} modifier collapses tied top salaries (e.g., multiple executives earning \$10,000) into a single tier, enabling \texttt{OFFSET 1} to isolate the true second-highest compensation level.
+The \texttt{DISTINCT} modifier collapses tied top salaries into a single tier, enabling \texttt{OFFSET 1} to isolate the true second-highest compensation level.
 
 % -----------------------------------------------------------------------------
-\section{The Cartesian Cross Product ($R \times S$): Theoretical Basis and System Hazards}
+\section{The Cartesian Cross Product ($R \times S$): Theoretical Basis and Hazards}
 \label{sec:cartesian}
 
 When multiple relations are joined without an explicit join predicate or \texttt{WHERE} clause, the database engine computes the \textbf{Cartesian Cross Product}.
 
 \subsection{Theoretical Definition and Cardinality}
-Formally, given two relations $R(A_1, \dots, A_n)$ and $S(B_1, \dots, B_m)$, the Cartesian product $R \times S$ produces a relation containing every possible concatenation of tuples from $R$ and $S$:
+\begin{definition}[Cartesian Product]
+Given two relations $R(A_1, \dots, A_n)$ and $S(B_1, \dots, B_m)$, the Cartesian product $R \times S$ produces a composite relation containing every possible concatenation of tuples:
 \begin{equation}
-R \times S = \{ (r_1, \dots, r_n, s_1, \dots, s_m) \mid (r_1, \dots, r_n) \in R \land (s_1, \dots, s_m) \in S \}
+R \times S = \{ (r_1, \dots, r_n, s_1, \dots, s_m) \mid r \in R \land s \in S \}
 \end{equation}
-
 The cardinality of the Cartesian product is strictly multiplicative:
 \begin{equation}
 |R \times S| = |R| \cdot |S|
 \end{equation}
+\end{definition}
 
 \subsection{SQL Formulation and Production Traps}
 In SQL, a Cartesian product is produced by listing relations separated by commas or using the \texttt{JOIN} / \texttt{CROSS JOIN} syntax without an \texttt{ON} predicate:
@@ -516,17 +578,17 @@ In the Sakila database, the \texttt{film} table contains 1,000 rows, and the \te
 1,000 \times 6 = 6,000 \text{ rows}
 \end{equation*}
 
-\begin{figure}[htbp]
+\begin{figure*}[htbp]
 \centering
 \begin{tikzpicture}[
-    rel/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=blue!10, minimum width=2.4cm, minimum height=1.4cm, font=\footnotesize},
-    cross/.style={draw, circle, thick, align=center, fill=red!15, minimum size=1.0cm, font=\normalsize\bfseries},
-    result/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=orange!20, minimum width=3.0cm, minimum height=1.4cm, font=\footnotesize},
+    rel/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=blue!10, minimum width=2.4cm, minimum height=1.2cm, font=\scriptsize},
+    cross/.style={draw, circle, thick, align=center, fill=red!15, minimum size=0.9cm, font=\normalsize\bfseries},
+    result/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=orange!20, minimum width=3.0cm, minimum height=1.2cm, font=\scriptsize},
     arr/.style={->, >=stealth, very thick, color=blue!70!black}
 ]
     \node[rel] (r) {\textbf{Relation $R$}\\(Film)\\$|R| = 1,000$};
     \node[cross, right=1.2cm of r] (x) {$\times$};
-    \node[rel, above=0.6cm of x] (s) {\textbf{Relation $S$}\\(Language)\\$|S| = 6$};
+    \node[rel, above=0.5cm of x] (s) {\textbf{Relation $S$}\\(Language)\\$|S| = 6$};
     \node[result, right=1.2cm of x] (res) {\textbf{Cartesian Space}\\$|R \times S| = 6,000$\\(Unconstrained Pairing)};
     
     \draw[arr] (r) -- (x);
@@ -535,7 +597,7 @@ In the Sakila database, the \texttt{film} table contains 1,000 rows, and the \te
 \end{tikzpicture}
 \caption{The Cartesian Cross Product. Every row of relation $R$ is paired unconditionally with every row of relation $S$, resulting in multiplicative tuple expansion.}
 \label{fig:cartesian}
-\end{figure}
+\end{figure*}
 
 \subsubsection{Catastrophic Cartesian Explosions in Enterprise Systems}
 While a 6,000-row Cartesian product is trivial, real-world relations exhibit massive tuple counts. Suppose an unconstrained join is executed between a customer relation ($|C| = 10^6$ rows) and an order relation ($|O| = 10^7$ rows):
@@ -544,14 +606,6 @@ While a 6,000-row Cartesian product is trivial, real-world relations exhibit mas
 \end{equation*}
 At 100 bytes per tuple, this intermediate result represents \textbf{1 Petabyte of data}. Attempting to compute this query saturates disk buffers, causes extreme CPU thread locking, exhausts the server buffer pool, and triggers OS kernel out-of-memory (OOM) killer terminations.
 
-\subsection{Legitimate Production Use Cases for Cross Joins}
-Despite its hazards, Cartesian products are deployed intentionally in specific analytical domains:
-\begin{itemize}
-    \item \textbf{Dense Reporting Calendars}: Crossing a sparse transactional summary against a continuous date dimension table to guarantee every calendar day appears in financial dashboards with zero values rather than missing rows.
-    \item \textbf{Matrix Generation}: Generating exhaustive permutation sets, such as cross-matching product sizes and color variations during catalog initialization.
-    \item \textbf{Synthetic Load Testing}: Rapidly multiplying test datasets to stress-test query planners under high volume.
-\end{itemize}
-
 % -----------------------------------------------------------------------------
 \section{Inner Join Semantics, Table Aliasing, and Referential Integrity}
 \label{sec:inner_join}
@@ -559,14 +613,16 @@ Despite its hazards, Cartesian products are deployed intentionally in specific a
 The \textbf{Inner Join} is the primary relational mechanism for reconnecting normalized entities based on referential integrity.
 
 \subsection{Relational Algebra Equi-Join Definition}
+\begin{definition}[Theta Join and Equi-Join]
 In relational algebra, an Inner Join (Theta Join $\bowtie_\theta$) is defined as a selection predicate applied over the Cartesian product:
 \begin{equation}
 R \bowtie_\theta S = \sigma_\theta(R \times S)
 \end{equation}
-When the join condition $\theta$ specifies strict equality across common attributes (an \textbf{Equi-Join}):
+When the join condition $\theta$ specifies strict equality across common attributes $R.k = S.k$ (an \textbf{Equi-Join}):
 \begin{equation}
 R \bowtie_{R.k = S.k} S = \{ (r, s) \mid r \in R \land s \in S \land r.k = s.k \}
 \end{equation}
+\end{definition}
 
 \subsection{SQL Formulation and Namespace Disambiguation}
 In the Sakila database, the \texttt{film} entity references the \texttt{language} entity through the foreign key \texttt{film.language\_id}. To retrieve each film title alongside its human-readable language name:
@@ -605,24 +661,12 @@ When business requirements demand preserving records that lack matching referent
     \item \textbf{Full Outer Join ($R \mathbin{\bowtie_{\text{full}}} S$)}: Preserves all tuples from both relations, synthesizing \texttt{NULL}s on either side when a match is absent.
 \end{itemize}
 
-\subsubsection{Syntactic Equivalence and Production Standards}
-Any Right Outer Join can be transposed into a Left Outer Join by reversing relation ordering:
-\begin{lstlisting}[language=SQL]
-SELECT * FROM language l RIGHT JOIN film f ON l.language_id = f.language_id;
--- Exactly equivalent to:
-SELECT * FROM film f LEFT JOIN language l ON f.language_id = l.language_id;
-\end{lstlisting}
-Industrial engineering style guides strictly mandate using \textbf{\texttt{LEFT JOIN} exclusively}. Reading relations from left to right establishes a clear mental model where the primary driving entity is declared first. In engines lacking native Full Outer Join syntax (such as MySQL), the operation is synthesized via a \texttt{UNION} of Left and Right Outer Joins.
-
-\subsection{The Semantic Boundary: ON vs. WHERE in Outer Joins}
-One of the most insidious architectural bugs in relational SQL programming is misunderstanding the differing evaluation phases of the join predicate (\texttt{ON}) versus the post-join filter (\texttt{WHERE}).
-
 \begin{figure*}[htbp]
 \centering
 \begin{tikzpicture}[
-    box/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=blue!10, minimum width=3.0cm, minimum height=1.1cm, font=\footnotesize},
-    onbox/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=orange!20, minimum width=3.4cm, minimum height=1.1cm, font=\footnotesize\bfseries},
-    wherebox/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=red!15, minimum width=3.4cm, minimum height=1.1cm, font=\footnotesize\bfseries},
+    box/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=blue!10, minimum width=2.8cm, minimum height=1.0cm, font=\scriptsize},
+    onbox/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=orange!20, minimum width=3.2cm, minimum height=1.0cm, font=\scriptsize\bfseries},
+    wherebox/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=red!15, minimum width=3.2cm, minimum height=1.0cm, font=\scriptsize\bfseries},
     arr/.style={->, >=stealth, very thick, color=blue!70!black}
 ]
     \node[box] (tables) {Relation $R$ \& Relation $S$\\Input Streams};
@@ -631,12 +675,15 @@ One of the most insidious architectural bugs in relational SQL programming is mi
     \node[box, right=1.0cm of where] (out) {Projected Output\\Result Stream};
     
     \draw[arr] (tables) -- (on);
-    \draw[arr] (on) -- node[above, font=\scriptsize] {Materialized Intermediate} (where);
+    \draw[arr] (on) -- node[above, font=\tiny] {Intermediate Stream} (where);
     \draw[arr] (where) -- (out);
 \end{tikzpicture}
 \caption{The Relational Execution Sequence for Joins. The \texttt{ON} predicate evaluates during tuple pairing (governing outer join preservation), while the \texttt{WHERE} predicate evaluates after intermediate tuple materialization.}
 \label{fig:on_vs_where}
 \end{figure*}
+
+\subsection{The Semantic Boundary: ON vs. WHERE in Outer Joins}
+One of the most insidious architectural bugs in relational SQL programming is misunderstanding the differing evaluation phases of the join predicate (\texttt{ON}) versus the post-join filter (\texttt{WHERE}).
 
 \subsubsection{The Outer Join Collapse Anomaly}
 Consider an application requirement: \textit{``Retrieve all films, and for films produced in English, show the language name.''}
@@ -672,12 +719,12 @@ In this formulation, if a film's language is not English, the join predicate eva
 
 Table~\ref{tab:on_vs_where} summarizes predicate placement rules.
 
-\begin{table}[htbp]
+\begin{table*}[htbp]
 \caption{Join Predicate Placement Semantics: ON vs. WHERE}
 \label{tab:on_vs_where}
 \centering
-\small
-\begin{tabular}{p{3.2cm}p{6.4cm}p{6.4cm}}
+\scriptsize
+\begin{tabular}{p{3.0cm}p{6.8cm}p{6.8cm}}
 \toprule
 \textbf{Join Type} & \textbf{Predicate in \texttt{ON}} & \textbf{Predicate in \texttt{WHERE}} \\
 \midrule
@@ -685,7 +732,7 @@ Table~\ref{tab:on_vs_where} summarizes predicate placement rules.
 \textbf{Left Outer Join} & Restricts right table matches; preserves all left rows. & Filters post-join stream; \textbf{collapses outer join into inner join!} \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 % -----------------------------------------------------------------------------
 \section{Multi-Table Associative Entity Traversal (Many-to-Many Relationships)}
@@ -695,9 +742,9 @@ In relational database modeling, Many-to-Many ($M:N$) relationships cannot be re
 
 \subsection{The Sakila Actor-Film Many-to-Many Architecture}
 In the Sakila schema, an actor participates in multiple films, and a film features multiple actors. This $M:N$ relationship is decomposed into two One-to-Many ($1:M$) relationships joined by the bridge table \texttt{film\_actor}:
-\begin{equation*}
+\begin{equation}
 \text{actor (1)} \longleftrightarrow \text{(M) film\_actor (N)} \longleftrightarrow \text{(1) film}
-\end{equation*}
+\end{equation}
 
 The bridge table \texttt{film\_actor} maintains a composite primary key consisting of both foreign keys:
 \begin{lstlisting}[language=SQL]
@@ -725,9 +772,9 @@ ORDER BY actor_name;
 \begin{figure*}[htbp]
 \centering
 \begin{tikzpicture}[
-    table/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=blue!10, minimum width=2.8cm, minimum height=1.3cm, font=\footnotesize},
-    bridge/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=purple!15, minimum width=3.2cm, minimum height=1.3cm, font=\footnotesize\bfseries},
-    proc/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=green!15, minimum width=2.8cm, minimum height=1.3cm, font=\footnotesize},
+    table/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=blue!10, minimum width=2.6cm, minimum height=1.1cm, font=\scriptsize},
+    bridge/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=purple!15, minimum width=3.0cm, minimum height=1.1cm, font=\scriptsize\bfseries},
+    proc/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=green!15, minimum width=2.6cm, minimum height=1.1cm, font=\scriptsize},
     arr/.style={->, >=stealth, very thick, color=blue!70!black}
 ]
     \node[table] (actor) {\textbf{Relation: actor}\\Filter: \texttt{first\_name LIKE 'S\%'}\\(Index Range Scan)};
@@ -735,9 +782,9 @@ ORDER BY actor_name;
     \node[table, right=1.0cm of fa] (film) {\textbf{Relation: film}\\PK: \texttt{film\_id}\\(Clustered PK Point Seek)};
     \node[proc, right=1.0cm of film] (sort) {\textbf{Filesort Buffer}\\Format: \texttt{CONCAT()}\\Sort: \texttt{actor\_name ASC}};
     
-    \draw[arr] (actor) -- node[above, font=\scriptsize] {\texttt{actor\_id}} (fa);
-    \draw[arr] (fa) -- node[above, font=\scriptsize] {\texttt{film\_id}} (film);
-    \draw[arr] (film) -- node[above, font=\scriptsize] {Joined Rows} (sort);
+    \draw[arr] (actor) -- node[above, font=\tiny] {\texttt{actor\_id}} (fa);
+    \draw[arr] (fa) -- node[above, font=\tiny] {\texttt{film\_id}} (film);
+    \draw[arr] (film) -- node[above, font=\tiny] {Joined Rows} (sort);
 \end{tikzpicture}
 \caption{Associative Entity Multi-Hop Traversal Architecture. The query optimizer begins with the selective index scan on \texttt{actor}, traverses through the composite primary key index of \texttt{film\_actor}, and executes clustered point lookups into \texttt{film}.}
 \label{fig:traversal}
@@ -746,17 +793,14 @@ ORDER BY actor_name;
 \subsection{Systems Mechanics of the Multi-Hop Query}
 The execution engine coordinates multiple physical subsystems:
 \begin{enumerate}
-    \item \textbf{SARGable Prefix Scan on Actor}: The predicate \texttt{WHERE a.first\_name LIKE 'S\%'} is SARGable. If an index on \texttt{first\_name} exists, the engine performs an index range scan, isolating qualifying actors (e.g., ``SCARLETT'', ``SEAN'') in logarithmic time.
+    \item \textbf{SARGable Prefix Scan on Actor}: The predicate \texttt{WHERE a.first\_name LIKE 'S\%'} is SARGable. If an index on \texttt{first\_name} exists, the engine performs an index range scan, isolating qualifying actors in logarithmic time.
     \item \textbf{Bridge Table Index Seek}: For each qualifying \texttt{actor\_id}, the engine seeks into the composite index of \texttt{film\_actor}. Because \texttt{actor\_id} forms the leading edge of \texttt{PRIMARY KEY (actor\_id, film\_id)}, the engine locates all corresponding \texttt{film\_id} values instantly.
     \item \textbf{Clustered Index Seek on Film}: For each retrieved \texttt{film\_id}, the engine performs a primary key point seek into the InnoDB clustered B+ Tree of \texttt{film}, retrieving the \texttt{title} attribute.
     \item \textbf{String Projection Formatting}: The scalar function \texttt{CONCAT(a.first\_name, ' ', a.last\_name)} dynamically formats the actor's full name in the execution engine's projection buffer.
     \item \textbf{Sort Buffer Materialization}: The projected tuples are streamed into a sort buffer, where they are ordered by the projected alias \texttt{actor\_name}.
 \end{enumerate}
 
-% -----------------------------------------------------------------------------
-\section{Multi-Table Predicate Pushdown and Query Optimization}
-\label{sec:predicate_pushdown_multitable}
-
+\subsection{Multi-Table Predicate Pushdown and Query Optimization}
 Next, consider joining actors and films with an additional domain filter on film content:
 \begin{lstlisting}[language=SQL]
 SELECT CONCAT(a.first_name, ' ', a.last_name) AS actor_name, f.title, f.rating
@@ -766,29 +810,11 @@ JOIN film f ON f.film_id = fa.film_id
 WHERE f.rating = 'PG-13';
 \end{lstlisting}
 
-\subsection{Relational Equivalence and Join Condition Placement}
 In an Inner Join, the placement of the filtering predicate is semantically interchangeable:
-\begin{lstlisting}[language=SQL]
--- Placement Option 1: Predicate inside the ON clause:
-JOIN film f ON f.film_id = fa.film_id AND f.rating = 'PG-13'
-
--- Placement Option 2: Predicate in the WHERE clause:
-WHERE f.rating = 'PG-13'
-\end{lstlisting}
-Under Codd's relational algebra, selection distributes over inner joins:
 \begin{equation}
 \sigma_{p(S)}(R \bowtie S) \equiv R \bowtie \sigma_{p(S)}(S)
 \end{equation}
-The Cost-Based Optimizer recognizes this equivalence, transforming Option 2 into Option 1 automatically during AST rewriting.
-
-\subsection{Algorithmic Optimization: Choosing the Driving Relation}
-The execution planner faces two fundamentally different execution paths:
-\begin{itemize}
-    \item \textbf{Naive Execution Path}: Join all actors (200 rows) with all bridge entries (5,462 rows) and all films (1,000 rows), materializing a full 5,462-row intermediate dataset. Finally, filter the materialized dataset for \texttt{f.rating = 'PG-13'}.
-    \item \textbf{Optimizer Predicate Pushdown Path}: Evaluate the filter \texttt{rating = 'PG-13'} on \texttt{film} \textbf{first}. In Sakila, exactly 223 films have a \texttt{PG-13} rating. The optimizer uses \texttt{film} as the driving table, scanning only 223 films, looking up their corresponding records in \texttt{film\_actor}, and finally retrieving the associated actors.
-\end{itemize}
-
-By pushing the predicate down into the storage scan of \texttt{film}, the optimizer reduces intermediate tuple evaluations by over 75\%, saving memory bandwidth and execution cycles.
+The Cost-Based Optimizer recognizes this equivalence, evaluating the filter \texttt{rating = 'PG-13'} on \texttt{film} \textbf{first}. In Sakila, exactly 223 films have a \texttt{PG-13} rating. The optimizer uses \texttt{film} as the driving table, scanning only 223 films, looking up their corresponding records in \texttt{film\_actor}, and finally retrieving the associated actors. By pushing the predicate down into the storage scan of \texttt{film}, intermediate tuple evaluations are reduced by over 75\%.
 
 % -----------------------------------------------------------------------------
 \section{Physical Join Execution Engine Algorithms}
@@ -798,21 +824,17 @@ Relational database engines deploy distinct physical algorithms to execute join 
 
 \subsection{Simple Nested Loop Join (NLJ)}
 The Nested Loop Join is the fundamental join primitive:
-\begin{lstlisting}[language=SQL]
--- Conceptual procedural execution of Simple Nested Loop Join:
-FOR each tuple r IN relation R DO:
-    FOR each tuple s IN relation S DO:
-        IF r.join_key == s.join_key THEN:
-            EMIT (r, s)
-\end{lstlisting}
-\begin{itemize}
-    \item \textbf{Time Complexity}: $\mathcal{O}(|R| \cdot |S|)$ comparisons.
-    \item \textbf{Disk Page I/O}: If relation $S$ cannot be pinned in memory, the engine reads the entire inner table from disk once for every single row in the outer table:
-    \begin{equation}
-    \text{I/O Cost} = \text{Pages}(R) + |R| \cdot \text{Pages}(S)
-    \end{equation}
-    For large relations, Simple NLJ is catastrophically slow and is never deployed unoptimized.
-\end{itemize}
+\begin{theorem}[Nested Loop Join Complexity]
+For relations $R$ and $S$ containing $|R|$ and $|S|$ tuples stored across $\text{Pages}(R)$ and $\text{Pages}(S)$ disk pages, Simple NLJ evaluates in:
+\begin{equation}
+T_{\text{NLJ}} = \mathcal{O}(|R| \cdot |S|)
+\end{equation}
+with unbuffered disk page I/O cost:
+\begin{equation}
+\text{I/O}_{\text{NLJ}} = \text{Pages}(R) + |R| \cdot \text{Pages}(S)
+\end{equation}
+\end{theorem}
+For large relations, Simple NLJ is catastrophically slow and is never deployed unoptimized.
 
 \subsection{Block Nested Loop Join (BNL)}
 To reduce disk I/O, relational engines allocate an in-memory buffer called the \textbf{Join Buffer} (configured by \texttt{join\_buffer\_size}):
@@ -821,26 +843,24 @@ To reduce disk I/O, relational engines allocate an in-memory buffer called the \
     \item The inner relation $S$ is scanned once against the entire buffer block in memory.
     \item The buffer is cleared, and the next block of $R$ is loaded.
 \end{enumerate}
-\begin{itemize}
-    \item \textbf{Disk Page I/O}:
-    \begin{equation}
-    \text{I/O Cost} = \text{Pages}(R) + \left\lceil \frac{\text{Pages}(R)}{\text{Buffer Capacity}} \right\rceil \cdot \text{Pages}(S)
-    \end{equation}
-    BNL reduces inner table scans from $|R|$ scans to $\lceil \text{Pages}(R) / B \rceil$ scans.
-\end{itemize}
+\begin{equation}
+\text{I/O}_{\text{BNL}} = \text{Pages}(R) + \left\lceil \frac{\text{Pages}(R)}{\text{Buffer Capacity}} \right\rceil \cdot \text{Pages}(S)
+\end{equation}
+BNL reduces inner table scans from $|R|$ scans to $\lceil \text{Pages}(R) / B \rceil$ scans.
 
 \subsection{Index Nested Loop Join (INLJ)}
 Index Nested Loop Join is the cornerstone of high-performance Online Transaction Processing (OLTP) engines. In INLJ, the inner relation $S$ possesses an index (B+ Tree) on the join attribute:
-\begin{lstlisting}[language=SQL]
-FOR each tuple r IN relation R DO:
-    Traverse B+ Tree of S using key r.join_key (Index Point Seek)
-    FOR each matching leaf entry IN S DO:
-        EMIT (r, s)
-\end{lstlisting}
-\begin{itemize}
-    \item \textbf{Time Complexity}: $\mathcal{O}(|R| \cdot \log_B |S|)$ where $B$ is the B+ Tree fan-out.
-    \item \textbf{Page I/O}: $\text{Pages}(R) + |R| \cdot \text{Height}(\text{Tree}_S)$. Because the tree height is typically 3 to 4 levels and non-leaf pages reside permanently in the InnoDB buffer pool, each lookup requires only 0 to 1 physical disk reads.
-\end{itemize}
+\begin{theorem}[Index Nested Loop Join Complexity]
+Let $B$ denote the B+ Tree fan-out and $h_S = \lceil \log_B |S| \rceil$ the index tree height. INLJ executes in:
+\begin{equation}
+T_{\text{INLJ}} = \mathcal{O}(|R| \cdot \log_B |S|)
+\end{equation}
+with physical page I/O bounded by:
+\begin{equation}
+\text{I/O}_{\text{INLJ}} = \text{Pages}(R) + |R| \cdot h_S
+\end{equation}
+\end{theorem}
+Because $h_S$ is typically 3 to 4 levels and non-leaf pages reside permanently in the InnoDB buffer pool, each lookup requires only 0 to 1 physical disk reads.
 
 \subsection{Hash Join}
 Introduced natively in modern engines (MySQL 8.0.18+) to replace BNL for unindexed equi-joins, the \textbf{Hash Join} executes in two discrete phases:
@@ -852,28 +872,30 @@ Introduced natively in modern engines (MySQL 8.0.18+) to replace BNL for unindex
 \begin{figure*}[htbp]
 \centering
 \begin{tikzpicture}[
-    box/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=blue!10, minimum width=2.8cm, minimum height=1.1cm, font=\footnotesize},
-    ht/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=orange!25, minimum width=3.2cm, minimum height=1.3cm, font=\footnotesize\bfseries},
-    probe/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=green!15, minimum width=2.8cm, minimum height=1.1cm, font=\footnotesize},
+    box/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=blue!10, minimum width=2.8cm, minimum height=1.0cm, font=\scriptsize},
+    ht/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=orange!25, minimum width=3.2cm, minimum height=1.1cm, font=\scriptsize\bfseries},
+    probe/.style={draw, rectangle, rounded corners=3pt, thick, align=center, fill=green!15, minimum width=2.8cm, minimum height=1.0cm, font=\scriptsize},
     arr/.style={->, >=stealth, very thick, color=blue!70!black}
 ]
     \node[box] (build) {\textbf{Build Relation}\\(Smaller Table $R$)};
     \node[ht, right=1.2cm of build] (hash) {\textbf{In-Memory Hash Table}\\Key: \texttt{r.join\_key}\\Buckets in \texttt{join\_buffer}};
-    \node[probe, below=1.2cm of build] (stream) {\textbf{Probe Relation}\\(Larger Table $S$)};
+    \node[probe, below=1.0cm of build] (stream) {\textbf{Probe Relation}\\(Larger Table $S$)};
     \node[box, right=1.2cm of stream] (match) {\textbf{Hash Probe \& Emit}\\$\mathcal{O}(1)$ Bucket Lookup\\Emits Matching $(r, s)$};
     
-    \draw[arr] (build) -- node[above, font=\scriptsize] {1. Build Phase} (hash);
-    \draw[arr] (stream) -- node[above, font=\scriptsize] {2. Stream Rows} (match);
-    \draw[arr] (hash) -- node[right, font=\scriptsize] {Probe Buckets} (match);
+    \draw[arr] (build) -- node[above, font=\tiny] {1. Build Phase} (hash);
+    \draw[arr] (stream) -- node[above, font=\tiny] {2. Stream Rows} (match);
+    \draw[arr] (hash) -- node[right, font=\tiny] {Probe Buckets} (match);
 \end{tikzpicture}
 \caption{The Hash Join Execution Architecture. The Build phase populates an in-memory hash table from the smaller relation; the Probe phase streams the larger relation through hash lookups in linear $\mathcal{O}(|R| + |S|)$ time.}
 \label{fig:hash_join}
 \end{figure*}
 
-\begin{itemize}
-    \item \textbf{Time Complexity}: $\mathcal{O}(|R| + |S|)$ linear processing time.
-    \item \textbf{Memory Overflow Handling}: If the hash table exceeds available memory, the engine partitions both relations into disk buckets using a hash-partitioning function (Grace Hash Join), streaming matching bucket pairs independently.
-\end{itemize}
+\begin{theorem}[Hash Join Linear Complexity]
+Assuming uniform hash distribution with negligible collision clustering, Hash Join executes in strict linear asymptotic time:
+\begin{equation}
+T_{\text{Hash}} = \mathcal{O}(|R| + |S|)
+\end{equation}
+\end{theorem}
 
 \subsection{Sort-Merge Join}
 In Sort-Merge joins, both relations are sorted on the join key, and a coordinated two-pointer scan traverses both relations simultaneously in $\mathcal{O}(|R| + |S|)$ time. Sort-Merge joins are optimal when inputs are already presorted by index structures.
@@ -884,7 +906,7 @@ Table~\ref{tab:join_algorithms} presents a comparative systems analysis of physi
 \caption{Comparative Systems Analysis of Physical Join Execution Algorithms}
 \label{tab:join_algorithms}
 \centering
-\small
+\scriptsize
 \begin{tabular}{p{2.6cm}p{2.3cm}p{2.5cm}p{3.2cm}p{5.4cm}}
 \toprule
 \textbf{Algorithm} & \textbf{Time Complexity} & \textbf{Memory Footprint} & \textbf{Index Dependency} & \textbf{Optimal Production Use Case} \\
@@ -899,13 +921,13 @@ Table~\ref{tab:join_algorithms} presents a comparative systems analysis of physi
 \end{table*}
 
 % -----------------------------------------------------------------------------
-\section{Cost-Based Optimizer (CBO) Join Ordering Dynamics and Indexing Strategies}
+\section{Cost-Based Optimizer Join Ordering and Indexing}
 \label{sec:optimizer_ordering}
 
 When a query requests joins across $K$ tables, the Cost-Based Optimizer must determine the optimal physical join sequence.
 
 \subsection{Combinatorial Complexity of Join Ordering}
-For a query joining $K$ relations, the number of possible left-deep join orderings is $K!$. If bushy trees (where intermediate joins are joined together) are considered, the search space grows according to the Catalan number:
+For a query joining $K$ relations, the number of possible left-deep join orderings is $K!$. If bushy trees are considered, the search space grows according to the Catalan number:
 \begin{equation}
 N_{\text{bushy}} = \frac{(2K - 2)!}{(K - 1)!}
 \end{equation}
@@ -979,11 +1001,11 @@ UPDATE film SET rental_rate = 1.99 WHERE release_year = 2006 LIMIT 50;
 
 A widespread misconception among software engineers is assuming SQL queries execute in the order written. In reality, the relational engine executes clauses in a strict logical lifecycle:
 
-\begin{table}[htbp]
+\begin{table*}[htbp]
 \caption{Comprehensive SQL DQL Logical Execution Pipeline}
 \label{tab:execution_pipeline}
 \centering
-\small
+\scriptsize
 \begin{tabular}{clll}
 \toprule
 \textbf{Step} & \textbf{SQL Clause} & \textbf{Relational Operation} & \textbf{Physical Engine Subsystem} \\
@@ -1000,7 +1022,7 @@ A widespread misconception among software engineers is assuming SQL queries exec
 10 & \texttt{LIMIT / OFFSET} & Stream Windowing & Discards offset records, emits final page. \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 Understanding this lifecycle explains why column aliases defined in \texttt{SELECT} (Step 7) cannot be referenced in \texttt{WHERE} (Step 4), but can be referenced in \texttt{ORDER BY} (Step 9).
 
@@ -1027,6 +1049,7 @@ By adhering to this architectural blueprint, database architects and software en
 
 % -----------------------------------------------------------------------------
 \begin{thebibliography}{10}
+\setlength{\itemsep}{1pt}
 
 \bibitem{codd1970}
 E.~F.~Codd, ``A Relational Model of Data for Large Shared Data Banks,'' \emph{Communications of the ACM}, vol.~13, no.~6, pp.~377--387, 1970.
