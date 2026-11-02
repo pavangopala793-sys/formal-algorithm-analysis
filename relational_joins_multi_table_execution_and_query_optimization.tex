@@ -274,14 +274,14 @@ Table~\ref{tab:precedence} details the operational precedence hierarchy in relat
 \label{tab:precedence}
 \centering
 \scriptsize
-\begin{tabular}{lll}
+\begin{tabular}{lp{2.5cm}p{3.2cm}}
 \toprule
 \textbf{Rank} & \textbf{Operator Class} & \textbf{SQL Operators} \\
 \midrule
 1 (Highest) & Grouping \& Scope & Parentheses \texttt{()} \\
 2 & Member Access & JSON extraction \texttt{->}, \texttt{->>} \\
-3 & Unary Operators & Unary minus \texttt{-}, Bitwise inversion \texttt{\~{}} \\
-4 & Multiplicative & Multiplication \texttt{*}, Division \texttt{/}, Modulo \texttt{\%} \\
+3 & Unary Operators & Minus \texttt{-}, Inversion \texttt{\~{}} \\
+4 & Multiplicative & Multiply \texttt{*}, Divide \texttt{/}, Mod \texttt{\%} \\
 5 & Additive & Addition \texttt{+}, Subtraction \texttt{-} \\
 6 & Relational Comparisons & \texttt{=}, \texttt{!=}, \texttt{<>}, \texttt{<}, \texttt{<=}, \texttt{>}, \texttt{>=}, \texttt{LIKE}, \texttt{IN} \\
 7 & Logical Negation & \texttt{NOT} \\
@@ -724,7 +724,7 @@ Table~\ref{tab:on_vs_where} summarizes predicate placement rules.
 \label{tab:on_vs_where}
 \centering
 \scriptsize
-\begin{tabular}{p{3.0cm}p{6.8cm}p{6.8cm}}
+\begin{tabular}{p{2.6cm}p{6.4cm}p{6.4cm}}
 \toprule
 \textbf{Join Type} & \textbf{Predicate in \texttt{ON}} & \textbf{Predicate in \texttt{WHERE}} \\
 \midrule
@@ -907,7 +907,7 @@ Table~\ref{tab:join_algorithms} presents a comparative systems analysis of physi
 \label{tab:join_algorithms}
 \centering
 \scriptsize
-\begin{tabular}{p{2.6cm}p{2.3cm}p{2.5cm}p{3.2cm}p{5.4cm}}
+\begin{tabular}{p{2.3cm}p{2.1cm}p{2.2cm}p{2.9cm}p{5.1cm}}
 \toprule
 \textbf{Algorithm} & \textbf{Time Complexity} & \textbf{Memory Footprint} & \textbf{Index Dependency} & \textbf{Optimal Production Use Case} \\
 \midrule
@@ -980,10 +980,11 @@ When \texttt{sql\_safe\_updates = 1} is active, MySQL enforces strict operationa
 \begin{enumerate}
     \item Any \texttt{UPDATE} or \texttt{DELETE} lacking a \texttt{WHERE} clause is rejected immediately.
     \item Any \texttt{UPDATE} or \texttt{DELETE} whose \texttt{WHERE} clause does \textbf{not} utilize an indexed key column (Primary Key or indexed column) is aborted with MySQL Error 1175:
-    \begin{verbatim}
-    ERROR 1175 (HY000): You are using safe update mode and you 
-    tried to update a table without a WHERE that uses a KEY column.
-    \end{verbatim}
+    \begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+ERROR 1175 (HY000): You are using safe update mode 
+and you tried to update a table without a WHERE 
+that uses a KEY column.
+    \end{lstlisting}
     \item To execute a non-keyed bulk mutation, the developer must explicitly supply a \texttt{LIMIT} clause to restrict the blast radius.
 \end{enumerate}
 
