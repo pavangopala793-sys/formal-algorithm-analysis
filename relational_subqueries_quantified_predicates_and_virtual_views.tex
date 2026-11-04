@@ -586,7 +586,7 @@ Because \texttt{EXISTS} only requires proof of at least one row ($|Q| \ge 1$), t
 \label{tab:exists_vs_in}
 \centering
 \scriptsize
-\begin{tabular}{p{2.6cm}p{2.8cm}p{3.2cm}p{3.2cm}p{3.4cm}}
+\begin{tabular}{p{2.2cm}p{2.6cm}p{3.1cm}p{3.1cm}p{3.2cm}}
 \toprule
 \textbf{Construct} & \textbf{Evaluation Paradigm} & \textbf{NULL-Handling Behavior} & \textbf{Short-Circuiting Capability} & \textbf{Duplicate Cardinality Impact} \\
 \midrule
@@ -603,7 +603,10 @@ The most profound architectural distinction between \texttt{IN} and \texttt{EXIS
     \item \textbf{The Fatal \texttt{NOT IN} Null Trap}:
     Suppose a subquery returns a set containing a single \texttt{NULL}: $\{1, 2, \text{NULL}\}$. Under De Morgan's laws:
     \begin{equation}
-    x \text{ NOT IN } \{1, 2, \text{NULL}\} \iff (x \neq 1) \land (x \neq 2) \land (x \neq \text{NULL})
+    \begin{aligned}
+    x \text{ NOT IN } \{1, 2, \text{NULL}\} &\iff \\
+    (x \neq 1) \land (x \neq 2) &\land (x \neq \text{NULL})
+    \end{aligned}
     \end{equation}
     Because $(x \neq \text{NULL})$ evaluates to \textbf{\texttt{UNKNOWN}} under Three-Valued Logic ($3\text{VL}$), the entire conjunction evaluates to \textbf{\texttt{UNKNOWN}} for every row in the database. The query returns **zero rows**, silently losing all data!
     \item \textbf{The Absolute Immunity of \texttt{NOT EXISTS}}:
@@ -700,7 +703,7 @@ The complete logical execution lifecycle of a complex relational query containin
 \label{tab:execution_pipeline}
 \centering
 \scriptsize
-\begin{tabular}{clll}
+\begin{tabular}{cp{3.2cm}p{3.8cm}p{7.2cm}}
 \toprule
 \textbf{Step} & \textbf{SQL Processing Phase} & \textbf{Relational Operation} & \textbf{Subquery / View Resolution Mechanism} \\
 \midrule
