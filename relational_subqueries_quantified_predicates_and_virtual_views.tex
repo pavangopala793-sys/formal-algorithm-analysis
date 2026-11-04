@@ -124,7 +124,7 @@
 
 In modern enterprise computing architectures, Relational Database Management Systems (RDBMS) such as MySQL InnoDB, PostgreSQL, and Oracle are tasked with executing complex analytical and transactional queries over highly normalized relational schemas. While elementary queries retrieve or filter data from single tables, enterprise decision systems frequently require multi-stage relational reasoning: identifying entities that exceed dynamically calculated population thresholds, verifying referential memberships across distinct role hierarchies, computing non-nestable aggregate summaries, and establishing access-controlled data abstractions.
 
-To resolve complex relational inquiries declaratively, SQL provides the **Subquery** mechanism. Formalized within relational calculus and first-order predicate logic \cite{codd1970, date2004}, a subquery (or nested query) is an auxiliary \texttt{SELECT} statement encapsulated within an enclosing parent query block. Subqueries embody the classical algorithmic principle of **Divide and Conquer**: decomposing a monolithic relational problem into modular, verifiable subproblems whose intermediate results feed directly into upstream evaluation operators.
+To resolve complex relational inquiries declaratively, SQL provides the \textbf{Subquery} mechanism. Formalized within relational calculus and first-order predicate logic \cite{codd1970, date2004}, a subquery (or nested query) is an auxiliary \texttt{SELECT} statement encapsulated within an enclosing parent query block. Subqueries embody the classical algorithmic principle of \textbf{Divide and Conquer}: decomposing a monolithic relational problem into modular, verifiable subproblems whose intermediate results feed directly into upstream evaluation operators.
 
 \begin{figure*}[htbp]
 \centering
@@ -164,7 +164,7 @@ Based on pedagogical and industrial database engineering curriculum notes (speci
 \section{Scalar Subqueries and Cardinality Enforcement}
 \label{sec:scalar_subqueries}
 
-The most elementary class of nested query is the **Scalar Subquery**, which produces an output relation consisting of exactly one row and one column ($1 \times 1$).
+The most elementary class of nested query is the \textbf{Scalar Subquery}, which produces an output relation consisting of exactly one row and one column ($1 \times 1$).
 
 \subsection{Syntax and Operational Mechanics}
 Consider the canonical \texttt{students} relation from \cite{sql6notes}, structured with attributes \texttt{id}, \texttt{name}, \texttt{batch\_id}, and \texttt{psp} (problem-solving percentage). Suppose business logic requires identifying all students who performed strictly better than a specific individual (e.g., student with \texttt{id = 2}, named Rohit with \texttt{psp = 90}):
@@ -278,7 +278,7 @@ In the pedagogical dataset from \cite{sql6notes}:
 \subsection{Query Optimizer Semi-Join Transformations}
 In naive relational engines, an \texttt{IN} subquery was executed as a nested loop: for every outer row, the inner subquery was re-evaluated, resulting in $\mathcal{O}(N \cdot M)$ complexity.
 
-Modern query optimizers (including MySQL 8.0+) transform \texttt{WHERE col IN (SELECT ...)} into an optimized **Semi-Join**:
+Modern query optimizers (including MySQL 8.0+) transform \texttt{WHERE col IN (SELECT ...)} into an optimized \textbf{Semi-Join}:
 \begin{equation}
 R \ltimes S = \{ r \in R \mid \exists s \in S \text{ such that } r.A = s.A \}
 \end{equation}
@@ -296,7 +296,7 @@ The optimizer selects among four primary semi-join execution strategies:
 \section{Derived Tables in the FROM Clause and Non-Nesting Invariants}
 \label{sec:derived_tables}
 
-When a subquery appears in the \texttt{FROM} clause of a parent statement, it is formally termed a **Derived Table** (or inline view).
+When a subquery appears in the \texttt{FROM} clause of a parent statement, it is formally termed a \textbf{Derived Table} (or inline view).
 
 \subsection{The Mandatory Alias Invariant}
 In ANSI SQL and MySQL, derived tables operate as anonymous relational expressions. Because every relation within the \texttt{FROM} clause must possess a resolvable namespace in the query data dictionary:
@@ -378,7 +378,7 @@ As illustrated in Figure~\ref{fig:derived_table}, derived tables enable multi-pa
 \section{Quantified Comparison Predicates: ALL and ANY}
 \label{sec:quantified_predicates}
 
-When comparing a scalar attribute against a set of values emitted by a columnar subquery using relational inequalities ($<, \le, >, \ge$), SQL provides **Quantified Comparison Predicates**: \texttt{ALL} and \texttt{ANY} (synonymous with \texttt{SOME}).
+When comparing a scalar attribute against a set of values emitted by a columnar subquery using relational inequalities ($<, \le, >, \ge$), SQL provides \textbf{Quantified Comparison Predicates}: \texttt{ALL} and \texttt{ANY} (synonymous with \texttt{SOME}).
 
 \subsection{Mathematical Formalization}
 Let $x$ be a scalar attribute value and $S = \{s_1, s_2, \dots, s_m\}$ be a non-empty set of values returned by a subquery:
@@ -396,7 +396,7 @@ A common misconception among database developers is attempting to use \texttt{IN
 -- SYNTAX ERROR: IN only supports equality!
 SELECT * FROM students WHERE psp > IN (SELECT ...);
 \end{lstlisting}
-The \texttt{IN} predicate is mathematically restricted to set equality ($\in$). To express an inequality comparison against an arbitrary set, the query **must** employ \texttt{ANY} or \texttt{ALL}:
+The \texttt{IN} predicate is mathematically restricted to set equality ($\in$). To express an inequality comparison against an arbitrary set, the query \textbf{must} employ \texttt{ANY} or \texttt{ALL}:
 \begin{lstlisting}[language=SQL]
 -- Correct formulation:
 SELECT * FROM students WHERE psp > ANY (SELECT ...);
@@ -468,7 +468,7 @@ Table~\ref{tab:quantified_truth} exposes critical boundary conditions in SQL qua
 \section{Correlated Subqueries and Computational Complexity}
 \label{sec:correlated_subqueries}
 
-An independent subquery evaluates once, detached from the outer query context. In contrast, a **Correlated Subquery** references attributes from the enclosing query block, creating an interdependent execution loop.
+An independent subquery evaluates once, detached from the outer query context. In contrast, a \textbf{Correlated Subquery} references attributes from the enclosing query block, creating an interdependent execution loop.
 
 \subsection{Operational Definition and Dependency Binding}
 \begin{definition}[Correlated Subquery]
@@ -537,7 +537,7 @@ For a relation of $10^6$ rows, an unoptimized correlated subquery forces $10^{12
 \end{theorem}
 
 \subsection{Optimizer Decorrelation and Subquery Unnesting}
-To eliminate the quadratic performance penalty, modern query optimizers deploy **Subquery Decorrelation** (also termed Subquery Unnesting). The optimizer rewrites the correlated subquery into an explicit Inner Join against a pre-aggregated derived table:
+To eliminate the quadratic performance penalty, modern query optimizers deploy \textbf{Subquery Decorrelation} (also termed Subquery Unnesting). The optimizer rewrites the correlated subquery into an explicit Inner Join against a pre-aggregated derived table:
 
 \begin{lstlisting}[language=SQL]
 -- Decorrelated Relational Equivalence Plan:
@@ -579,7 +579,7 @@ SELECT * FROM students s WHERE EXISTS (SELECT 1/0 FROM ...); -- No divide-by-zer
 \end{lstlisting}
 
 \subsubsection{Short-Circuit Optimization}
-Because \texttt{EXISTS} only requires proof of at least one row ($|Q| \ge 1$), the storage engine executes **Short-Circuit Optimization**: scanning terminates immediately upon encountering the first qualifying index entry, avoiding full table scans.
+Because \texttt{EXISTS} only requires proof of at least one row ($|Q| \ge 1$), the storage engine executes \textbf{Short-Circuit Optimization}: scanning terminates immediately upon encountering the first qualifying index entry, avoiding full table scans.
 
 \begin{table*}[htbp]
 \caption{Architectural Comparison: IN vs. EXISTS vs. INNER JOIN}
@@ -608,7 +608,7 @@ The most profound architectural distinction between \texttt{IN} and \texttt{EXIS
     (x \neq 1) \land (x \neq 2) &\land (x \neq \text{NULL})
     \end{aligned}
     \end{equation}
-    Because $(x \neq \text{NULL})$ evaluates to \textbf{\texttt{UNKNOWN}} under Three-Valued Logic ($3\text{VL}$), the entire conjunction evaluates to \textbf{\texttt{UNKNOWN}} for every row in the database. The query returns **zero rows**, silently losing all data!
+    Because $(x \neq \text{NULL})$ evaluates to \textbf{\texttt{UNKNOWN}} under Three-Valued Logic ($3\text{VL}$), the entire conjunction evaluates to \textbf{\texttt{UNKNOWN}} for every row in the database. The query returns \textbf{zero rows}, silently losing all data!
     \item \textbf{The Absolute Immunity of \texttt{NOT EXISTS}}:
     The \texttt{NOT EXISTS} operator tests row count, not value equality:
     \begin{equation}
@@ -621,7 +621,7 @@ The most profound architectural distinction between \texttt{IN} and \texttt{EXIS
 \section{Relational Views: Virtual Table Architecture and Updatability}
 \label{sec:views}
 
-In enterprise database systems, a **View** is a stored query specification persisted in the database data dictionary that presents itself to client applications as a virtual relation.
+In enterprise database systems, a \textbf{View} is a stored query specification persisted in the database data dictionary that presents itself to client applications as a virtual relation.
 
 \subsection{Architectural Foundations of Views}
 As formal architectural abstractions, views provide five enterprise benefits:
@@ -683,7 +683,7 @@ A common enterprise requirement is executing Data Manipulation Language mutation
 \begin{theorem}[View Updatability Invariant]
 A relational view is updatable if and only if there exists an injective (one-to-one) deterministic mapping between each row in the view and exactly one physical tuple in an underlying base table.
 \end{theorem}
-Consequently, views that contain the following operations are strictly **read-only**:
+Consequently, views that contain the following operations are strictly \textbf{read-only}:
 \begin{itemize}
     \item Aggregate reduction functions (\texttt{SUM}, \texttt{COUNT}, \texttt{AVG}, etc.).
     \item Relational grouping (\texttt{GROUP BY}) and post-filtering (\texttt{HAVING}).
