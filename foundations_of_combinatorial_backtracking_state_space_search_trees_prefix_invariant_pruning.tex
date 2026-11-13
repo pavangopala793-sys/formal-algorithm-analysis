@@ -76,9 +76,9 @@ Recursion, Backtracking, State-Space Trees, Invariant Pruning, Catalan Numbers, 
 \section{Introduction: The Combinatorial Dilemma}
 \label{sec:intro}
 
-In algorithmic computer science, computational problems are broadly categorized by whether they require finding a single optimal solution (optimization), deciding feasibility (decision), or enumerating all configurations satisfying a specified set of constraints (enumeration). While greedy strategies and dynamic programming (DP) yield polynomial-time solutions for problems possessing greedy-choice properties and overlapping optimal substructure, a vast domain of fundamental problems admits neither property. In these domains---spanning boolean satisfiability (SAT), constraint satisfaction problems (CSP), compiler syntax grammar verification, combinatorial testing, and dynamic scheduling---one must navigate an astronomically large \textit{discrete mathematical domain}\footnote{\textbf{Vocabulary Note:} \textit{Discrete mathematical domains} refers to countable, separate, and distinct (vidi-vidi) values in computer science and mathematics.}.
+In algorithmic computer science, computational problems are broadly categorized by whether they require finding a single optimal solution (optimization), deciding feasibility (decision), or enumerating all configurations satisfying a specified set of constraints (enumeration). While greedy strategies and dynamic programming (DP) yield polynomial-time solutions for problems possessing greedy-choice properties and overlapping optimal substructure, a vast domain of fundamental problems admits neither property. In these domains—spanning boolean satisfiability (SAT), constraint satisfaction problems (CSP), compiler syntax grammar verification, combinatorial testing, and dynamic scheduling—one must navigate an astronomically large discrete solution space.
 
-Consider a discrete search domain characterized by $N$ decision stages. If each stage presents $b$ discrete choices, the \textit{cardinality}\footnote{\textbf{Vocabulary Note:} \textit{Cardinality} means ``oka set leda group lo unna mothham elements sankhya''---the total count of elements within a set.} of the search space explodes exponentially as $\Omega(b^N)$, leading to severe \textit{combinatorial explosion}\footnote{\textbf{Vocabulary Note:} \textit{Combinatorial explosion} means ``elements perigekoddi saadhyamayye configurations ghaathaanka reethilo (exponentially) vipaarithamgaa perigipovadam''.}. If the choices depend upon permutations of previously unselected items, the cardinality explodes factorially as $\Omega(N!)$, rendering naive computation \textit{intractable}\footnote{\textbf{Vocabulary Note:} \textit{Intractable} refers to problems so computationally complex that they cannot be solved in reasonable polynomial time on standard computers.}.
+Consider a discrete search domain characterized by $N$ decision stages. If each stage presents $b$ discrete choices, the cardinality of the search space explodes exponentially as $\Omega(b^N)$. If the choices depend upon permutations of previously unselected items, the cardinality explodes factorially as $\Omega(N!)$. 
 
 \subsection{Brute Force vs. Backtracking}
 The naive approach to combinatorial generation is \textbf{Exhaustive Brute-Force Enumeration}:
@@ -88,9 +88,9 @@ The naive approach to combinatorial generation is \textbf{Exhaustive Brute-Force
     \item If $\mathcal{V}(\sigma) = \text{True}$, accept $\sigma$ into the solution repository; otherwise, discard it.
 \end{enumerate}
 
-The severe computational \textit{pathology}\footnote{\textbf{Vocabulary Note:} \textit{Pathology} in computer science refers to a severe defect, abnormal behavior, or catastrophic inefficiency in algorithmic design.} of brute-force \textit{exhaustive enumeration}\footnote{\textbf{Vocabulary Note:} \textit{Exhaustive} means ``okkatikuda vadhalakunda annitini check cheyadam''---evaluating every candidate thoroughly without leaving any out.} lies in its total blindness to partial invalidity. For instance, in generating balanced parentheses of length $2N$, if the first character selected is a closing parenthesis \texttt{')'}, no subsequent assignment of the remaining $2N-1$ characters can ever yield a valid string. Nevertheless, brute force blithely evaluates all $2^{2N-1}$ \textit{descendant}\footnote{\textbf{Vocabulary Note:} \textit{Descendants} means ``kindha vache nodes / tarvata vache branches''---all child and grandchild nodes beneath a parent in the search tree.} configurations beneath that \textit{doomed prefix}\footnote{\textbf{Vocabulary Note:} \textit{Doomed prefix} means ``modatlo chesina mistake valla, inka mundhuku velthunna eppatikee correct kaaleni state''.}, \textit{squandering}\footnote{\textbf{Vocabulary Note:} \textit{Squandering} means ``CPU samayam mariyu memory ni vyarthamgaa vrudhaa cheyadam''---wasting computational resources recklessly.} exponential CPU cycles on mathematically provable dead ends.
+The severe computational pathology of brute force lies in its total blindness to partial invalidity. For instance, in generating balanced parentheses of length $2N$, if the first character selected is a closing parenthesis \texttt{')'}, no subsequent assignment of the remaining $2N-1$ characters can ever yield a valid string. Nevertheless, brute force blithely evaluates all $2^{2N-1}$ descendant configurations beneath that doomed prefix, squandering exponential CPU cycles on mathematically provable dead ends.
 
-\textbf{Backtracking} resolves this exponential pathology by transforming search into an active, self-pruning traversal over an implicit \textbf{State-Space Tree}. Rather than evaluating validity \textit{post-mortem}\footnote{\textbf{Vocabulary Note:} \textit{Post-mortem evaluation} means checking correctness only after complete construction, rather than in-flight.}, backtracking evaluates \textit{local invariants in-flight}\footnote{\textbf{Vocabulary Note:} \textit{In-flight invariant checking} means evaluating rules dynamically at each incremental step during execution.} at every incremental construction step. If extending the current partial configuration $\sigma_{1..k}$ violates a necessary invariant, the algorithm immediately terminates the search along that branch, \textit{pruning}\footnote{\textbf{Vocabulary Note:} \textit{Pruning} means ``chettla kommalanu kattirinchinattu, dead-end branches ni mundhe thuncheyadam''---cutting off unviable search paths prematurely.} an entire subtree of \textit{barren descendants}\footnote{\textbf{Vocabulary Note:} \textit{Barren} means ``emee phalitanni ivvani vyardhamaina branches''---yielding zero valid solutions.}, and \textit{backtracks} to the parent state to explore alternative siblings.
+\textbf{Backtracking} resolves this exponential pathology by transforming search into an active, self-pruning traversal over an implicit \textbf{State-Space Tree}. Rather than evaluating validity post-mortem, backtracking evaluates \textit{local invariants} at every incremental construction step. If extending the current partial configuration $\sigma_{1..k}$ violates a necessary invariant, the algorithm immediately terminates the search along that branch, pruning an entire subtree of barren descendants, and \textit{backtracks} to the parent state to explore alternative siblings.
 
 \begin{figure}[htbp]
 \centering
@@ -1052,77 +1052,6 @@ The algorithmic paradigms formalizing backtracking extend directly into industri
 % =========================================================================
 % SECTION 8: CONCLUSION
 % =========================================================================
-
-% =========================================================================
-% SECTION: LEXICON AND BILINGUAL CONCEPTUAL BRIDGE
-% =========================================================================
-\section{The Backtracking \& Computer Science Lexicon: Bilingual Conceptual Bridge}
-\label{sec:lexicon}
-
-To facilitate deep intuitive comprehension and academic language acquisition for multilingual software engineers and computer science researchers, Table~\ref{tab:master_lexicon} presents a formalized lexicon of the 25 foundational academic and computational terms utilized throughout this paper. Each entry pairs the precise Telugu contextual meaning (\textit{Bhavartham}) with its rigorous systems-level operational definition.
-
-\begin{table*}[htbp]
-\centering
-\caption{The Backtracking \& Academic Computer Science Lexicon (Telugu Bhavartham \& Systems Definition)}
-\label{tab:master_lexicon}
-\small
-\begin{tabular}{p{3.3cm} p{5.5cm} p{7.5cm}}
-\toprule
-\textbf{Academic Term} & \textbf{Telugu Meaning (Bhavartham)} & \textbf{Formal Systems / Computer Science Definition} \\
-\midrule
-\textbf{Exhaustive} & \textit{Okkatikuda vadhalakunda annitini poorthiga check cheyadam} & Thorough and complete search evaluating every candidate configuration in the state space without omission. \\
-\addlinespace
-\textbf{Discrete Domains} & \textit{Vidi-vidiga lekkinchagalige (countable) viluvala sammoham} & Mathematical problem spaces characterized by separated, countable values (e.g., integers, permutations) rather than smooth continua. \\
-\addlinespace
-\textbf{Descendants} & \textit{Tree lo oka node kindha vache child, grandchild nodes mariyu sub-branches} & All downstream child nodes and subtrees originating from a parent node in a search tree hierarchy. \\
-\addlinespace
-\textbf{Intractable} & \textit{Standard computers lo samanyamaina time lo solve cheyaleni athi klistamaina samasyalu} & Problems lacking polynomial-time algorithms, where search time explodes exponentially ($\Omega(2^N)$) or factorially ($\Omega(N!)$). \\
-\addlinespace
-\textbf{Combinatorial Explosion} & \textit{Elements perigekoddi saadhyamayye configurations ghaathaanka reethilo vipaarithamgaa perigipovadam} & Catastrophic super-linear growth in candidate solutions as input size $N$ increases, rapidly exceeding computational capacity. \\
-\addlinespace
-\textbf{Algorithmic Pathology} & \textit{Algorithm lo unna theevramaina asamardhatha leda pedda structural lopam} & A severe defect, catastrophic inefficiency, or unviable behavioral pattern inherent in a naive computational strategy. \\
-\addlinespace
-\textbf{Squandering} & \textit{CPU cycles mariyu memory ni vyarthamgaa vrudhaa cheyadam} & Wasting computational resources recklessly on evaluating branches mathematically guaranteed to yield no solutions. \\
-\addlinespace
-\textbf{Branch Pruning} & \textit{Chetta kommalanu kattirinchinattu, dead-end branches ni mundhe thuncheyadam} & Terminating an unpromising search trajectory prematurely before evaluating its descendants upon invariant violation. \\
-\addlinespace
-\textbf{Barren Subtree} & \textit{Emee phalitanni ivvani vyardhamaina search branches} & A subtree in the state-space tree that contains zero feasible or valid goal states. \\
-\addlinespace
-\textbf{Doomed Prefix} & \textit{Modatlo chesina mistake valla, inka mundhuku velthunna eppatikee correct kaaleni state} & A partial configuration whose accumulated state guarantees that no valid continuation exists (e.g., prefix starting with \texttt{')'}). \\
-\addlinespace
-\textbf{Post-Mortem Evaluation} & \textit{Mothham execution ayipoyaaka chivarlo thappu jarigindha ani check cheyadam} & Validating candidate correctness only after full sequence generation is completed, rather than in-flight. \\
-\addlinespace
-\textbf{In-Flight Invariant} & \textit{Algorithm run avuthunna madhyalone prathi step daggara rules satisfy ayyaayo ledo check cheyadam} & Dynamically testing state boundary conditions before executing recursive descent, preventing invalid state allocation. \\
-\addlinespace
-\textbf{Dyck Language} & \textit{Bracketlu saraina balance mariyu nested order lo unna valid strings} & The formal language consisting of balanced strings of properly nested matching parentheses over alphabet $\Sigma = \{(, )\}$. \\
-\addlinespace
-\textbf{Cardinality} & \textit{Oka set leda group lo unna mothham elements sankhya} & The formal measure of the number of elements contained within a mathematical set ($|\mathcal{P}(S)| = 2^N$). \\
-\addlinespace
-\textbf{Asymptotic Growth} & \textit{Input size $N$ chaalaa pedhadhavuthunna koddi complexity ela peruguthundho cheppadam} & The limiting behavior of runtime or space complexity as input size approaches infinity ($N \to \infty$). \\
-\addlinespace
-\textbf{Bijective Mapping} & \textit{Rendu groups madhya prathi element ki one-to-one exact match undadam} & A mathematical correspondence between two sets that is simultaneously injective (one-to-one) and surjective (onto). \\
-\addlinespace
-\textbf{Lattice Path} & \textit{Grid meeda coordinates gundaa velthe vacche oka dishta margam} & A sequence of discrete step vectors traversing coordinates on a discrete Cartesian grid. \\
-\addlinespace
-\textbf{Contiguous} & \textit{Madhyalo ye gap lekundaa varusagaa antukuni unna segment} & An uninterrupted, contiguous block of adjacent elements residing side-by-side in continuous memory. \\
-\addlinespace
-\textbf{Call-Stack Unwinding} & \textit{Recursion base case reach ayyaka, call stack frames okatokatiga venakki clear avuthu raavadam} & The process of popping stack frames in LIFO order back to the caller upon function return, enabling state restoration. \\
-\addlinespace
-\textbf{State Mutation} & \textit{Unna data leda shared object state ni modify cheyadam} & Altering the internal memory representation of a mutable accumulator during depth-first traversal. \\
-\addlinespace
-\textbf{In-Place Transformation} & \textit{Extra kothha memory lekundaa, ichina array lone elements ni maarusthoo pani poorthi cheyadam} & Executing algorithmic transformations entirely within existing array storage without allocating auxiliary buffers ($\mathcal{O}(1)$ space). \\
-\addlinespace
-\textbf{Symmetric Transposition} & \textit{Rendu positions lo unna elements ni thama madhya thamu maaruchukovadam (swapping)} & Permuting elements by swapping pairs $(i, j)$ and symmetrically reversing the swap during backtracking. \\
-\addlinespace
-\textbf{Engagement Fatigue} & \textit{Users oke vishayanni malli malli chusi visugu chendi app vaadadam aapeyyadam} & Cognitive weariness and disinterest experienced by mobile application users subjected to static, repetitive sequences. \\
-\addlinespace
-\textbf{Algorithmic Pitfall} & \textit{Theliyakundaa padipoye saadhaaranamaina mistake leda dangerous programming bug} & A subtle design error or edge-case trap that introduces catastrophic semantic corruption (e.g., shallow copying). \\
-\addlinespace
-\textbf{Shallow vs Deep Copy} & \textit{Shallow Copy ante memory reference ni mathrame copy cheyadam; Deep Copy ante original data ni kothha memory lo complete gaa duplicate cheyadam} & Shallow copy clones memory pointers leaving shared mutation vulnerabilities; deep copy duplicates underlying data independently. \\
-\bottomrule
-\end{tabular}
-\end{table*}
-
 \section{Conclusion}
 \label{sec:conclusion}
 
