@@ -599,81 +599,81 @@ Industrial compilers (such as LLVM Clang and GCC) translate high-level source co
 \section{Comprehensive Bilingual Lexicon \& Conceptual Glossary (Telugu - English)}
 \label{sec:lexicon}
 
-To facilitate frictionless technical comprehension for Telugu-speaking computer science engineers and researchers without requiring constant reference to a Telugu-English translation dictionary, this section formalizes the core vocabulary used throughout this paper:
+To facilitate frictionless technical comprehension for Telugu-speaking computer science engineers and researchers without requiring constant reference to a Telugu-English translation dictionary, this section formalizes the core vocabulary used throughout this paper. In the interactive digital PDF edition of this work, clicking or hovering over any highlighted terminology activates pop-up notes displaying complete Telugu script definitions alongside English systems context:
 
 \begin{enumerate}
-    \item \textbf{Ubiquity / Ubiquitous (అంతటా వ్యాపించి ఉండటం):}
-    \textit{Telenglish:} Antataa vyaapinchi undatam.
+    \item \textbf{Ubiquity / Ubiquitous (Antataa Vyaapinchadam):}
+    \textit{Telenglish:} Antataa vistharinchi leda prathichotaa saadhaaranamgaa kanipinche lakshanam.
     \textit{English:} Present, appearing, or found everywhere simultaneously.
     \textit{Systems Context:} Refers to the universal deployment of BSTs across database indexing and kernel architectures.
 
-    \item \textbf{Monotonicity / Monotonic (ఒకే దిశలో స్థిరంగా పెరిగే గుణం):}
-    \textit{Telenglish:} Oke dishalo sthiramgaa perige gunam.
+    \item \textbf{Monotonicity / Monotonic (Oke Dishalo Sthiramgaa Peragadam):}
+    \textit{Telenglish:} Oke dishalo kramamgaa perige gunam; reversal lekundaa sthiramgaa undadam.
     \textit{English:} A sequence that never decreases or never increases.
     \textit{Systems Context:} The foundational BST inorder invariant where values strictly increase without reversal.
 
-    \item \textbf{Traversal (క్రమబద్ధంగా సందర్శించడం):}
-    \textit{Telenglish:} Kramabaddhamgaa sandarsinchadam.
+    \item \textbf{Traversal (Kramabaddhamgaa Sandarsinchadam):}
+    \textit{Telenglish:} Kramabaddhamgaa sandarsinchadam; prathi node nu okasari visit cheyadam.
     \textit{English:} The process of systematically visiting every node in a data structure exactly once.
     \textit{Systems Context:} Recursive, iterative, and Morris-threaded methods for navigating tree nodes.
 
-    \item \textbf{Inorder Predecessor (పూర్వగామి / ముందొచ్చే నోడ్):}
-    \textit{Telenglish:} Poorvagaami / mundhocche node.
+    \item \textbf{Inorder Predecessor (Poorvagaami / Mundhocche Node):}
+    \textit{Telenglish:} Poorvagaami; oka node kante mundhocche node.
     \textit{English:} The node that immediately precedes a given node in an inorder traversal sequence.
     \textit{Systems Context:} Calculated as the rightmost node of the left subtree; leveraged in Morris Traversal to establish threaded return links.
 
-    \item \textbf{Inorder Successor (ఉత్తరగామి / తర్వాత వెంటనే వచ్చే నోడ్):}
-    \textit{Telenglish:} Uttharagaami / tharvaatha ventane vacche node.
+    \item \textbf{Inorder Successor (Uttharagaami / Tharvaatha Vacche Node):}
+    \textit{Telenglish:} Uttharagaami; oka node tharvaatha ventane vacche node.
     \textit{English:} The node that immediately follows a given node in an inorder sequence.
     \textit{Systems Context:} The leftmost node of the right subtree; utilized in node deletion value substitution.
 
-    \item \textbf{Threaded Binary Tree (థ్రెడెడ్ బైనరీ ట్రీ / తాత్కాలిక లింకుల చెట్టు):}
-    \textit{Telenglish:} Threded binary tree / thaatkaalika linkula chettu.
+    \item \textbf{Threaded Binary Tree (Threded Tree / Thaatkaalika Linkulu):}
+    \textit{Telenglish:} Threded binary tree; thaatkaalika daaraalu veyadam.
     \textit{English:} A binary tree variant wherein null child pointers store direct memory references to inorder ancestors.
     \textit{Systems Context:} The foundational structure of Morris Traversal that permits $O(1)$-space depth-first traversal.
 
-    \item \textbf{Degenerate Tree (వంగిపోయిన / హీన స్థితికి చేరిన చెట్టు):}
-    \textit{Telenglish:} Vangipoyina / heena sthithiki cherina chettu.
+    \item \textbf{Degenerate Tree (Vangipoyina / Heena Sthithi Chettu):}
+    \textit{Telenglish:} Vangipoyina chettu; linked list laa maaripoyina sthithi.
     \textit{English:} A binary tree where each parent node has only one child, reducing tree behavior to a singly-linked list.
     \textit{Systems Context:} Produces worst-case $O(N)$ height, inducing recursive stack overflow failures.
 
-    \item \textbf{Ancestor (పూర్వీకుడు / పై స్థాయి పేరెంట్ నోడ్):}
-    \textit{Telenglish:} Poorveekudu / pai sthaayi parent node.
+    \item \textbf{Ancestor (Poorveekudu / Pai Sthaayi Parent):}
+    \textit{Telenglish:} Poorveekudu; tree root nundi oka node varaku unna upstream parents.
     \textit{English:} Any node situated on the direct path from the root to a specified target node.
     \textit{Systems Context:} Central entity in Lowest Common Ancestor (LCA) graph and tree queries.
 
-    \item \textbf{Descendant (తర్వాతి తరం / కింది స్థాయి నోడ్):}
-    \textit{Telenglish:} Tharvaathi tharam / kindhi sthaayi node.
+    \item \textbf{Descendant (Vaarasudu / Kindhi Sthaayi Node):}
+    \textit{Telenglish:} Vaarasudu; oka node kindha unde sub-tree downstream nodes.
     \textit{English:} Any node situated within the subtree rooted at a specified node.
     \textit{Systems Context:} The target elements evaluated under common ancestor containment proofs.
 
-    \item \textbf{Bifurcation (రెండు వేర్వేరు మార్గాలుగా విడిపోవడం):}
+    \item \textbf{Bifurcation (Cheelika Bindhuvu / Daarulu Vidipovadam):}
     \textit{Telenglish:} Rendu ververu maargaalugaa vidipovadam.
     \textit{English:} The splitting of a single path into two distinct branches.
     \textit{Systems Context:} The decision boundary in BST LCA resolution where targets $A$ and $B$ diverge into opposing subtrees.
 
-    \item \textbf{Inversion (వరుస క్రమం తారుమారైన లోపం):}
-    \textit{Telenglish:} Varusa kramam thaarumaaraina lopam.
+    \item \textbf{Inversion (Varusa Kramam Thaarumaaraina Lopam):}
+    \textit{Telenglish:} Varusa kramam thappuga undadam; mundhunna value peddadhavadam.
     \textit{English:} A pair of elements in a sequence that are out of their natural sorted order.
     \textit{Systems Context:} The mathematical metric used to detect and rectify swapped BST nodes.
 
-    \item \textbf{Auxiliary Memory (సహాయక / అదనపు మెమరీ):}
-    \textit{Telenglish:} Sahaayaka / adhanapu memory.
+    \item \textbf{Auxiliary Memory (Sahaayaka / Adhanapu Memory):}
+    \textit{Telenglish:} Sahaayaka memory; extra gaa vaade taatkaalika storage.
     \textit{English:} Extra temporary storage utilized by an algorithm beyond the space occupied by the input itself.
     \textit{Systems Context:} The core differentiator between recursive $O(H)$ traversal and Morris $O(1)$ traversal.
 
-    \item \textbf{Structural Induction (నిర్మాణాత్మక ఆగమనం / గణిత నిరూపణ):}
-    \textit{Telenglish:} Nirmaanaathmaka aagamanam / ganitha niroopana.
+    \item \textbf{Structural Induction (Nirmaanaathmaka Ganitha Aagamanam):}
+    \textit{Telenglish:} Base case nundi pedda subtrees ki prove chese mathematical proof.
     \textit{English:} A mathematical proof technique used to prove properties over recursively defined structures.
     \textit{Systems Context:} Employed to prove correctness of Morris pointer restoration and BST invariants.
 
-    \item \textbf{Amortized Analysis (సగటు సమగ్ర విశ్లేషణ):}
-    \textit{Telenglish:} Sagatu samagra vishleshana.
+    \item \textbf{Amortized Analysis (Sagatu Samagra Vishleshana):}
+    \textit{Telenglish:} Chaalaa operations mothham time ni average chesi lekkinchadam.
     \textit{English:} The averaged execution cost per operation over a worst-case sequence of operations.
     \textit{Systems Context:} Proves that while predecessor searching appears nested, total Morris operations strictly equal $O(N)$.
 
-    \item \textbf{Call-Stack Unwinding (కాల్-స్టాక్ వెనక్కి క్లియర్ అవ్వడం):}
-    \textit{Telenglish:} Call-stack venakki clear avvadam.
+    \item \textbf{Call-Stack Unwinding (Call-Stack Venakki Clear Avvadam):}
+    \textit{Telenglish:} Recursion base case reach ayyaaka stack frames okatokatigaa clear avvadam.
     \textit{English:} The progressive popping of execution stack frames in LIFO order as recursive calls reach base cases.
     \textit{Systems Context:} The runtime overhead eliminated through threaded pointer manipulation.
 \end{enumerate}
