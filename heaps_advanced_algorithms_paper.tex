@@ -206,6 +206,7 @@ Table~\ref{tab:ropes-paradigms} establishes the algorithmic taxonomy for solving
 \centering
 \caption{Taxonomy of Algorithmic Paradigms for Connect Ropes}
 \label{tab:ropes-paradigms}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{lccc}
 \toprule
 \textbf{Paradigm} & \textbf{2-Min Extraction} & \textbf{Re-Insertion} & \textbf{Total Time} \\
@@ -215,7 +216,8 @@ B. Linear Min-Scan Loop & $\mathcal{O}(N)$ & $\mathcal{O}(1)$ & $\mathcal{O}(N^2
 C. Sorted List Shift & $\mathcal{O}(1)$ & $\mathcal{O}(N)$ shift & $\mathcal{O}(N^2)$ \\
 \textbf{D. Min-Heap (PriorityQueue)} & $\mathcal{O}(\log N)$ & $\mathcal{O}(\log N)$ & $\mathbf{\mathcal{O}(N \log N)}$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \section{Binary Heap Data Structure \& Array Representation}
@@ -360,7 +362,7 @@ To extract the minimum element:
 \begin{enumerate}
     \item \textbf{Root Extraction:} Capture $A[0]$ as the return value.
     \item \textbf{Shape Invariant Maintenance:} Move the final leaf element $A[N-1]$ into the root position ($A[0] \leftarrow A[N-1]$) and decrement size $N \leftarrow N - 1$.
-    \item \textbf{Order Restoration (Down-Heapify / Percolate-Down):} Starting at $i = 0$:
+    \item \textbf{Order Restoration (Down-Heapify / Percolate-Down):} Starting at $i = 0$, evaluate the minimum among node $i$ and its active children:
     \begin{align*}
         l &= 2i + 1, \quad r = 2i + 2 \\
         \text{smallest} &= \arg\min \{A[i], A[l] \ (\text{if } l < N), A[r] \ (\text{if } r < N)\}
@@ -669,105 +671,105 @@ Each arriving price tick is processed in $\mathcal{O}(\log N)$, and the median i
 \section{Comprehensive Bilingual Scholarly Compendium}
 \label{sec:bilingual}
 
-To cultivate rigorous scholarship and bridge theoretical algorithm engineering with bilingual pedagogical intuition, this section provides an exhaustive lexicon defining 20 fundamental concepts across Telugu (in Telugu script), Telenglish (phonetic transliteration), English technical definitions, and real-world Systems Context.
+To cultivate rigorous scholarship and bridge theoretical algorithm engineering with bilingual pedagogical intuition, this section provides an exhaustive lexicon defining 20 fundamental concepts across Telenglish phonetic transliteration, English technical definitions, and real-world Systems Context.
 
 \begin{enumerate}
-    \item \textbf{Binary Heap (ద్వియాంశ రాశి / Dvi-aamsha Raashi):}
+    \item \textbf{Binary Heap (Binary Heap / Dvi-aamsha Raashi):}
     \textit{Telenglish:} Min ledaa max element ni eppudoo root lo unche complete binary tree data structure.
     \textit{English:} A complete binary tree fulfilling the heap-order property where the root maintains the global extremum.
     \textit{Systems Context:} Foundation of priority queues and kernel schedulers.
 
-    \item \textbf{Complete Binary Tree (సంపూర్ణ ద్వియాంశ వృక్షం / Sampoorna Dvi-aamsha Vruksham):}
+    \item \textbf{Complete Binary Tree (Complete Binary Tree / Sampoorna Dvi-aamsha Vruksham):}
     \textit{Telenglish:} Aakharu level thappa migathaa levels anni poorthigaa nindi, aakharu level lo nodes anni edama nunchi kudi ki varusagaa unna tree.
     \textit{English:} A binary tree where all levels except possibly the last are full, and all leaves are packed left-to-right without gaps.
     \textit{Systems Context:} Enables gapless 1D array mapping with zero pointer overhead.
 
-    \item \textbf{Min-Heap Invariant (కనిష్ట రాశి నిబంధన / Kanishta Raashi Nibandhana):}
-    \textit{Telenglish:} Prathi parent node viluva thana pillala (children) viluvala kante thakkuvagaa ledaa samaanamgaa undaali ($A[\text{parent}] \le A[\text{child}]$).
+    \item \textbf{Min-Heap Invariant (Min-Heap Invariant / Kanishta Raashi Nibandhana):}
+    \textit{Telenglish:} Prathi parent node viluva thana pillala viluvala kante thakkuvagaa ledaa samaanamgaa undaali ($A[\text{parent}] \le A[\text{child}]$).
     \textit{English:} The structural constraint requiring every parent to be less than or equal to its children, placing the global minimum at the root.
     \textit{Systems Context:} Guarantees instantaneous $\mathcal{O}(1)$ access to the minimal priority task.
 
-    \item \textbf{Max-Heap Invariant (గరిష్ట రాశి నిబంధన / Garishta Raashi Nibandhana):}
+    \item \textbf{Max-Heap Invariant (Max-Heap Invariant / Garishta Raashi Nibandhana):}
     \textit{Telenglish:} Prathi parent node viluva thana pillala viluvala kante ekkuvagaa ledaa samaanamgaa undaali ($A[\text{parent}] \ge A[\text{child}]$).
     \textit{English:} The structural constraint requiring every parent to be greater than or equal to its children, placing the global maximum at the root.
     \textit{Systems Context:} Used in heap sort and descending priority dispatch systems.
 
-    \item \textbf{Up-Heapify / Percolate-Up (పైకి చేర్పు ప్రవాహం / Paiki Cherpu Pravaaham):}
+    \item \textbf{Up-Heapify / Percolate-Up (Up-Heapify / Paiki Cherpu Pravaaham):}
     \textit{Telenglish:} Kothha element ni array chivarana add chesi, parent tho polchukuntu paiki pampinche vidhaanam.
     \textit{English:} The restoration procedure moving an inserted leaf upwards by successive parent swaps until the heap invariant holds.
     \textit{Systems Context:} Bounds insertion latency to $\mathcal{O}(\log N)$.
 
-    \item \textbf{Down-Heapify / Percolate-Down (క్రిందికి చేర్పు ప్రవాహం / Krindiki Cherpu Pravaaham):}
-    \textit{Telenglish:} Root element ni theesesina tharvaatha, chivari element ni root lo petti, chinna pillavaaditho (child) swap chesthoo krindiki pampadam.
+    \item \textbf{Down-Heapify / Percolate-Down (Down-Heapify / Krindiki Cherpu Pravaaham):}
+    \textit{Telenglish:} Root element ni theesesina tharvaatha, chivari element ni root lo petti, chinna child tho swap chesthoo krindiki pampadam.
     \textit{English:} The procedure restoring order by pushing a violating root node downward via swaps with its minimum child.
     \textit{Systems Context:} Ensures extract-min runs in $\mathcal{O}(\log N)$ worst-case time.
 
-    \item \textbf{Array Node Indexing (వరుస చిరునామా సూత్రాలు / Varusa Chirunaamaa Soothraalu):}
+    \item \textbf{Array Node Indexing (Array Node Indexing / Varusa Chirunaamaa Soothraalu):}
     \textit{Telenglish:} Pointer lu lekundaa $2i+1$, $2i+2$, mariyu $(i-1)/2$ soothraala dwara array lone children mariyu parent ni kanugonadam.
     \textit{English:} Arithmetic formulas mapping tree adjacency into array indices without dynamic memory pointers.
     \textit{Systems Context:} Eliminates pointer dereferencing and achieves hardware L1/L2 cache prefetching.
 
-    \item \textbf{Floyd's Build Heap (ఫ్లాయిడ్ శీఘ్ర రాశి నిర్మాణం / Floyd Sheeghra Raashi Nirmaanam):}
+    \item \textbf{Floyd's Build Heap (Floyd's Build Heap / Sheeghra Raashi Nirmaanam):}
     \textit{Telenglish:} Unsorted array ni $\mathcal{O}(N)$ linear time lone heap gaa maarchadaniki chivari non-leaf node nunchi venakki down-heapify chese paddhathi.
     \textit{English:} Floyd's bottom-up linear-time algorithm constructing a heap by iterating down-heapify from index $\lfloor N/2 \rfloor - 1$ down to 0.
     \textit{Systems Context:} Outperforms repeated insertions by capitalizing on leaf node density.
 
-    \item \textbf{Arithmetic-Geometric Series (అంక-గుణ శ్రేణి / Anka-Guna Shreni):}
-    \textit{Telenglish:} Prathi padam lo oka anka shreni mariyu oka guna shreni kalasi unna ganitha shreni ($\sum h / 2^h$).
+    \item \textbf{Arithmetic-Geometric Series (Arithmetic-Geometric Series / Anka-Guna Shreni):}
+    \textit{Telenglish:} Prathi padam lo oka anka shreni mariyu oka guna shreni kalasi unna ganitha shreni ($\sum h / 2^h = 2$).
     \textit{English:} A series whose terms are products of terms in an arithmetic progression and a geometric progression.
     \textit{Systems Context:} Fundamental mathematical engine proving the $\mathcal{O}(N)$ complexity of buildHeap.
 
-    \item \textbf{Greedy Choice Property (ఆశాపూరిత ఎంపిక నియమం / Aashaapooritha Empika Niyamam):}
+    \item \textbf{Greedy Choice Property (Greedy Choice Property / Aashaapooritha Empika Niyamam):}
     \textit{Telenglish:} Prathi step lo appatiki unna athi chinna viluvalanu mathrame theesukuntu mundhuku velladam valla mottham samasya ki optimal solution raavadam.
     \textit{English:} The property where locally optimal choices lead directly to a globally optimal solution.
     \textit{Systems Context:} Core mathematical principle underpinning Huffman coding and rope connection.
 
-    \item \textbf{Connect Ropes Problem (తాళ్ల కలయిక సమస్య / Thaalla Kalayika Samasya):}
+    \item \textbf{Connect Ropes Problem (Connect Ropes Problem / Thaalla Kalayika Samasya):}
     \textit{Telenglish:} Rendu thallanu kalapadaniki ayye kharchu vaati podavula kootika; mottham thallanu kalapadaniki kanishta kharchu kanugonadam.
     \textit{English:} The problem of minimizing cumulative merge costs by repeatedly combining the two shortest available ropes.
     \textit{Systems Context:} Classic workload illustrating why dynamic priority queues beat sorting.
 
-    \item \textbf{Exchange Argument (పరస్పర మార్పిడి వాదన / Paraspara Maarpidi Vaadana):}
+    \item \textbf{Exchange Argument (Exchange Argument / Paraspara Maarpidi Vaadana):}
     \textit{Telenglish:} Mana greedy order kante vere order lo kalisthe kharchu ekkuva avuthundhani nirupinche ganitha rujuuvu.
     \textit{English:} A mathematical proof technique demonstrating that swapping an optimal choice with any other choice never decreases total cost.
     \textit{Systems Context:} Theoretical foundation for verifying greedy algorithm correctness.
 
-    \item \textbf{Cache Locality (క్యాష్ సామీప్యత / Cache Saameepyatha):}
+    \item \textbf{Cache Locality (Cache Locality / Cache Saameepyatha):}
     \textit{Telenglish:} Data antha pakkapakkane array lo undadam valla CPU processor memory nunchi vegamgaa data ni fetch chesukovadam.
     \textit{English:} The principle that contiguous memory layouts allow CPUs to prefetch adjacent data into high-speed L1/L2 caches.
     \textit{Systems Context:} The key systems advantage of array-based heaps over node-pointer binary trees.
 
-    \item \textbf{Leaf Node (ఆకు నోడ్ / Aaku Node):}
+    \item \textbf{Leaf Node (Leaf Node / Aaku Node):}
     \textit{Telenglish:} Pillalu (children) leni chivari tree node; heap array lo $\lfloor N/2 \rfloor$ nunchi $N-1$ varaku unnavi.
     \textit{English:} A tree node with degree zero, occupying indices $\lfloor N/2 \rfloor$ to $N-1$ in a complete binary tree.
     \textit{Systems Context:} Represents 50\% of heap elements, requiring zero work during bottom-up construction.
 
-    \item \textbf{Internal Node (అంతర్గత నోడ్ / Anthargatha Node):}
+    \item \textbf{Internal Node (Internal Node / Anthargatha Node):}
     \textit{Telenglish:} Kaneesam oka pillavaadu unna node; heap lo $0$ nunchi $\lfloor N/2 \rfloor - 1$ varaku unnavi.
     \textit{English:} A non-leaf tree node having one or two children.
     \textit{Systems Context:} The exact subset of nodes requiring down-heapify during Floyd's algorithm.
 
-    \item \textbf{Priority Queue (ప్రాధాన్యతా వరుస / Praadhaanyathaa Varusa):}
+    \item \textbf{Priority Queue (Priority Queue / Praadhaanyathaa Varusa):}
     \textit{Telenglish:} Normal FIFO queue kaakundaa, highest priority (kanishta ledaa garishta) unna element mundhu vacche data structure.
     \textit{English:} An abstract data type where each element has a priority, and elements with higher priority are dequeued before others.
     \textit{Systems Context:} Implemented in Java via \texttt{PriorityQueue} and C++ via \texttt{std::priority\_queue}.
 
-    \item \textbf{Dynamic Order Statistics (గతిశీల క్రమ గణాంకాలు / Gathisheela Krama Ganaankaalu):}
+    \item \textbf{Dynamic Order Statistics (Dynamic Order Statistics / Gathisheela Krama Ganaankaalu):}
     \textit{Telenglish:} Data maaruthunna kodhdhee minimum, maximum, ledaa median viluvalanu continuous gaa track cheyadam.
     \textit{English:} Maintaining ranking and extremal metrics over a dataset experiencing real-time insertions and deletions.
     \textit{Systems Context:} Essential for high-frequency algorithmic trading and live telemetry feeds.
 
-    \item \textbf{Virtual Runtime (వర్చువల్ రన్‌టైమ్ / Virtual Runtime):}
+    \item \textbf{Virtual Runtime (Virtual Runtime / Virtual Runtime Parimaanam):}
     \textit{Telenglish:} CPU lo oka process entha sepu execute ayyindho track chese samayam; Linux scheduler lo heap/tree priority ki vaadathaaru.
     \textit{English:} The weighted execution time accumulated by a task in an operating system process scheduler.
     \textit{Systems Context:} Governs process scheduling order in the Linux CFS.
 
-    \item \textbf{Shape Invariant (ఆకార నియమం / Aakaara Niyamam):}
+    \item \textbf{Shape Invariant (Shape Invariant / Aakaara Niyamam):}
     \textit{Telenglish:} Heap eppudoo complete binary tree roopam lone undaali ane niyamam.
     \textit{English:} The structural constraint requiring the underlying tree to remain a Complete Binary Tree at all times.
     \textit{Systems Context:} Guarantees tree height is strictly bounded by $\lfloor \log_2 N \rfloor$.
 
-    \item \textbf{Heap Sort (రాశి క్రమబద్ధీకరణ / Raashi Krama-baddheekarana):}
+    \item \textbf{Heap Sort (Heap Sort / Raashi Krama-baddheekarana):}
     \textit{Telenglish:} Build-heap chesi, root nunchi min/max extract chesthoo $\mathcal{O}(N \log N)$ lo in-place sort chese algorithm.
     \textit{English:} A comparison-based sorting algorithm using a binary heap with guaranteed $\mathcal{O}(N \log N)$ worst-case time.
     \textit{Systems Context:} Combines the $\mathcal{O}(N \log N)$ guarantee of merge sort with the $\mathcal{O}(1)$ space of quicksort.
